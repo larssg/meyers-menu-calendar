@@ -1,17 +1,78 @@
 using HtmlAgilityPack;
+using Meyers.Web.Models;
+using Meyers.Web.Repositories;
 
 namespace Meyers.Web.Services;
 
 public class MenuScrapingService
 {
     private readonly HttpClient _httpClient;
+    private readonly IMenuRepository _menuRepository;
+    private static readonly TimeSpan CacheRefreshInterval = TimeSpan.FromHours(6);
     
-    public MenuScrapingService(HttpClient httpClient)
+    public MenuScrapingService(HttpClient httpClient, IMenuRepository menuRepository)
     {
         _httpClient = httpClient;
+        _menuRepository = menuRepository;
     }
     
     public async Task<List<MenuDay>> ScrapeMenuAsync()
+    {
+        // Check if we need to refresh the cache
+        var lastUpdate = await _menuRepository.GetLastUpdateTimeAsync();
+        var shouldRefresh = lastUpdate == null || DateTime.UtcNow - lastUpdate.Value > CacheRefreshInterval;
+        
+        if (!shouldRefresh)
+        {
+            // Return cached data
+            var cachedMenus = await GetCachedMenusAsync();
+            if (cachedMenus.Any())
+            {
+                return cachedMenus;
+            }
+        }
+        
+        // Scrape fresh data from website
+        var freshMenus = await ScrapeFromWebsiteAsync();
+        
+        // Save to cache
+        if (freshMenus.Any())
+        {
+            await SaveMenusToCache(freshMenus);
+        }
+        
+        return freshMenus;
+    }
+    
+    private async Task<List<MenuDay>> GetCachedMenusAsync()
+    {
+        var today = DateTime.Today;
+        var endDate = today.AddDays(14); // Get next two weeks
+        var cachedEntries = await _menuRepository.GetMenusForDateRangeAsync(today, endDate);
+        
+        return cachedEntries.Select(entry => new MenuDay
+        {
+            DayName = entry.DayName,
+            Date = entry.Date,
+            MenuItems = string.IsNullOrEmpty(entry.MenuItems) 
+                ? new List<string>() 
+                : entry.MenuItems.Split('\n', StringSplitOptions.RemoveEmptyEntries).ToList()
+        }).ToList();
+    }
+    
+    private async Task SaveMenusToCache(List<MenuDay> menuDays)
+    {
+        var menuEntries = menuDays.Select(day => new MenuEntry
+        {
+            Date = day.Date,
+            DayName = day.DayName,
+            MenuItems = string.Join('\n', day.MenuItems)
+        }).ToList();
+        
+        await _menuRepository.SaveMenusAsync(menuEntries);
+    }
+    
+    private async Task<List<MenuDay>> ScrapeFromWebsiteAsync()
     {
         var url = "https://meyers.dk/erhverv/frokostordning/ugens-menuer/";
         var html = await _httpClient.GetStringAsync(url);

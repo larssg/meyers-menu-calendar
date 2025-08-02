@@ -1,4 +1,7 @@
 using Meyers.Web.Services;
+using Meyers.Web.Data;
+using Meyers.Web.Repositories;
+using Microsoft.EntityFrameworkCore;
 using HtmlAgilityPack;
 
 namespace Meyers.Test;
@@ -11,13 +14,31 @@ public class MenuScrapingServiceTests
     {
         _testHtmlPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TestData", "meyers-menu-page.html");
     }
+    
+    private MenuDbContext CreateInMemoryContext()
+    {
+        var options = new DbContextOptionsBuilder<MenuDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+        
+        var context = new MenuDbContext(options);
+        context.Database.EnsureCreated();
+        return context;
+    }
+    
+    private MenuScrapingService CreateService(MenuDbContext context)
+    {
+        var mockHttpClient = new MockHttpClient(_testHtmlPath);
+        var repository = new MenuRepository(context);
+        return new MenuScrapingService(mockHttpClient, repository);
+    }
 
     [Fact]
     public async Task ScrapeMenuAsync_WithRealPageData_ReturnsAllWeekdays()
     {
         // Arrange
-        var mockHttpClient = new MockHttpClient(_testHtmlPath);
-        var scrapingService = new MenuScrapingService(mockHttpClient);
+        using var context = CreateInMemoryContext();
+        var scrapingService = CreateService(context);
 
         // Act
         var result = await scrapingService.ScrapeMenuAsync();
@@ -51,8 +72,8 @@ public class MenuScrapingServiceTests
     public async Task ScrapeMenuAsync_WithRealPageData_ContainsValidMenuContent()
     {
         // Arrange
-        var mockHttpClient = new MockHttpClient(_testHtmlPath);
-        var scrapingService = new MenuScrapingService(mockHttpClient);
+        using var context = CreateInMemoryContext();
+        var scrapingService = CreateService(context);
 
         // Act
         var result = await scrapingService.ScrapeMenuAsync();
@@ -84,8 +105,8 @@ public class MenuScrapingServiceTests
     public async Task ScrapeMenuAsync_WithTestData_EachDayHasDifferentContent()
     {
         // Arrange
-        var mockHttpClient = new MockHttpClient(_testHtmlPath);
-        var scrapingService = new MenuScrapingService(mockHttpClient);
+        using var context = CreateInMemoryContext();
+        var scrapingService = CreateService(context);
 
         // Act
         var result = await scrapingService.ScrapeMenuAsync();
@@ -115,8 +136,8 @@ public class MenuScrapingServiceTests
     public async Task ScrapeMenuAsync_WithTestData_MondayHasCorrectDateAndContent()
     {
         // Arrange
-        var mockHttpClient = new MockHttpClient(_testHtmlPath);
-        var scrapingService = new MenuScrapingService(mockHttpClient);
+        using var context = CreateInMemoryContext();
+        var scrapingService = CreateService(context);
 
         // Act
         var result = await scrapingService.ScrapeMenuAsync();
@@ -141,8 +162,8 @@ public class MenuScrapingServiceTests
     public async Task ScrapeMenuAsync_WithTestData_AllDaysHaveCorrectDates()
     {
         // Arrange
-        var mockHttpClient = new MockHttpClient(_testHtmlPath);
-        var scrapingService = new MenuScrapingService(mockHttpClient);
+        using var context = CreateInMemoryContext();
+        var scrapingService = CreateService(context);
 
         // Act
         var result = await scrapingService.ScrapeMenuAsync();
@@ -166,6 +187,34 @@ public class MenuScrapingServiceTests
             
             Assert.Equal(expectedDay.DayName, actualDay.DayName);
             Assert.Equal(expectedDay.Date, actualDay.Date);
+        }
+    }
+    
+    [Fact]
+    public async Task ScrapeMenuAsync_WithCachedData_ReturnsCachedResults()
+    {
+        // Arrange
+        using var context = CreateInMemoryContext();
+        var scrapingService = CreateService(context);
+        
+        // First call should scrape from website and cache the data
+        var firstResult = await scrapingService.ScrapeMenuAsync();
+        Assert.NotEmpty(firstResult);
+        
+        // Verify data was cached
+        var cachedEntries = await context.MenuEntries.ToListAsync();
+        Assert.NotEmpty(cachedEntries);
+        
+        // Second call should return cached data (since cache is fresh)
+        var secondResult = await scrapingService.ScrapeMenuAsync();
+        
+        // Results should be identical
+        Assert.Equal(firstResult.Count, secondResult.Count);
+        for (int i = 0; i < firstResult.Count; i++)
+        {
+            Assert.Equal(firstResult[i].DayName, secondResult[i].DayName);
+            Assert.Equal(firstResult[i].Date, secondResult[i].Date);
+            Assert.Equal(firstResult[i].MenuItems.Count, secondResult[i].MenuItems.Count);
         }
     }
 }
