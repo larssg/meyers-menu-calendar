@@ -31,13 +31,27 @@ public class CalendarService
             foreach (var menuDay in menuDays)
             {
                 var date = DateTime.SpecifyKind(menuDay.Date, DateTimeKind.Unspecified);
-                var menuText = string.Join(", ", menuDay.MenuItems);
+                
+                // Use new MainDish and Details if available, otherwise fall back to MenuItems
+                string title, description;
+                
+                if (!string.IsNullOrEmpty(menuDay.MainDish))
+                {
+                    title = $"Meyers Menu - {menuDay.DayName}: {menuDay.MainDish}";
+                    description = !string.IsNullOrEmpty(menuDay.Details) ? menuDay.Details : string.Join(", ", menuDay.MenuItems);
+                }
+                else
+                {
+                    // Fallback to old format
+                    title = $"Meyers Menu - {menuDay.DayName}";
+                    description = string.Join(", ", menuDay.MenuItems);
+                }
                 
                 var calendarEvent = new CalendarEvent
                 {
                     Uid = $"meyers-menu-{date:yyyy-MM-dd}",
-                    Summary = $"Meyers Menu - {menuDay.DayName}",
-                    Description = menuText,
+                    Summary = title,
+                    Description = description,
                     Start = new CalDateTime(date.AddHours(12)),
                     End = new CalDateTime(date.AddHours(13))
                 };

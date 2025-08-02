@@ -20,6 +20,8 @@ public class MenuDbContext : DbContext
             entity.Property(e => e.Date).IsRequired();
             entity.Property(e => e.DayName).IsRequired().HasMaxLength(50);
             entity.Property(e => e.MenuItems).IsRequired();
+            entity.Property(e => e.MainDish).IsRequired();
+            entity.Property(e => e.Details).IsRequired();
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.Property(e => e.UpdatedAt).IsRequired();
         });

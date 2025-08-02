@@ -16,6 +16,10 @@ public class MenuEntry
     [Required]
     public string MenuItems { get; set; } = string.Empty;
     
+    public string MainDish { get; set; } = string.Empty;
+    
+    public string Details { get; set; } = string.Empty;
+    
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

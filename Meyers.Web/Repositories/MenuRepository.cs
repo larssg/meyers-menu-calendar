@@ -35,6 +35,8 @@ public class MenuRepository : IMenuRepository
         {
             existing.DayName = menuEntry.DayName;
             existing.MenuItems = menuEntry.MenuItems;
+            existing.MainDish = menuEntry.MainDish;
+            existing.Details = menuEntry.Details;
             existing.UpdatedAt = DateTime.UtcNow;
             _context.MenuEntries.Update(existing);
         }
@@ -56,6 +58,8 @@ public class MenuRepository : IMenuRepository
             {
                 existing.DayName = menuEntry.DayName;
                 existing.MenuItems = menuEntry.MenuItems;
+                existing.MainDish = menuEntry.MainDish;
+                existing.Details = menuEntry.Details;
                 existing.UpdatedAt = DateTime.UtcNow;
                 _context.MenuEntries.Update(existing);
             }

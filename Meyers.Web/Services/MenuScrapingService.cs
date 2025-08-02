@@ -57,7 +57,9 @@ public class MenuScrapingService
             Date = entry.Date,
             MenuItems = string.IsNullOrEmpty(entry.MenuItems) 
                 ? new List<string>() 
-                : entry.MenuItems.Split('\n', StringSplitOptions.RemoveEmptyEntries).ToList()
+                : entry.MenuItems.Split('\n', StringSplitOptions.RemoveEmptyEntries).ToList(),
+            MainDish = entry.MainDish,
+            Details = entry.Details
         }).ToList();
     }
     
@@ -67,7 +69,9 @@ public class MenuScrapingService
         {
             Date = day.Date,
             DayName = day.DayName,
-            MenuItems = string.Join('\n', day.MenuItems)
+            MenuItems = string.Join('\n', day.MenuItems),
+            MainDish = day.MainDish,
+            Details = day.Details
         }).ToList();
         
         await _menuRepository.SaveMenusAsync(menuEntries);
@@ -113,18 +117,76 @@ public class MenuScrapingService
                 {
                     var dayMenuItems = new List<string>();
                     
+                    var mainDishParts = new List<string>();
+                    var detailsParts = new List<string>();
+                    
                     foreach (var recipe in menuRecipes)
                     {
                         var title = recipe.SelectSingleNode(".//h4[contains(@class, 'menu-recipe-display__title')]")?.InnerText?.Trim();
-                        var description = recipe.SelectSingleNode(".//p[contains(@class, 'menu-recipe-display__description')]")?.InnerText?.Trim();
+                        var descriptionNode = recipe.SelectSingleNode(".//p[contains(@class, 'menu-recipe-display__description')]");
                         
-                        if (!string.IsNullOrEmpty(title) && !string.IsNullOrEmpty(description))
+                        if (!string.IsNullOrEmpty(title) && descriptionNode != null)
                         {
-                            // Clean up the description by removing HTML entities and extra whitespace
-                            description = System.Net.WebUtility.HtmlDecode(description);
-                            description = System.Text.RegularExpressions.Regex.Replace(description, @"\s+", " ").Trim();
+                            // Get the plain text content and clean it up
+                            var plainText = System.Net.WebUtility.HtmlDecode(descriptionNode.InnerText?.Trim() ?? "");
+                            plainText = System.Text.RegularExpressions.Regex.Replace(plainText, @"\s+", " ").Trim();
                             
-                            dayMenuItems.Add($"{title}: {description}");
+                            if (!string.IsNullOrEmpty(plainText))
+                            {
+                                // Find the first sentence or phrase (up to the first period followed by space, or first 100 chars)
+                                var firstSentenceMatch = System.Text.RegularExpressions.Regex.Match(plainText, @"^([^.]*\.)");
+                                
+                                string mainDish, details;
+                                
+                                if (firstSentenceMatch.Success && firstSentenceMatch.Groups[1].Value.Length < 150)
+                                {
+                                    // Use the first sentence as main dish
+                                    mainDish = firstSentenceMatch.Groups[1].Value.Trim();
+                                    details = plainText.Substring(firstSentenceMatch.Length).Trim();
+                                }
+                                else
+                                {
+                                    // Fallback: use first 100 characters as main dish
+                                    if (plainText.Length > 100)
+                                    {
+                                        var cutPoint = plainText.LastIndexOf(' ', 100);
+                                        if (cutPoint > 50)
+                                        {
+                                            mainDish = plainText.Substring(0, cutPoint).Trim() + "...";
+                                            details = plainText.Substring(cutPoint).Trim();
+                                        }
+                                        else
+                                        {
+                                            mainDish = plainText.Substring(0, 100) + "...";
+                                            details = plainText.Substring(100).Trim();
+                                        }
+                                    }
+                                    else
+                                    {
+                                        mainDish = plainText;
+                                        details = "";
+                                    }
+                                }
+                                
+                                // Remove allergen info for cleaner display
+                                mainDish = System.Text.RegularExpressions.Regex.Replace(mainDish, @"\([^)]*\)\s*", "").Trim();
+                                details = System.Text.RegularExpressions.Regex.Replace(details, @"\([^)]*\)\s*", "").Trim();
+                                
+                                if (!string.IsNullOrEmpty(mainDish))
+                                {
+                                    mainDishParts.Add($"{title}: {mainDish}");
+                                }
+                                
+                                if (!string.IsNullOrEmpty(details))
+                                {
+                                    detailsParts.Add($"{title}: {details}");
+                                }
+                                
+                                // For backward compatibility, also add to MenuItems
+                                var fullDescription = System.Net.WebUtility.HtmlDecode(descriptionNode.InnerText?.Trim() ?? "");
+                                fullDescription = System.Text.RegularExpressions.Regex.Replace(fullDescription, @"\s+", " ").Trim();
+                                dayMenuItems.Add($"{title}: {fullDescription}");
+                            }
                         }
                     }
                     
@@ -134,7 +196,9 @@ public class MenuScrapingService
                         {
                             DayName = dayInfo.DayName,
                             Date = dayInfo.Date,
-                            MenuItems = dayMenuItems
+                            MenuItems = dayMenuItems,
+                            MainDish = string.Join(", ", mainDishParts),
+                            Details = string.Join(" | ", detailsParts)
                         });
                     }
                     
@@ -231,4 +295,6 @@ public class MenuDay
     public string DayName { get; set; } = string.Empty;
     public DateTime Date { get; set; }
     public List<string> MenuItems { get; set; } = new();
+    public string MainDish { get; set; } = string.Empty;
+    public string Details { get; set; } = string.Empty;
 }

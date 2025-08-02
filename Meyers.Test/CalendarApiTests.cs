@@ -49,11 +49,11 @@ public class CalendarApiTests : IClassFixture<WebApplicationFactory<Program>>
         Assert.Contains("BEGIN:VCALENDAR", content);
         Assert.Contains("END:VCALENDAR", content);
         
-        // Verify we have events for all weekdays
+        // Verify we have events for all weekdays (now with main dish info)
         var weekdays = new[] { "Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag" };
         foreach (var day in weekdays)
         {
-            Assert.Contains($"SUMMARY:Meyers Menu - {day}", content);
+            Assert.Contains($"SUMMARY:Meyers Menu - {day}:", content);
         }
         
         // Verify we have different UIDs for different days (dates)
