@@ -46,9 +46,10 @@ public class MenuScrapingService
     
     private async Task<List<MenuDay>> GetCachedMenusAsync()
     {
-        var today = DateTime.Today;
-        var endDate = today.AddDays(14); // Get next two weeks
-        var cachedEntries = await _menuRepository.GetMenusForDateRangeAsync(today, endDate);
+        // Get all cached entries from the past week to future two weeks to ensure we don't miss any data
+        var startDate = DateTime.Today.AddDays(-7);
+        var endDate = DateTime.Today.AddDays(14);
+        var cachedEntries = await _menuRepository.GetMenusForDateRangeAsync(startDate, endDate);
         
         return cachedEntries.Select(entry => new MenuDay
         {
@@ -188,8 +189,8 @@ public class MenuScrapingService
             }
         }
         
-        // Only return weekdays (limit to 5 days)
-        return dateMapping.Where(d => IsWeekday(d.DayName)).Take(5).ToList();
+        // Only return weekdays (both weeks - up to 10 days)
+        return dateMapping.Where(d => IsWeekday(d.DayName)).ToList();
     }
     
     private int ParseDanishMonth(string monthName)

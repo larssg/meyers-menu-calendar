@@ -59,15 +59,22 @@ public class CalendarApiTests : IClassFixture<WebApplicationFactory<Program>>
         // Verify we have different UIDs for different days (dates)
         Assert.Contains("UID:meyers-menu-", content);
         
-        // Count the number of events - should be 5 for weekdays
+        // Count the number of events - should be 10 for two weeks of weekdays
         var eventCount = System.Text.RegularExpressions.Regex.Matches(content, "BEGIN:VEVENT").Count;
-        Assert.Equal(5, eventCount);
+        Assert.Equal(10, eventCount);
         
-        // Verify the calendar contains the correct dates from July 28 - August 1, 2025
+        // Verify the calendar contains the correct dates for both weeks
+        // First week: July 28 - August 1, 2025
         Assert.Contains("UID:meyers-menu-2025-07-28", content); // Monday
         Assert.Contains("UID:meyers-menu-2025-07-29", content); // Tuesday  
         Assert.Contains("UID:meyers-menu-2025-07-30", content); // Wednesday
         Assert.Contains("UID:meyers-menu-2025-07-31", content); // Thursday
         Assert.Contains("UID:meyers-menu-2025-08-01", content); // Friday
+        // Second week: August 4 - August 8, 2025
+        Assert.Contains("UID:meyers-menu-2025-08-04", content); // Monday
+        Assert.Contains("UID:meyers-menu-2025-08-05", content); // Tuesday
+        Assert.Contains("UID:meyers-menu-2025-08-06", content); // Wednesday
+        Assert.Contains("UID:meyers-menu-2025-08-07", content); // Thursday
+        Assert.Contains("UID:meyers-menu-2025-08-08", content); // Friday
     }
 }

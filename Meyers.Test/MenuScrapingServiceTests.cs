@@ -47,11 +47,11 @@ public class MenuScrapingServiceTests
         Assert.NotNull(result);
         Assert.NotEmpty(result);
         
-        // Verify we have all weekday entries
+        // Verify we have all weekday entries for two weeks (10 days total)
         var expectedDays = new[] { "Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag" };
         var foundDays = result.Select(r => r.DayName).ToList();
         
-        Assert.Equal(expectedDays.Length, foundDays.Count);
+        Assert.Equal(10, foundDays.Count); // Two weeks of weekdays
         
         foreach (var expectedDay in expectedDays)
         {
@@ -169,15 +169,22 @@ public class MenuScrapingServiceTests
         var result = await scrapingService.ScrapeMenuAsync();
 
         // Assert
-        Assert.Equal(5, result.Count);
+        Assert.Equal(10, result.Count);
         
         var expectedDates = new[]
         {
+            // First week
             (DayName: "Mandag", Date: new DateTime(2025, 7, 28)),
             (DayName: "Tirsdag", Date: new DateTime(2025, 7, 29)),
             (DayName: "Onsdag", Date: new DateTime(2025, 7, 30)),
             (DayName: "Torsdag", Date: new DateTime(2025, 7, 31)),
-            (DayName: "Fredag", Date: new DateTime(2025, 8, 1))
+            (DayName: "Fredag", Date: new DateTime(2025, 8, 1)),
+            // Second week
+            (DayName: "Mandag", Date: new DateTime(2025, 8, 4)),
+            (DayName: "Tirsdag", Date: new DateTime(2025, 8, 5)),
+            (DayName: "Onsdag", Date: new DateTime(2025, 8, 6)),
+            (DayName: "Torsdag", Date: new DateTime(2025, 8, 7)),
+            (DayName: "Fredag", Date: new DateTime(2025, 8, 8))
         };
         
         for (int i = 0; i < expectedDates.Length; i++)
