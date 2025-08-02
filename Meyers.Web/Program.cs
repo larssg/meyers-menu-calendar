@@ -1,9 +1,14 @@
 using Microsoft.EntityFrameworkCore;
+using Meyers.Web.Configuration;
 using Meyers.Web.Data;
 using Meyers.Web.Repositories;
 using Meyers.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configuration
+builder.Services.Configure<MenuCacheOptions>(
+    builder.Configuration.GetSection(MenuCacheOptions.SectionName));
 
 // Database configuration
 builder.Services.AddDbContext<MenuDbContext>(options =>
@@ -15,6 +20,9 @@ builder.Services.AddScoped<IMenuRepository, MenuRepository>();
 // Service registration
 builder.Services.AddHttpClient<MenuScrapingService>();
 builder.Services.AddScoped<CalendarService>();
+
+// Background service registration
+builder.Services.AddHostedService<MenuCacheBackgroundService>();
 
 var app = builder.Build();
 
