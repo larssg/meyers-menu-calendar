@@ -37,7 +37,7 @@ public class CalendarService
                 
                 if (!string.IsNullOrEmpty(menuDay.MainDish))
                 {
-                    title = $"Meyers Menu - {menuDay.DayName}: {menuDay.MainDish}";
+                    title = menuDay.MainDish;
                     description = !string.IsNullOrEmpty(menuDay.Details) ? menuDay.Details : string.Join(", ", menuDay.MenuItems);
                 }
                 else

@@ -49,11 +49,18 @@ public class CalendarApiTests : IClassFixture<WebApplicationFactory<Program>>
         Assert.Contains("BEGIN:VCALENDAR", content);
         Assert.Contains("END:VCALENDAR", content);
         
-        // Verify we have events for all weekdays (now with main dish info)
-        var weekdays = new[] { "Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag" };
-        foreach (var day in weekdays)
+        // Verify we have events with main dish titles (simplified format)
+        Assert.Contains("SUMMARY:", content);
+        
+        // Verify the summary contains actual menu content, not just the template
+        var summaryLines = content.Split('\n').Where(line => line.StartsWith("SUMMARY:")).ToArray();
+        Assert.True(summaryLines.Length >= 5, "Should have at least 5 summary lines for weekdays");
+        
+        // Each summary should contain menu content, not just "Meyers Menu"
+        foreach (var summaryLine in summaryLines.Take(5))
         {
-            Assert.Contains($"SUMMARY:Meyers Menu - {day}:", content);
+            Assert.DoesNotContain("Meyers Menu -", summaryLine);
+            Assert.True(summaryLine.Length > 10, $"Summary should contain actual menu content: {summaryLine}");
         }
         
         // Verify we have different UIDs for different days (dates)
