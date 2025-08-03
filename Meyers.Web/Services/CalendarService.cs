@@ -126,7 +126,7 @@ public class CalendarService
             var firstSentence = mainSection.Split('.')[0];
             if (firstSentence.Length > 20 && firstSentence.Length < mainSection.Length)
             {
-                mainSection = firstSentence.Trim();
+                mainSection = firstSentence.Trim() + "...";
             }
             else if (mainSection.Length > maxTitleLength)
             {
@@ -135,6 +135,11 @@ public class CalendarService
                 if (breakPoint > 40)
                 {
                     mainSection = mainSection.Substring(0, breakPoint).Trim() + "...";
+                }
+                else
+                {
+                    // Fallback: hard truncate at maxTitleLength
+                    mainSection = mainSection.Substring(0, maxTitleLength).Trim() + "...";
                 }
             }
         }
