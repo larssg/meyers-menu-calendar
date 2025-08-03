@@ -1,0 +1,11 @@
+# nixpacks.toml
+# Configuration for building and deploying the Meyers Menu Calendar API
+
+[phases.setup]
+nixPkgs = ["dotnet-sdk_9"]
+
+[phases.build]
+cmds = ["dotnet publish Meyers.Web/Meyers.Web.csproj -c Release -o out"]
+
+[start]
+cmd = "dotnet out/Meyers.Web.dll"
