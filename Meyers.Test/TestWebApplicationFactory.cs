@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Meyers.Web.Data;
 using Meyers.Web.Repositories;
 using Meyers.Web.Services;
+using System.Net;
 
 namespace Meyers.Test;
 
@@ -45,10 +46,12 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IDispos
 
             // Replace MenuScrapingService with test version
             services.RemoveAll<MenuScrapingService>();
+            services.RemoveAll<HttpClient>();
             
             // Create a test version that uses local data
             var testHtmlPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TestData", "meyers-menu-page.html");
-            var mockHttpClient = new MockHttpClient(testHtmlPath);
+            var mockHandler = new MockHttpMessageHandler(testHtmlPath);
+            var mockHttpClient = new HttpClient(mockHandler);
             services.AddSingleton<HttpClient>(mockHttpClient);
             services.AddScoped<MenuScrapingService>(provider =>
             {

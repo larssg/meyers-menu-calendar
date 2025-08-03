@@ -3,6 +3,7 @@ using Meyers.Web.Data;
 using Meyers.Web.Repositories;
 using Microsoft.EntityFrameworkCore;
 using HtmlAgilityPack;
+using System.Net;
 
 namespace Meyers.Test;
 
@@ -29,9 +30,15 @@ public class MenuScrapingServiceTests
     
     private MenuScrapingService CreateService(MenuDbContext context)
     {
-        var mockHttpClient = new MockHttpClient(_testHtmlPath);
+        var mockHttpClient = CreateMockHttpClient(_testHtmlPath);
         var repository = new MenuRepository(context);
         return new MenuScrapingService(mockHttpClient, repository);
+    }
+    
+    private HttpClient CreateMockHttpClient(string filePath)
+    {
+        var mockHandler = new MockHttpMessageHandler(filePath);
+        return new HttpClient(mockHandler);
     }
 
     [Fact]
@@ -228,21 +235,25 @@ public class MenuScrapingServiceTests
     }
 }
 
-// Mock HttpClient for testing
-public class MockHttpClient : HttpClient
+// Mock HttpMessageHandler for testing
+public class MockHttpMessageHandler : HttpMessageHandler
 {
     private readonly string _filePath;
 
-    public MockHttpClient(string filePath)
+    public MockHttpMessageHandler(string filePath)
     {
         _filePath = filePath;
     }
 
-    public new async Task<string> GetStringAsync(string requestUri)
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         if (File.Exists(_filePath))
         {
-            return await File.ReadAllTextAsync(_filePath);
+            var content = await File.ReadAllTextAsync(_filePath, cancellationToken);
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(content, System.Text.Encoding.UTF8, "text/html")
+            };
         }
         throw new FileNotFoundException($"Test file not found: {_filePath}");
     }
