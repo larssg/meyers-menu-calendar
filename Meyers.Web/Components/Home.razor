@@ -78,7 +78,7 @@
                 </div>
             </div>
 
-            <div class="mt-8 p-6 rounded-xl border border-teal-200/60 dark:border-teal-700/50
+            <div class="mt-6 p-6 rounded-xl border border-teal-200/60 dark:border-teal-700/50
                   bg-teal-50/70 dark:bg-teal-900/20">
                 <h4 class="font-semibold text-slate-900 dark:text-slate-100 mb-3">
                     How to add to your calendar
@@ -104,7 +104,8 @@
                     <span class="text-2xl mr-3">🍽️</span>
                     Menu Preview
                 </h3>
-                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1 ml-9">
+                <p class="text-sm text-slate-400 dark:text-slate-40 flex items-center">
+                    <span class="text-2xl mr-3 opacity-0" aria-hidden="true">🍽️</span>
                     <span id="previewMenuTypeName">@GetSelectedMenuTypeName()</span>
                 </p>
             </div>
@@ -184,21 +185,21 @@
     const TOAST_DURATION = 1800;
     const AUTO_REFRESH_INTERVAL = 3600000; // 1 hour
     const BASE_URL = window.location.origin;
-    
+
     const MENU_NAME_IDS = ['selectedMenuTypeName', 'heroMenuTypeName', 'previewMenuTypeName'];
     const TAB_ACTIVE_CLASS = 'bg-teal-600 text-white';
     const TAB_INACTIVE_CLASS = 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/60 border-l border-slate-200 dark:border-slate-700';
-    
+
     // Templates
     const templates = {
         loading: '<p class="text-slate-500 dark:text-slate-400 text-sm">Loading...</p>',
         error: '<p class="text-slate-500 dark:text-slate-400 text-sm">Failed to load menu</p>',
         noMenu: '<p class="text-slate-500 dark:text-slate-400 text-sm">No menu available for {period}</p>',
         menuItem: (title, details) => {
-            let html = '<div><p class="font-medium text-slate-900 dark:text-slate-100 text-base">' + 
+            let html = '<div><p class="font-medium text-slate-900 dark:text-slate-100 text-base">' +
                       escapeHtml(title) + '</p>';
             if (details) {
-                html += '<p class="text-slate-600 dark:text-slate-300 mt-2 text-sm">' + 
+                html += '<p class="text-slate-600 dark:text-slate-300 mt-2 text-sm">' +
                        escapeHtml(details) + '</p>';
             }
             return html + '</div>';
@@ -232,7 +233,7 @@
         navigator.clipboard.writeText(text).then(() => {
             const existing = $('copy-toast');
             if (existing) existing.remove();
-            
+
             const toast = document.createElement('div');
             toast.id = 'copy-toast';
             toast.textContent = 'Copied to clipboard';
@@ -256,7 +257,7 @@
                 };
             }
         }
-        
+
         // Fallback to tab if available
         const tab = $(`tab-${menuTypeId}`);
         if (tab) {
@@ -265,7 +266,7 @@
                 name: tab.textContent.trim()
             };
         }
-        
+
         return { slug: null, name: null };
     }
 
@@ -276,7 +277,7 @@
             const input = $('calendarUrl');
             if (input) input.value = calendarUrl;
         }
-        
+
         // Update menu names
         if (name) {
             updateElements(MENU_NAME_IDS, name);
@@ -286,7 +287,7 @@
     function updateMenuContent(containerId, data, period) {
         const container = $(containerId);
         if (!container) return;
-        
+
         if (data) {
             container.innerHTML = templates.menuItem(data.title, data.details);
         } else {
@@ -297,11 +298,7 @@
     async function loadMenuPreview(menuTypeId) {
         const todayContent = $('todayMenuContent');
         const tomorrowContent = $('tomorrowMenuContent');
-        
-        // Show loading state
-        if (todayContent) todayContent.innerHTML = templates.loading;
-        if (tomorrowContent) tomorrowContent.innerHTML = templates.loading;
-        
+
         try {
             const response = await fetch(`/api/menu-preview/${menuTypeId}`);
             if (response.ok) {
@@ -334,13 +331,13 @@
                 tab.className = `px-4 py-2 text-sm font-medium transition-colors ${
                     isActive ? TAB_ACTIVE_CLASS : TAB_INACTIVE_CLASS
                 }`;
-                
+
                 if (isActive && slug && !tab.getAttribute('data-slug')) {
                     tab.setAttribute('data-slug', slug);
                 }
             });
         }
-        
+
         // Update UI and load preview
         updateUI(menuTypeId, slug, name);
         updateMenuType(menuTypeId);
