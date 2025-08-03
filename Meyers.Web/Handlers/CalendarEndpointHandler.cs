@@ -3,33 +3,22 @@ using Meyers.Web.Services;
 
 namespace Meyers.Web.Handlers;
 
-public class CalendarEndpointHandler
+public class CalendarEndpointHandler(
+    MenuScrapingService menuScrapingService,
+    CalendarService calendarService,
+    IMenuRepository menuRepository)
 {
-    private readonly MenuScrapingService _menuScrapingService;
-    private readonly CalendarService _calendarService;
-    private readonly IMenuRepository _menuRepository;
-
-    public CalendarEndpointHandler(
-        MenuScrapingService menuScrapingService,
-        CalendarService calendarService,
-        IMenuRepository menuRepository)
-    {
-        _menuScrapingService = menuScrapingService;
-        _calendarService = calendarService;
-        _menuRepository = menuRepository;
-    }
-
     public async Task<IResult> GetCalendarAsync()
     {
         try
         {
             // Get current menu data (this will refresh the cache if needed)
-            var currentMenuDays = await _menuScrapingService.ScrapeMenuAsync();
+            var currentMenuDays = await menuScrapingService.ScrapeMenuAsync();
 
             // Also get historical data from the last month plus any future items
             var startDate = DateTime.Today.AddMonths(-1);
             var endDate = DateTime.Today.AddMonths(1); // Get up to one month in the future
-            var allCachedEntries = await _menuRepository.GetMenusForDateRangeAsync(startDate, endDate);
+            var allCachedEntries = await menuRepository.GetMenusForDateRangeAsync(startDate, endDate);
 
             // Convert cached entries to MenuDay objects
             var historicalMenuDays = allCachedEntries
@@ -51,7 +40,7 @@ public class CalendarEndpointHandler
                 .OrderBy(m => m.Date)
                 .ToList();
 
-            var icalContent = _calendarService.GenerateCalendar(allMenuDays);
+            var icalContent = calendarService.GenerateCalendar(allMenuDays);
 
             return Results.Text(icalContent, "text/calendar; charset=utf-8");
         }
