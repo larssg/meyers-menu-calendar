@@ -29,6 +29,7 @@ builder.Services.AddScoped<CalendarService>();
 
 // Handler registration
 builder.Services.AddScoped<CalendarEndpointHandler>();
+builder.Services.AddScoped<MenuPreviewHandler>();
 
 // Blazor SSR services
 builder.Services.AddRazorComponents();
@@ -92,54 +93,8 @@ app.MapGet("/api/menu-types", async (IMenuRepository menuRepository) =>
 });
 
 // API endpoint for menu preview
-app.MapGet("/api/menu-preview/{menuTypeId:int}", async (int menuTypeId, IMenuRepository menuRepository, CalendarService calendarService) =>
-{
-    try
-    {
-        // Get Copenhagen timezone
-        TimeZoneInfo copenhagenTimeZone;
-        try
-        {
-            copenhagenTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
-        }
-        catch
-        {
-            try
-            {
-                copenhagenTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Copenhagen");
-            }
-            catch
-            {
-                copenhagenTimeZone = TimeZoneInfo.Utc;
-            }
-        }
-
-        var copenhagenNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, copenhagenTimeZone);
-        var today = copenhagenNow.Date;
-        var tomorrow = today.AddDays(1);
-
-        var todayMenu = await menuRepository.GetMenuForDateAsync(today, menuTypeId);
-        var tomorrowMenu = await menuRepository.GetMenuForDateAsync(tomorrow, menuTypeId);
-
-        return Results.Ok(new
-        {
-            today = todayMenu != null ? new
-            {
-                title = CalendarService.CleanupTitle(todayMenu.MainDish),
-                details = todayMenu.Details
-            } : null,
-            tomorrow = tomorrowMenu != null ? new
-            {
-                title = CalendarService.CleanupTitle(tomorrowMenu.MainDish),
-                details = tomorrowMenu.Details
-            } : null
-        });
-    }
-    catch (Exception ex)
-    {
-        return Results.Problem($"Error fetching menu preview: {ex.Message}");
-    }
-});
+app.MapGet("/api/menu-preview/{menuTypeId:int}", async (int menuTypeId, MenuPreviewHandler handler) =>
+    await handler.GetMenuPreviewAsync(menuTypeId));
 
 app.Run();
 
