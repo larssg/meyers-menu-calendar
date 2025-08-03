@@ -108,12 +108,13 @@ The project uses GitHub Actions for continuous integration and deployment:
   - Builds and tests the application
   - Builds and tests Docker image
   - Unit tests must pass, integration tests allowed to fail due to migration conflicts
-  - **Automatic deployment**: When tests pass on the main branch, automatically triggers deployment to Dokploy
 
 - **Deployment Check** (`.github/workflows/deploy-check.yml`):
+  - Automatically runs after CI workflow completes successfully on main branch
   - Validates migrations and deployment scripts
   - Security scanning
   - Dockerfile best practices check
+  - **Automatic deployment**: Triggers Dokploy deployment after all checks pass
 
 - **Dependencies** (`.github/workflows/dependencies.yml`):
   - Weekly check for outdated packages
@@ -122,7 +123,13 @@ The project uses GitHub Actions for continuous integration and deployment:
 
 ### Automatic Deployment
 
-When code is pushed to the `main` branch and all tests pass, the CI pipeline automatically triggers a deployment to Dokploy via webhook. This ensures that production always runs the latest tested code.
+When code is pushed to the `main` branch:
+1. The CI pipeline runs all tests and builds
+2. If CI succeeds, the Deployment Check workflow automatically runs
+3. Deployment checks validate migrations, security, and Dockerfile
+4. If all checks pass, deployment to Dokploy is triggered via webhook
+
+This ensures that production only receives code that has passed all tests and security checks.
 
 ## Deployment
 

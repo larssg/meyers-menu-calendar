@@ -12,14 +12,14 @@ This repository uses GitHub Actions for continuous integration and deployment ch
   - Unit tests must pass ✅
   - Integration tests allowed to fail ⚠️ (due to migration conflicts in test environment)
 - **build-docker**: Builds and tests Docker image
-- **deploy**: Triggers Dokploy deployment (only on main branch after tests pass)
 
 ### 2. Deployment Check (`deploy-check.yml`)
-**Triggers:** Push to main, Manual dispatch
+**Triggers:** When CI workflow completes on main branch, Manual dispatch
 
 **Jobs:**
 - **check-migrations**: Validates EF migrations and production scripts
 - **security-scan**: Scans for vulnerabilities and Dockerfile best practices
+- **deploy**: Triggers Dokploy deployment webhook (only if all checks pass)
 
 ### 3. Dependencies (`dependencies.yml`)
 **Triggers:** Weekly schedule (Sundays 6 AM UTC), Manual dispatch
