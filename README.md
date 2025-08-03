@@ -87,6 +87,27 @@ dotnet test
 dotnet publish -c Release -o ./publish
 ```
 
+## Deployment
+
+### Using Docker (Recommended)
+
+```bash
+# Build the Docker image
+docker build -t meyers-menu-calendar .
+
+# Run the container
+docker run -p 8080:8080 meyers-menu-calendar
+```
+
+### Using Dokploy
+
+The repository includes a `Dockerfile` for deployment since .NET 9 may not be available in nixpacks yet.
+
+For Dokploy deployment:
+1. Connect your GitHub repository
+2. Set the port to 8080
+3. Deploy (it will automatically use the Dockerfile)
+
 ## How It Works
 
 1. **Scraping**: The service fetches the weekly menu from meyers.dk
