@@ -48,7 +48,7 @@
         <div class="sr-only" id="menuTypePanel"></div>
 
         <div class="mt-6 flex items-center justify-center">
-            <CopyButton InputId="calendarUrl" CssClass="btn-primary" id="heroCopyButton">
+            <CopyButton InputId="calendarUrl" CssClass="btn-primary">
                 Copy Calendar Feed URL (<span id="heroMenuTypeName">@GetSelectedMenuTypeName()</span>)
             </CopyButton>
         </div>
@@ -72,7 +72,7 @@
                 <div class="flex rounded-lg border border-slate-300/60 dark:border-slate-600/60 overflow-hidden
                     bg-white/80 dark:bg-slate-800/60 backdrop-blur">
                     <input type="text" id="calendarUrl" value="@GetCalendarIcsUrl()" readonly class="copy-input"/>
-                    <CopyButton InputId="calendarUrl" id="copyButton">
+                    <CopyButton InputId="calendarUrl">
                         Copy
                     </CopyButton>
                 </div>

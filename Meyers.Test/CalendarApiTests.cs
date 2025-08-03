@@ -15,9 +15,9 @@ public class CalendarApiTests : IClassFixture<TestWebApplicationFactory>
     }
 
     [Fact]
-    public async Task Get_Calendar_Returns_iCal_Content()
+    public async Task Get_Calendar_DetVelkendte_Returns_iCal_Content()
     {
-        var response = await _client.GetAsync("/calendar");
+        var response = await _client.GetAsync("/calendar/det-velkendte.ics");
         
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("text/calendar; charset=utf-8", response.Content.Headers.ContentType?.ToString());
@@ -41,9 +41,9 @@ public class CalendarApiTests : IClassFixture<TestWebApplicationFactory>
     }
 
     [Fact]
-    public async Task Get_Calendar_Creates_Events_For_All_Weekdays()
+    public async Task Get_Calendar_DetVelkendte_Creates_Events_For_All_Weekdays()
     {
-        var response = await _client.GetAsync("/calendar");
+        var response = await _client.GetAsync("/calendar/det-velkendte.ics");
         
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         
@@ -65,25 +65,25 @@ public class CalendarApiTests : IClassFixture<TestWebApplicationFactory>
             Assert.True(summaryLine.Length > 10, $"Summary should contain actual menu content: {summaryLine}");
         }
         
-        // Verify we have different UIDs for different days (dates)
+        // Verify we have different UIDs for different days (dates) with menu type suffix
         Assert.Contains("UID:meyers-menu-", content);
         
         // Count the number of events - should be 10 for two weeks of weekdays
         var eventCount = System.Text.RegularExpressions.Regex.Matches(content, "BEGIN:VEVENT").Count;
         Assert.Equal(10, eventCount);
         
-        // Verify the calendar contains the correct dates for both weeks
-        // First week: July 28 - August 1, 2025
-        Assert.Contains("UID:meyers-menu-2025-07-28", content); // Monday
-        Assert.Contains("UID:meyers-menu-2025-07-29", content); // Tuesday  
-        Assert.Contains("UID:meyers-menu-2025-07-30", content); // Wednesday
-        Assert.Contains("UID:meyers-menu-2025-07-31", content); // Thursday
-        Assert.Contains("UID:meyers-menu-2025-08-01", content); // Friday
+        // Verify the calendar contains the correct dates for both weeks with Det velkendte suffix
+        // UIDs now include menu type: "meyers-menu-2025-07-28-det-velkendte"
+        Assert.Contains("UID:meyers-menu-2025-07-28-det-velkendte", content); // Monday
+        Assert.Contains("UID:meyers-menu-2025-07-29-det-velkendte", content); // Tuesday  
+        Assert.Contains("UID:meyers-menu-2025-07-30-det-velkendte", content); // Wednesday
+        Assert.Contains("UID:meyers-menu-2025-07-31-det-velkendte", content); // Thursday
+        Assert.Contains("UID:meyers-menu-2025-08-01-det-velkendte", content); // Friday
         // Second week: August 4 - August 8, 2025
-        Assert.Contains("UID:meyers-menu-2025-08-04", content); // Monday
-        Assert.Contains("UID:meyers-menu-2025-08-05", content); // Tuesday
-        Assert.Contains("UID:meyers-menu-2025-08-06", content); // Wednesday
-        Assert.Contains("UID:meyers-menu-2025-08-07", content); // Thursday
-        Assert.Contains("UID:meyers-menu-2025-08-08", content); // Friday
+        Assert.Contains("UID:meyers-menu-2025-08-04-det-velkendte", content); // Monday
+        Assert.Contains("UID:meyers-menu-2025-08-05-det-velkendte", content); // Tuesday
+        Assert.Contains("UID:meyers-menu-2025-08-06-det-velkendte", content); // Wednesday
+        Assert.Contains("UID:meyers-menu-2025-08-07-det-velkendte", content); // Thursday
+        Assert.Contains("UID:meyers-menu-2025-08-08-det-velkendte", content); // Friday
     }
 }
