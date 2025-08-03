@@ -20,6 +20,33 @@
             Get Meyers daily menus delivered straight to your calendar. Simple,
             automatic, and always up to date.
         </p>
+
+        @if (menuTypes.Any())
+        {
+            <div class="mt-6">
+                <div role="tablist" aria-label="Menu types"
+                     class="inline-flex rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+                    @foreach (var menuType in menuTypes)
+                    {
+                        var isActive = menuType.Id == selectedMenuTypeId;
+                        <button
+                            role="tab"
+                            aria-selected="@(isActive.ToString().ToLower())"
+                            aria-controls="menuTypePanel"
+                            id="tab-@menuType.Id"
+                            class="px-4 py-2 text-sm font-medium transition-colors @(isActive
+                                   ? "bg-teal-600 text-white"
+                                   : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/60 border-l border-slate-200 dark:border-slate-700")"
+                            onclick="selectMenuTab(@menuType.Id, '@menuType.Slug', '@menuType.Name')">
+                            @menuType.Name
+                        </button>
+                    }
+                </div>
+            </div>
+        }
+
+        <div class="sr-only" id="menuTypePanel"></div>
+
         <div class="mt-6 flex items-center justify-center">
             <button class="btn-primary" id="heroCopyButton"
                     onclick="copyToClipboard(document.getElementById('calendarUrl')?.value || '@GetCalendarIcsUrl()')">
@@ -38,28 +65,6 @@
                 <span class="text-2xl mr-3">📅</span>
                 Calendar Feed URL
             </h3>
-
-            @if (menuTypes.Any())
-            {
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                        Menu
-                    </label>
-                    <select id="menuTypeSelector" 
-                            class="w-full px-4 py-3 rounded-lg border border-slate-300/60 dark:border-slate-600/60
-                                   bg-white/80 dark:bg-slate-800/60 backdrop-blur text-slate-800 dark:text-slate-100
-                                   focus:outline-none focus:ring-2 focus:ring-teal-500"
-                            onchange="updateMenuType(this.value)">
-                        @foreach (var menuType in menuTypes)
-                        {
-                            <option value="@menuType.Id" data-slug="@menuType.Slug" data-name="@menuType.Name" 
-                                    @(menuType.Id == selectedMenuTypeId ? "selected" : "")>
-                                @menuType.Name
-                            </option>
-                        }
-                    </select>
-                </div>
-            }
 
             <div>
                 <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -96,10 +101,15 @@
 
         <!-- Menu Preview Section -->
         <div class="card p-8">
-            <h3 class="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-6 flex items-center">
-                <span class="text-2xl mr-3">🍽️</span>
-                Menu Preview - <span id="previewMenuTypeName">@GetSelectedMenuTypeName()</span>
-            </h3>
+            <div class="mb-6">
+                <h3 class="text-xl font-semibold text-slate-900 dark:text-slate-100 flex items-center">
+                    <span class="text-2xl mr-3">🍽️</span>
+                    Menu Preview
+                </h3>
+                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1 ml-9">
+                    <span id="previewMenuTypeName">@GetSelectedMenuTypeName()</span>
+                </p>
+            </div>
 
             <div class="space-y-6">
                 <div class="rounded-xl p-6 border bg-gradient-to-r
@@ -190,82 +200,129 @@
 
     async function updateMenuType(menuTypeId) {
         const selector = document.getElementById('menuTypeSelector');
-        const selectedOption = selector.options[selector.selectedIndex];
-        const slug = selectedOption.getAttribute('data-slug');
-        const name = selectedOption.getAttribute('data-name');
+        const selectedOption = selector ? selector.options[selector.selectedIndex] : null;
+        const slug = selectedOption ? selectedOption.getAttribute('data-slug') : null;
+        const name = selectedOption ? selectedOption.getAttribute('data-name') : null;
+
         const baseUrl = window.location.origin;
-        
+
+        // If slug/name not from select (tabs path), derive from active tab's attributes
+        let effectiveSlug = slug;
+        let effectiveName = name;
+        if (!effectiveSlug || !effectiveName) {
+            const activeTab = document.getElementById(`tab-${menuTypeId}`);
+            if (activeTab) {
+                effectiveName = activeTab.textContent.trim();
+                // Slug is used only to build URL; fallback to data attr if present
+                effectiveSlug = activeTab.getAttribute('data-slug') || null;
+            }
+        }
+
+        // If we still don't have a slug, fetch it from server API as fallback
+        // but try to infer from calendarUrl if already present
+        if (!effectiveSlug) {
+            try {
+                // Attempt to parse current URL’s slug and swap by id is non-trivial here;
+                // instead we optimistically call an endpoint if you have one.
+                // For now, gracefully skip and let the API preview update still work.
+            } catch { /* noop */ }
+        }
+
         // Update the calendar URL
-        const calendarUrl = `${baseUrl}/calendar/${slug}.ics`;
-        
-        document.getElementById('calendarUrl').value = calendarUrl;
-        
+        const urlSlug = effectiveSlug || (selectedOption ? selectedOption.getAttribute('data-slug') : null);
+        if (urlSlug) {
+            const calendarUrl = `${baseUrl}/calendar/${urlSlug}.ics`;
+            const input = document.getElementById('calendarUrl');
+            if (input) input.value = calendarUrl;
+        }
+
         // Update all menu type name displays
-        document.getElementById('selectedMenuTypeName').textContent = name;
-        document.getElementById('heroMenuTypeName').textContent = name;
-        document.getElementById('previewMenuTypeName').textContent = name;
-        
+        const displayName = effectiveName ||
+            (selectedOption ? selectedOption.getAttribute('data-name') : null);
+        if (displayName) {
+            const ids = ['selectedMenuTypeName', 'heroMenuTypeName', 'previewMenuTypeName'];
+            ids.forEach((id) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = displayName;
+            });
+        }
+
         // Hide the refresh note since we're loading dynamically
         const refreshNote = document.getElementById('refreshNote');
         if (refreshNote) {
             refreshNote.classList.add('hidden');
         }
-        
+
         // Show loading state
         const todayContent = document.getElementById('todayMenuContent');
         const tomorrowContent = document.getElementById('tomorrowMenuContent');
-        
+
         const loadingHtml = '<p class="text-slate-500 dark:text-slate-400 text-sm">Loading...</p>';
-        todayContent.innerHTML = loadingHtml;
-        tomorrowContent.innerHTML = loadingHtml;
-        
+        if (todayContent) todayContent.innerHTML = loadingHtml;
+        if (tomorrowContent) tomorrowContent.innerHTML = loadingHtml;
+
         // Fetch new menu preview
         try {
             const response = await fetch(`/api/menu-preview/${menuTypeId}`);
             if (response.ok) {
                 const data = await response.json();
-                
+
                 // Update today's menu
-                if (data.today) {
-                    let todayHtml = '<div><p class="font-medium text-slate-900 dark:text-slate-100 text-base">' + 
-                                   escapeHtml(data.today.title) + '</p>';
-                    if (data.today.details) {
-                        todayHtml += '<p class="text-slate-600 dark:text-slate-300 mt-2 text-sm">' + 
-                                    escapeHtml(data.today.details) + '</p>';
+                if (todayContent) {
+                    if (data.today) {
+                        let todayHtml =
+                            '<div><p class="font-medium text-slate-900 dark:text-slate-100 text-base">' +
+                            escapeHtml(data.today.title) +
+                            '</p>';
+                        if (data.today.details) {
+                            todayHtml +=
+                                '<p class="text-slate-600 dark:text-slate-300 mt-2 text-sm">' +
+                                escapeHtml(data.today.details) +
+                                '</p>';
+                        }
+                        todayHtml += '</div>';
+                        todayContent.innerHTML = todayHtml;
+                    } else {
+                        todayContent.innerHTML =
+                            '<p class="text-slate-500 dark:text-slate-400 text-sm">No menu available for today</p>';
                     }
-                    todayHtml += '</div>';
-                    todayContent.innerHTML = todayHtml;
-                } else {
-                    todayContent.innerHTML = '<p class="text-slate-500 dark:text-slate-400 text-sm">No menu available for today</p>';
                 }
-                
+
                 // Update tomorrow's menu
-                if (data.tomorrow) {
-                    let tomorrowHtml = '<div><p class="font-medium text-slate-900 dark:text-slate-100 text-base">' + 
-                                      escapeHtml(data.tomorrow.title) + '</p>';
-                    if (data.tomorrow.details) {
-                        tomorrowHtml += '<p class="text-slate-600 dark:text-slate-300 mt-2 text-sm">' + 
-                                       escapeHtml(data.tomorrow.details) + '</p>';
+                if (tomorrowContent) {
+                    if (data.tomorrow) {
+                        let tomorrowHtml =
+                            '<div><p class="font-medium text-slate-900 dark:text-slate-100 text-base">' +
+                            escapeHtml(data.tomorrow.title) +
+                            '</p>';
+                        if (data.tomorrow.details) {
+                            tomorrowHtml +=
+                                '<p class="text-slate-600 dark:text-slate-300 mt-2 text-sm">' +
+                                escapeHtml(data.tomorrow.details) +
+                                '</p>';
+                        }
+                        tomorrowHtml += '</div>';
+                        tomorrowContent.innerHTML = tomorrowHtml;
+                    } else {
+                        tomorrowContent.innerHTML =
+                            '<p class="text-slate-500 dark:text-slate-400 text-sm">No menu available for tomorrow</p>';
                     }
-                    tomorrowHtml += '</div>';
-                    tomorrowContent.innerHTML = tomorrowHtml;
-                } else {
-                    tomorrowContent.innerHTML = '<p class="text-slate-500 dark:text-slate-400 text-sm">No menu available for tomorrow</p>';
                 }
             } else {
-                // Show error state
-                const errorHtml = '<p class="text-slate-500 dark:text-slate-400 text-sm">Failed to load menu</p>';
-                todayContent.innerHTML = errorHtml;
-                tomorrowContent.innerHTML = errorHtml;
+                const errorHtml =
+                    '<p class="text-slate-500 dark:text-slate-400 text-sm">Failed to load menu</p>';
+                if (todayContent) todayContent.innerHTML = errorHtml;
+                if (tomorrowContent) tomorrowContent.innerHTML = errorHtml;
             }
         } catch (error) {
             console.error('Failed to fetch menu preview:', error);
-            const errorHtml = '<p class="text-slate-500 dark:text-slate-400 text-sm">Failed to load menu</p>';
-            todayContent.innerHTML = errorHtml;
-            tomorrowContent.innerHTML = errorHtml;
+            const errorHtml =
+                '<p class="text-slate-500 dark:text-slate-400 text-sm">Failed to load menu</p>';
+            if (todayContent) todayContent.innerHTML = errorHtml;
+            if (tomorrowContent) tomorrowContent.innerHTML = errorHtml;
         }
     }
-    
+
     function escapeHtml(text) {
         const map = {
             '&': '&amp;',
@@ -274,7 +331,7 @@
             '"': '&quot;',
             "'": '&#039;'
         };
-        return text.replace(/[&<>"']/g, m => map[m]);
+        return text.replace(/[&<>"']/g, (m) => map[m]);
     }
 
     let refreshInterval;
@@ -299,6 +356,46 @@
         else startAutoRefresh();
     });
     window.addEventListener("beforeunload", stopAutoRefresh);
+
+    // Tabs helper: activate a menu type tab and reuse existing update flow
+    function selectMenuTab(menuTypeId, slug, name) {
+        // Update active tab styling
+        const tablist = document.querySelector('[role="tablist"]');
+        if (tablist) {
+            const tabs = tablist.querySelectorAll('[role="tab"]');
+            tabs.forEach((t) => {
+                const isActive = t.id === `tab-${menuTypeId}`;
+                t.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                t.className =
+                    'px-4 py-2 text-sm font-medium transition-colors ' +
+                    (isActive
+                        ? 'bg-teal-600 text-white'
+                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/60 border-l border-slate-200 dark:border-slate-700');
+                // store slug for potential later use
+                if (!t.getAttribute('data-slug') && slug && isActive) {
+                    t.setAttribute('data-slug', slug);
+                }
+            });
+        }
+
+        // Update displayed names immediately
+        const ids = ['selectedMenuTypeName', 'heroMenuTypeName', 'previewMenuTypeName'];
+        ids.forEach((id) => {
+            const el = document.getElementById(id);
+            if (el && name) el.textContent = name;
+        });
+
+        // Update URL input immediately
+        const baseUrl = window.location.origin;
+        if (slug) {
+            const calendarUrl = `${baseUrl}/calendar/${slug}.ics`;
+            const input = document.getElementById('calendarUrl');
+            if (input) input.value = calendarUrl;
+        }
+
+        // Trigger data refresh via existing function
+        updateMenuType(menuTypeId);
+    }
 </script>
 
 @code {
@@ -314,7 +411,7 @@
         {
             // Load available menu types
             menuTypes = await MenuRepository.GetMenuTypesAsync();
-            
+
             // Set default to "Det velkendte" if available
             var defaultMenuType = menuTypes.FirstOrDefault(mt => mt.Slug == "det-velkendte");
             if (defaultMenuType != null)
@@ -364,7 +461,6 @@
         tomorrowMenu = await MenuRepository.GetMenuForDateAsync(tomorrow, selectedMenuTypeId);
     }
 
-
     private string FormatLastUpdated()
     {
         if (lastUpdated == null)
@@ -387,13 +483,13 @@
     {
         var request = HttpContextAccessor?.HttpContext?.Request;
         var selectedMenuType = menuTypes.FirstOrDefault(mt => mt.Id == selectedMenuTypeId);
-        
+
         if (selectedMenuType != null)
         {
             if (request == null) return $"/calendar/{selectedMenuType.Slug}.ics";
             return $"{request.Scheme}://{request.Host}/calendar/{selectedMenuType.Slug}.ics";
         }
-        
+
         // Fallback to det-velkendte if no menu type found
         if (request == null) return "/calendar/det-velkendte.ics";
         return $"{request.Scheme}://{request.Host}/calendar/det-velkendte.ics";
@@ -404,5 +500,4 @@
         var selectedMenuType = menuTypes.FirstOrDefault(mt => mt.Id == selectedMenuTypeId);
         return selectedMenuType?.Name ?? "Det velkendte";
     }
-
 }
