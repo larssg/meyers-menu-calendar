@@ -9,183 +9,181 @@
 <PageTitle>Meyers Menu Calendar</PageTitle>
 
 <div class="max-w-5xl mx-auto">
-  <!-- Hero -->
-  <section class="text-center mb-12">
-    <span class="kicker">Calendar feed for lunch menus</span>
-    <h2 class="mt-2 text-4xl font-extrabold tracking-tight
+    <!-- Hero -->
+    <section class="text-center mb-12">
+        <span class="kicker">Calendar feed for lunch menus</span>
+        <h2 class="mt-2 text-4xl font-extrabold tracking-tight
                text-slate-900 dark:text-white">
-      Never miss lunch again
-    </h2>
-    <p class="mt-3 text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
-      Get Meyers daily menus delivered straight to your calendar. Simple,
-      automatic, and always up to date.
-    </p>
-    <div class="mt-6 flex items-center justify-center">
-      <button class="btn-primary"
-              onclick="copyToClipboard('@GetCalendarIcsUrl()')">
-        Copy Calendar Feed URL
-      </button>
-    </div>
-    <div class="mt-3">
-      <span class="pill">Works with Google, Outlook, Apple Calendar</span>
-    </div>
-  </section>
-
-  <div class="grid lg:grid-cols-2 gap-8">
-    <!-- Calendar Feed Section -->
-    <div class="card p-8">
-      <h3 class="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-6 flex items-center">
-        <span class="text-2xl mr-3">📅</span>
-        Calendar Feed URL
-      </h3>
-
-      <div>
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-          Calendar Feed URL (.ics)
-        </label>
-        <div class="flex rounded-lg border border-slate-300/60 dark:border-slate-600/60 overflow-hidden
-                    bg-white/80 dark:bg-slate-800/60 backdrop-blur">
-          <input type="text" value="@GetCalendarIcsUrl()" readonly class="copy-input" />
-          <button onclick="copyToClipboard('@GetCalendarIcsUrl()')"
-                  class="px-5 py-3 font-medium text-white bg-teal-700 hover:bg-teal-600 transition-colors">
-            Copy
-          </button>
+            Never miss lunch again
+        </h2>
+        <p class="mt-3 text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
+            Get Meyers daily menus delivered straight to your calendar. Simple,
+            automatic, and always up to date.
+        </p>
+        <div class="mt-6 flex items-center justify-center">
+            <button class="btn-primary"
+                    onclick="copyToClipboard('@GetCalendarIcsUrl()')">
+                Copy Calendar Feed URL
+            </button>
         </div>
-      </div>
+        <div class="mt-3">
+            <span class="pill">Works with Google, Outlook, Apple Calendar</span>
+        </div>
+    </section>
 
-      <div class="mt-8 p-6 rounded-xl border border-teal-200/60 dark:border-teal-700/50
+    <div class="grid lg:grid-cols-2 gap-8">
+        <!-- Calendar Feed Section -->
+        <div class="card p-8">
+            <h3 class="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-6 flex items-center">
+                <span class="text-2xl mr-3">📅</span>
+                Calendar Feed URL
+            </h3>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    Calendar Feed URL (.ics)
+                </label>
+                <div class="flex rounded-lg border border-slate-300/60 dark:border-slate-600/60 overflow-hidden
+                    bg-white/80 dark:bg-slate-800/60 backdrop-blur">
+                    <input type="text" value="@GetCalendarIcsUrl()" readonly class="copy-input"/>
+                    <button onclick="copyToClipboard('@GetCalendarIcsUrl()')"
+                            class="px-5 py-3 font-medium text-white bg-teal-700 hover:bg-teal-600 transition-colors">
+                        Copy
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-8 p-6 rounded-xl border border-teal-200/60 dark:border-teal-700/50
                   bg-teal-50/70 dark:bg-teal-900/20">
-        <h4 class="font-semibold text-slate-900 dark:text-slate-100 mb-3">
-          How to add to your calendar
-        </h4>
-        <ul class="text-sm text-slate-700 dark:text-slate-300 space-y-2">
-          <li class="flex items-start"><span class="font-medium mr-2">Google Calendar:</span> Settings → Add calendar → From URL</li>
-          <li class="flex items-start"><span class="font-medium mr-2">Outlook:</span> Add calendar → Subscribe from web</li>
-          <li class="flex items-start"><span class="font-medium mr-2">Apple Calendar:</span> File → New Calendar Subscription</li>
-        </ul>
-      </div>
-    </div>
+                <h4 class="font-semibold text-slate-900 dark:text-slate-100 mb-3">
+                    How to add to your calendar
+                </h4>
+                <ul class="text-sm text-slate-700 dark:text-slate-300 space-y-2">
+                    <li class="flex items-start"><span class="font-medium mr-2">Google Calendar:</span> Settings → Add
+                        calendar → From URL
+                    </li>
+                    <li class="flex items-start"><span class="font-medium mr-2">Outlook:</span> Add calendar → Subscribe
+                        from web
+                    </li>
+                    <li class="flex items-start"><span class="font-medium mr-2">Apple Calendar:</span> File → New
+                        Calendar Subscription
+                    </li>
+                </ul>
+            </div>
+        </div>
 
-    <!-- Menu Preview Section -->
-    <div class="card p-8">
-      <h3 class="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-6 flex items-center">
-        <span class="text-2xl mr-3">🍽️</span>
-        Menu Preview
-      </h3>
+        <!-- Menu Preview Section -->
+        <div class="card p-8">
+            <h3 class="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-6 flex items-center">
+                <span class="text-2xl mr-3">🍽️</span>
+                Menu Preview
+            </h3>
 
-      <div class="space-y-6">
-        <div class="rounded-xl p-6 border bg-gradient-to-r
+            <div class="space-y-6">
+                <div class="rounded-xl p-6 border bg-gradient-to-r
                     from-orange-50 to-white dark:from-orange-900/20 dark:to-transparent
                     border-orange-200/70 dark:border-orange-700/50">
-          <h4 class="font-semibold text-orange-900 dark:text-orange-300 mb-3 flex items-center">
-            <span class="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
-            Today’s Menu
-          </h4>
-          @if (todayMenu != null)
-          {
-              <div>
-                  <p class="font-medium text-slate-900 dark:text-slate-100 text-base">
-                      @CalendarService.CleanupTitle(todayMenu.MainDish)
-                  </p>
-                  @if (!string.IsNullOrEmpty(todayMenu.Details))
-                  {
-                      <p class="text-slate-600 dark:text-slate-300 mt-2 text-sm">
-                          @todayMenu.Details
-                      </p>
-                  }
-              </div>
-          }
-          else
-          {
-              <p class="text-slate-500 dark:text-slate-400 text-sm">No menu available for today</p>
-          }
-        </div>
+                    <h4 class="font-semibold text-orange-900 dark:text-orange-300 mb-3 flex items-center">
+                        <span class="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
+                        Today’s Menu
+                    </h4>
+                    @if (todayMenu != null)
+                    {
+                        <div>
+                            <p class="font-medium text-slate-900 dark:text-slate-100 text-base">
+                                @CalendarService.CleanupTitle(todayMenu.MainDish)
+                            </p>
+                            @if (!string.IsNullOrEmpty(todayMenu.Details))
+                            {
+                                <p class="text-slate-600 dark:text-slate-300 mt-2 text-sm">
+                                    @todayMenu.Details
+                                </p>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-slate-500 dark:text-slate-400 text-sm">No menu available for today</p>
+                    }
+                </div>
 
-        <div class="rounded-xl p-6 border bg-gradient-to-r
+                <div class="rounded-xl p-6 border bg-gradient-to-r
                     from-teal-50 to-white dark:from-teal-900/20 dark:to-transparent
                     border-teal-200/70 dark:border-teal-700/50">
-          <h4 class="font-semibold text-teal-900 dark:text-teal-300 mb-3 flex items-center">
-            <span class="w-2 h-2 bg-teal-600 rounded-full mr-2"></span>
-            Tomorrow’s Menu
-          </h4>
-          @if (tomorrowMenu != null)
-          {
-              <div>
-                  <p class="font-medium text-slate-900 dark:text-slate-100 text-base">
-                      @CalendarService.CleanupTitle(tomorrowMenu.MainDish)
-                  </p>
-                  @if (!string.IsNullOrEmpty(tomorrowMenu.Details))
-                  {
-                      <p class="text-slate-600 dark:text-slate-300 mt-2 text-sm">
-                          @tomorrowMenu.Details
-                      </p>
-                  }
-              </div>
-          }
-          else
-          {
-              <p class="text-slate-500 dark:text-slate-400 text-sm">No menu available for tomorrow</p>
-          }
+                    <h4 class="font-semibold text-teal-900 dark:text-teal-300 mb-3 flex items-center">
+                        <span class="w-2 h-2 bg-teal-600 rounded-full mr-2"></span>
+                        Tomorrow’s Menu
+                    </h4>
+                    @if (tomorrowMenu != null)
+                    {
+                        <div>
+                            <p class="font-medium text-slate-900 dark:text-slate-100 text-base">
+                                @CalendarService.CleanupTitle(tomorrowMenu.MainDish)
+                            </p>
+                            @if (!string.IsNullOrEmpty(tomorrowMenu.Details))
+                            {
+                                <p class="text-slate-600 dark:text-slate-300 mt-2 text-sm">
+                                    @tomorrowMenu.Details
+                                </p>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-slate-500 dark:text-slate-400 text-sm">No menu available for tomorrow</p>
+                    }
+                </div>
+            </div>
         </div>
-      </div>
-
-      <div class="mt-8 p-6 rounded-xl border bg-emerald-50/80 dark:bg-emerald-900/20
-                  border-emerald-200/70 dark:border-emerald-700/50">
-        <h4 class="font-semibold text-slate-900 dark:text-slate-100 mb-3">
-          ✨ Features
-        </h4>
-        <ul class="text-sm text-slate-700 dark:text-slate-300 space-y-2">
-          <li class="flex items-center"><span class="text-emerald-600 mr-2">•</span>Automatic daily menu updates</li>
-          <li class="flex items-center"><span class="text-emerald-600 mr-2">•</span>Detailed descriptions with full menu</li>
-        </ul>
-      </div>
     </div>
-  </div>
 
-  <!-- Last updated timestamp -->
-  <div class="mt-12 text-center">
-    <p class="text-xs text-slate-500 dark:text-slate-400">
-      @FormatLastUpdated()
-    </p>
-  </div>
+    <!-- Last updated timestamp -->
+    <div class="mt-12 text-center">
+        <p class="text-xs text-slate-500 dark:text-slate-400">
+            @FormatLastUpdated()
+        </p>
+    </div>
 </div>
 
 <script>
-  function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(function () {
-      const id = "copy-toast";
-      const existing = document.getElementById(id);
-      if (existing) existing.remove();
-      const toast = document.createElement("div");
-      toast.id = id;
-      toast.textContent = "Copied to clipboard";
-      toast.className =
-        "fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 " +
-        "rounded-lg bg-teal-700 text-white text-sm shadow";
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 1800);
-    });
-  }
-
-  let refreshInterval;
-  function startAutoRefresh() {
-    refreshInterval = setInterval(() => {
-      console.log("Auto-refreshing menu data...");
-      window.location.reload();
-    }, 3600000);
-  }
-  function stopAutoRefresh() {
-    if (refreshInterval) {
-      clearInterval(refreshInterval);
-      refreshInterval = null;
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(function () {
+            const id = "copy-toast";
+            const existing = document.getElementById(id);
+            if (existing) existing.remove();
+            const toast = document.createElement("div");
+            toast.id = id;
+            toast.textContent = "Copied to clipboard";
+            toast.className =
+                "fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 " +
+                "rounded-lg bg-teal-700 text-white text-sm shadow";
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 1800);
+        });
     }
-  }
-  document.addEventListener("DOMContentLoaded", startAutoRefresh);
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) stopAutoRefresh();
-    else startAutoRefresh();
-  });
-  window.addEventListener("beforeunload", stopAutoRefresh);
+
+    let refreshInterval;
+
+    function startAutoRefresh() {
+        refreshInterval = setInterval(() => {
+            console.log("Auto-refreshing menu data...");
+            window.location.reload();
+        }, 3600000);
+    }
+
+    function stopAutoRefresh() {
+        if (refreshInterval) {
+            clearInterval(refreshInterval);
+            refreshInterval = null;
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", startAutoRefresh);
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden) stopAutoRefresh();
+        else startAutoRefresh();
+    });
+    window.addEventListener("beforeunload", stopAutoRefresh);
 </script>
 
 @code {
@@ -261,4 +259,5 @@
         if (request == null) return "/calendar.ics";
         return $"{request.Scheme}://{request.Host}/calendar.ics";
     }
+
 }
