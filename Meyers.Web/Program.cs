@@ -50,6 +50,27 @@ using (var scope = app.Services.CreateScope())
 // Configure static files
 app.UseStaticFiles();
 
+// Add headers to prevent indexing (except for social media preview crawlers)
+app.Use(async (context, next) =>
+{
+    var userAgent = context.Request.Headers["User-Agent"].ToString().ToLowerInvariant();
+    var isSocialMediaCrawler = userAgent.Contains("facebookexternalhit") ||
+                              userAgent.Contains("twitterbot") ||
+                              userAgent.Contains("linkedinbot") ||
+                              userAgent.Contains("whatsapp") ||
+                              userAgent.Contains("telegrambot") ||
+                              userAgent.Contains("skypeuripreview") ||
+                              userAgent.Contains("slackbot") ||
+                              userAgent.Contains("discordbot");
+    
+    if (!isSocialMediaCrawler)
+    {
+        context.Response.Headers.Add("X-Robots-Tag", "noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate, nocache");
+    }
+    
+    await next();
+});
+
 // Configure routing
 app.UseRouting();
 
