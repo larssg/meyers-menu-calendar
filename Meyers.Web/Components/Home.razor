@@ -139,6 +139,13 @@
             </div>
         </div>
     </div>
+    
+    <!-- Last updated timestamp -->
+    <div class="mt-12 text-center">
+        <p class="text-xs text-slate-400 dark:text-slate-500">
+            @FormatLastUpdated()
+        </p>
+    </div>
 </div>
 
 <script>
@@ -187,6 +194,7 @@
 @code {
     private MenuEntry? todayMenu;
     private MenuEntry? tomorrowMenu;
+    private DateTime? lastUpdated;
 
     protected override async Task OnInitializedAsync()
     {
@@ -217,13 +225,35 @@
 
             todayMenu = await MenuRepository.GetMenuForDateAsync(today);
             tomorrowMenu = await MenuRepository.GetMenuForDateAsync(tomorrow);
+            
+            // Get the latest update timestamp from the repository
+            lastUpdated = await MenuRepository.GetLastUpdateTimeAsync();
         }
         catch
         {
             // If anything fails, just use empty menus - better than crashing the page
             todayMenu = null;
             tomorrowMenu = null;
+            lastUpdated = null;
         }
+    }
+    
+    private string FormatLastUpdated()
+    {
+        if (lastUpdated == null)
+            return "Menu data not available";
+            
+        var localTime = lastUpdated.Value.ToLocalTime();
+        var timeAgo = DateTime.Now - localTime;
+        
+        if (timeAgo.TotalMinutes < 1)
+            return "Menu updated just now";
+        else if (timeAgo.TotalHours < 1)
+            return $"Menu updated {(int)timeAgo.TotalMinutes} minutes ago";
+        else if (timeAgo.TotalDays < 1)
+            return $"Menu updated {(int)timeAgo.TotalHours} hours ago";
+        else
+            return $"Menu updated {localTime:MMM d, yyyy 'at' h:mm tt}";
     }
 
     private string GetCalendarUrl()
