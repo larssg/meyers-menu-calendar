@@ -6,7 +6,6 @@ A .NET 9 Blazor app that scrapes Meyers lunch menus and provides iCal feeds for 
 
 ## Features
 
-- 🍽️ **8 Menu Types**: Det velkendte, Almanak, Den Grønne, etc.
 - 📅 **iCal Feeds**: Individual calendar subscriptions for each type
 - 🚀 **Fast**: Blazor SSR with .NET 9 MapStaticAssets
 - 🔄 **Auto-Refresh**: Updates every 6 hours
