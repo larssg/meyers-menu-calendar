@@ -31,8 +31,10 @@ public class MenuPreviewHandler(IMenuRepository menuRepository)
             var today = copenhagenNow.Date;
             var tomorrow = today.AddDays(1);
 
-            var todayMenu = await menuRepository.GetMenuForDateAsync(today, menuTypeId);
-            var tomorrowMenu = await menuRepository.GetMenuForDateAsync(tomorrow, menuTypeId);
+            // Get both today's and tomorrow's menu in a single query
+            var menus = await menuRepository.GetMenusForDateRangeAsync(today, tomorrow, menuTypeId);
+            var todayMenu = menus.FirstOrDefault(m => m.Date.Date == today);
+            var tomorrowMenu = menus.FirstOrDefault(m => m.Date.Date == tomorrow);
 
             return Results.Ok(new
             {
