@@ -109,24 +109,26 @@
                         <span class="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
                         Today’s Menu
                     </h4>
-                    @if (todayMenu != null)
-                    {
-                        <div>
-                            <p class="font-medium text-slate-900 dark:text-slate-100 text-base">
-                                @CalendarService.CleanupTitle(todayMenu.MainDish)
-                            </p>
-                            @if (!string.IsNullOrEmpty(todayMenu.Details))
-                            {
-                                <p class="text-slate-600 dark:text-slate-300 mt-2 text-sm">
-                                    @todayMenu.Details
+                    <div id="todayMenuContent">
+                        @if (todayMenu != null)
+                        {
+                            <div>
+                                <p class="font-medium text-slate-900 dark:text-slate-100 text-base">
+                                    @CalendarService.CleanupTitle(todayMenu.MainDish)
                                 </p>
-                            }
-                        </div>
-                    }
-                    else
-                    {
-                        <p class="text-slate-500 dark:text-slate-400 text-sm">No menu available for today</p>
-                    }
+                                @if (!string.IsNullOrEmpty(todayMenu.Details))
+                                {
+                                    <p class="text-slate-600 dark:text-slate-300 mt-2 text-sm">
+                                        @todayMenu.Details
+                                    </p>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-slate-500 dark:text-slate-400 text-sm">No menu available for today</p>
+                        }
+                    </div>
                 </div>
 
                 <div class="rounded-xl p-6 border bg-gradient-to-r
@@ -136,29 +138,27 @@
                         <span class="w-2 h-2 bg-teal-600 rounded-full mr-2"></span>
                         Tomorrow’s Menu
                     </h4>
-                    @if (tomorrowMenu != null)
-                    {
-                        <div>
-                            <p class="font-medium text-slate-900 dark:text-slate-100 text-base">
-                                @CalendarService.CleanupTitle(tomorrowMenu.MainDish)
-                            </p>
-                            @if (!string.IsNullOrEmpty(tomorrowMenu.Details))
-                            {
-                                <p class="text-slate-600 dark:text-slate-300 mt-2 text-sm">
-                                    @tomorrowMenu.Details
+                    <div id="tomorrowMenuContent">
+                        @if (tomorrowMenu != null)
+                        {
+                            <div>
+                                <p class="font-medium text-slate-900 dark:text-slate-100 text-base">
+                                    @CalendarService.CleanupTitle(tomorrowMenu.MainDish)
                                 </p>
-                            }
-                        </div>
-                    }
-                    else
-                    {
-                        <p class="text-slate-500 dark:text-slate-400 text-sm">No menu available for tomorrow</p>
-                    }
+                                @if (!string.IsNullOrEmpty(tomorrowMenu.Details))
+                                {
+                                    <p class="text-slate-600 dark:text-slate-300 mt-2 text-sm">
+                                        @tomorrowMenu.Details
+                                    </p>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-slate-500 dark:text-slate-400 text-sm">No menu available for tomorrow</p>
+                        }
+                    </div>
                 </div>
-            </div>
-            
-            <div class="mt-4 text-xs text-slate-500 dark:text-slate-400 text-center">
-                <p id="refreshNote" class="hidden">Refresh the page to see the preview for the selected menu</p>
             </div>
         </div>
     </div>
@@ -188,7 +188,7 @@
         });
     }
 
-    function updateMenuType(menuTypeId) {
+    async function updateMenuType(menuTypeId) {
         const selector = document.getElementById('menuTypeSelector');
         const selectedOption = selector.options[selector.selectedIndex];
         const slug = selectedOption.getAttribute('data-slug');
@@ -205,11 +205,76 @@
         document.getElementById('heroMenuTypeName').textContent = name;
         document.getElementById('previewMenuTypeName').textContent = name;
         
-        // Show the refresh note if menu has changed
+        // Hide the refresh note since we're loading dynamically
         const refreshNote = document.getElementById('refreshNote');
         if (refreshNote) {
-            refreshNote.classList.remove('hidden');
+            refreshNote.classList.add('hidden');
         }
+        
+        // Show loading state
+        const todayContent = document.getElementById('todayMenuContent');
+        const tomorrowContent = document.getElementById('tomorrowMenuContent');
+        
+        const loadingHtml = '<p class="text-slate-500 dark:text-slate-400 text-sm">Loading...</p>';
+        todayContent.innerHTML = loadingHtml;
+        tomorrowContent.innerHTML = loadingHtml;
+        
+        // Fetch new menu preview
+        try {
+            const response = await fetch(`/api/menu-preview/${menuTypeId}`);
+            if (response.ok) {
+                const data = await response.json();
+                
+                // Update today's menu
+                if (data.today) {
+                    let todayHtml = '<div><p class="font-medium text-slate-900 dark:text-slate-100 text-base">' + 
+                                   escapeHtml(data.today.title) + '</p>';
+                    if (data.today.details) {
+                        todayHtml += '<p class="text-slate-600 dark:text-slate-300 mt-2 text-sm">' + 
+                                    escapeHtml(data.today.details) + '</p>';
+                    }
+                    todayHtml += '</div>';
+                    todayContent.innerHTML = todayHtml;
+                } else {
+                    todayContent.innerHTML = '<p class="text-slate-500 dark:text-slate-400 text-sm">No menu available for today</p>';
+                }
+                
+                // Update tomorrow's menu
+                if (data.tomorrow) {
+                    let tomorrowHtml = '<div><p class="font-medium text-slate-900 dark:text-slate-100 text-base">' + 
+                                      escapeHtml(data.tomorrow.title) + '</p>';
+                    if (data.tomorrow.details) {
+                        tomorrowHtml += '<p class="text-slate-600 dark:text-slate-300 mt-2 text-sm">' + 
+                                       escapeHtml(data.tomorrow.details) + '</p>';
+                    }
+                    tomorrowHtml += '</div>';
+                    tomorrowContent.innerHTML = tomorrowHtml;
+                } else {
+                    tomorrowContent.innerHTML = '<p class="text-slate-500 dark:text-slate-400 text-sm">No menu available for tomorrow</p>';
+                }
+            } else {
+                // Show error state
+                const errorHtml = '<p class="text-slate-500 dark:text-slate-400 text-sm">Failed to load menu</p>';
+                todayContent.innerHTML = errorHtml;
+                tomorrowContent.innerHTML = errorHtml;
+            }
+        } catch (error) {
+            console.error('Failed to fetch menu preview:', error);
+            const errorHtml = '<p class="text-slate-500 dark:text-slate-400 text-sm">Failed to load menu</p>';
+            todayContent.innerHTML = errorHtml;
+            tomorrowContent.innerHTML = errorHtml;
+        }
+    }
+    
+    function escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, m => map[m]);
     }
 
     let refreshInterval;
