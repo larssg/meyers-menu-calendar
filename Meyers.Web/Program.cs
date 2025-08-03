@@ -55,8 +55,8 @@ using (var scope = app.Services.CreateScope())
     context.Database.Migrate();
 }
 
-// Configure static files
-app.UseStaticFiles();
+// Configure static assets (new in .NET 9)
+app.MapStaticAssets();
 
 // Add headers to prevent indexing (except for social media preview crawlers)
 app.Use(async (context, next) =>
@@ -89,7 +89,7 @@ app.UseAntiforgery();
 app.MapRazorComponents<App>();
 
 // Map calendar endpoints
-app.MapGet("/calendar/{menuTypeSlug}.ics", async (string menuTypeSlug, CalendarEndpointHandler handler) => 
+app.MapGet("/calendar/{menuTypeSlug}.ics", async (string menuTypeSlug, CalendarEndpointHandler handler) =>
     await handler.GetCalendarAsync(menuTypeSlug));
 
 // API endpoint for available menus

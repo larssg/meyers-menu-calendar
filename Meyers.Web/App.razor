@@ -8,33 +8,13 @@
     />
     <title>Meyers Menu Calendar</title>
     <base href="/" />
-    <link href="css/app.css" rel="stylesheet" />
+    <link href="@Assets["css/app.css"]" rel="stylesheet" />
     <link rel="icon" type="image/png" href="favicon.png" />
     <HeadOutlet />
 </head>
 <body class="bg-app text-slate-900 dark:text-slate-100 antialiased">
 <Routes />
 
-<script src="/js/menu-app.js?v=@GetFileVersion()"></script>
-
-@code {
-    private static string GetFileVersion()
-    {
-        try
-        {
-            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "js", "menu-app.js");
-            if (File.Exists(filePath))
-            {
-                var hash = System.Security.Cryptography.MD5.HashData(File.ReadAllBytes(filePath));
-                return Convert.ToHexString(hash)[..8]; // Use first 8 characters
-            }
-        }
-        catch
-        {
-            // Fall back to timestamp if file reading fails
-        }
-        return DateTime.Now.Ticks.ToString("X")[..8];
-    }
-}
+<script src="@Assets["js/menu-app.js"]"></script>
 </body>
 </html>
