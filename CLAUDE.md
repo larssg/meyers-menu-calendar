@@ -25,8 +25,8 @@ This is a .NET application that scrapes menu content from the Meyers restaurant 
   - `Repositories/IMenuRepository.cs` & `MenuRepository.cs`: Data access layer using repository pattern
   - `Configuration/MenuCacheOptions.cs`: Configuration options for cache intervals
   - `Styles/app.css`: Tailwind CSS v4 source configuration
-  - `wwwroot/css/app.css`: Compiled CSS (auto-generated during build, served via MapStaticAssets)
-  - `wwwroot/js/menu-app.js`: Client-side JavaScript for menu interactions and auto-refresh (served via MapStaticAssets with cache busting)
+  - `wwwroot/css/app.css`: Compiled CSS (auto-generated during build)
+  - `wwwroot/js/menu-app.js`: Client-side JavaScript for menu interactions and auto-refresh
   - `package.json`: Node.js dependencies for Tailwind CSS compilation
   - `Migrations/`: Entity Framework Core database migrations
 - **Meyers.Test**: xUnit test project with comprehensive test coverage including web interface tests
@@ -135,8 +135,6 @@ Tests verify complete weekly menu extraction, web interface rendering, and corre
 - **Component Structure**: Keep layout, routing, and page components separate for maintainability
 - **CSS Framework**: Use Tailwind CSS v4 with @theme directive for consistent design system
 - **Build Integration**: Ensure Tailwind CSS compilation is integrated into MSBuild process
-- **Static Assets**: Use .NET 9's MapStaticAssets() instead of UseStaticFiles() for improved performance and automatic cache busting
-- **Asset References**: Use @Assets["path"] directive in Razor components for automatic fingerprinting and cache optimization
 - **Testing**: When adding new endpoints or features, comprehensive tests must be added and all existing tests must be updated to reflect the changes. Tests should cover both success and error scenarios.
 
 ## Build System

@@ -261,8 +261,8 @@ public class CalendarApiTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Remove("X-Forwarded-Proto");
     }
 
-    [Fact] 
-    public async Task Get_Root_Returns_Valid_HTML_Structure()
+    [Fact]
+    public async Task Get_Root_Includes_Versioned_JavaScript_File()
     {
         var response = await _client.GetAsync("/");
         
@@ -270,13 +270,9 @@ public class CalendarApiTests : IClassFixture<TestWebApplicationFactory>
         
         var content = await response.Content.ReadAsStringAsync();
         
-        // Verify basic HTML structure is present
-        Assert.Contains("<!DOCTYPE html>", content);
-        Assert.Contains("Meyers Menu Calendar", content);
-        Assert.Contains("</body>", content);
-        
-        // Note: JavaScript inclusion via @Assets[] works in development/production
-        // but may not be fully initialized in test environment
+        // Verify that the JavaScript file is included with proper path resolution and versioning
+        Assert.Contains("menu-app.js?v=", content);
+        Assert.Contains("src=\"/js/menu-app.js", content);
     }
 
     [Fact]
