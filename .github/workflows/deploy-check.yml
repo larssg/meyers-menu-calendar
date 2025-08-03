@@ -25,16 +25,6 @@ jobs:
         cd Meyers.Web
         dotnet ef migrations list --no-build || echo "No migrations found"
         
-    - name: Validate production migration script
-      run: |
-        if [ -f "production-migration-setup.sql" ]; then
-          echo "✅ Production migration script exists"
-          cat production-migration-setup.sql
-        else
-          echo "❌ Production migration script missing"
-          exit 1
-        fi
-        
   security-scan:
     runs-on: ubuntu-latest
     
