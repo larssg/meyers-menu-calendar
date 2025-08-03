@@ -3,7 +3,7 @@ const TOAST_DURATION = 1800;
 const AUTO_REFRESH_INTERVAL = 3600000; // 1 hour
 const BASE_URL = window.location.origin;
 
-const MENU_NAME_IDS = ['selectedMenuTypeName', 'heroMenuTypeName', 'previewMenuTypeName'];
+const MENU_NAME_IDS = ['selectedMenuTypeName', 'previewMenuTypeName'];
 const TAB_ACTIVE_CLASS = 'bg-teal-600 text-white border-teal-600';
 const TAB_INACTIVE_CLASS = 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/60';
 
