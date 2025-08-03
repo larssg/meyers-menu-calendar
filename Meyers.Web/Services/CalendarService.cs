@@ -7,11 +7,12 @@ namespace Meyers.Web.Services;
 
 public class CalendarService
 {
-    public string GenerateCalendar(List<MenuDay> menuDays)
+    public string GenerateCalendar(List<MenuDay> menuDays, string? menuTypeName = null)
     {
+        var calendarName = string.IsNullOrEmpty(menuTypeName) ? "Meyers Menu Calendar" : $"Meyers Menu Calendar - {menuTypeName}";
         var calendar = new Calendar
         {
-            ProductId = "Meyers Menu Calendar",
+            ProductId = calendarName,
             Version = "2.0"
         };
 
@@ -57,9 +58,14 @@ public class CalendarService
                     description = FormatDescription(string.Join(", ", menuDay.MenuItems));
                 }
 
+                // Include menu type in UID to avoid conflicts when multiple menu types exist
+                var uid = string.IsNullOrEmpty(menuDay.MenuType) 
+                    ? $"meyers-menu-{date:yyyy-MM-dd}" 
+                    : $"meyers-menu-{date:yyyy-MM-dd}-{menuDay.MenuType.Replace(" ", "-").Replace("/", "-").ToLowerInvariant()}";
+
                 var calendarEvent = new CalendarEvent
                 {
-                    Uid = $"meyers-menu-{date:yyyy-MM-dd}",
+                    Uid = uid,
                     Summary = title,
                     Description = description,
                     Start = startTime,

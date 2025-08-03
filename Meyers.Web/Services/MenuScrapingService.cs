@@ -53,20 +53,29 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
                 ? []
                 : entry.MenuItems.Split('\n', StringSplitOptions.RemoveEmptyEntries).ToList(),
             MainDish = entry.MainDish,
-            Details = entry.Details
+            Details = entry.Details,
+            MenuType = entry.MenuType?.Name ?? "Det velkendte"
         }).ToList();
     }
 
     private async Task SaveMenusToCache(List<MenuDay> menuDays)
     {
-        var menuEntries = menuDays.Select(day => new MenuEntry
+        var menuEntries = new List<MenuEntry>();
+
+        foreach (var day in menuDays)
         {
-            Date = day.Date,
-            DayName = day.DayName,
-            MenuItems = string.Join('\n', day.MenuItems),
-            MainDish = day.MainDish,
-            Details = day.Details
-        }).ToList();
+            var menuType = await menuRepository.GetOrCreateMenuTypeAsync(day.MenuType);
+            
+            menuEntries.Add(new MenuEntry
+            {
+                Date = day.Date,
+                DayName = day.DayName,
+                MenuItems = string.Join('\n', day.MenuItems),
+                MainDish = day.MainDish,
+                Details = day.Details,
+                MenuTypeId = menuType.Id
+            });
+        }
 
         await menuRepository.SaveMenusAsync(menuEntries);
     }
@@ -80,135 +89,91 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
 
         var menuDays = new List<MenuDay>();
 
-        // Look for text containing "Det velkendte" anywhere in the document
-        var allText = doc.DocumentNode.InnerText;
-        if (!allText.Contains("Det velkendte", StringComparison.OrdinalIgnoreCase))
-        {
-            return menuDays; // No "Det velkendte" found
-        }
-
         // First, extract the dates from the week menu headers
         var dateMapping = ExtractDatesFromWeekHeaders(doc);
-
-        // Look for "Det velkendte" tab content specifically
-        var detVelkendteNodes = doc.DocumentNode.SelectNodes("//div[@data-tab-content='Det velkendte']");
-
         if (dateMapping.Count == 0) return menuDays;
 
-        var dayIndex = 0;
+        // Discover all available menu types from data-tab-content attributes
+        var allTabContentNodes = doc.DocumentNode.SelectNodes("//div[@data-tab-content]");
+        if (allTabContentNodes == null) return menuDays;
 
-        foreach (var tabNode in detVelkendteNodes)
+        // Get unique menu types
+        var menuTypes = allTabContentNodes
+            .Select(node => node.GetAttributeValue("data-tab-content", ""))
+            .Where(content => !string.IsNullOrEmpty(content))
+            .Distinct()
+            .ToList();
+
+        // Process each menu type
+        foreach (var menuType in menuTypes)
         {
-            // Only process weekdays and if we have date mapping
-            if (dayIndex >= dateMapping.Count) break;
+            var tabNodes = doc.DocumentNode.SelectNodes($"//div[@data-tab-content='{menuType}']");
+            if (tabNodes == null) continue;
 
-            var dayInfo = dateMapping[dayIndex];
+            var dayIndex = 0;
 
-            // Look for menu recipe displays within this tab
-            var menuRecipes = tabNode.SelectNodes(".//div[contains(@class, 'menu-recipe-display')]");
-            if (menuRecipes != null)
+            foreach (var tabNode in tabNodes)
             {
-                var dayMenuItems = new List<string>();
+                // Only process weekdays and if we have date mapping
+                if (dayIndex >= dateMapping.Count) break;
 
-                string mainDishContent = "";
-                string detailsContent = "";
+                var dayInfo = dateMapping[dayIndex];
 
-                foreach (var recipe in menuRecipes)
+                // Look for menu recipe displays within this tab
+                var menuRecipes = tabNode.SelectNodes(".//div[contains(@class, 'menu-recipe-display')]");
+                if (menuRecipes != null)
                 {
-                    var title = recipe.SelectSingleNode(".//h4[contains(@class, 'menu-recipe-display__title')]")?.InnerText?.Trim();
-                    var descriptionNode = recipe.SelectSingleNode(".//p[contains(@class, 'menu-recipe-display__description')]");
+                    var dayMenuItems = new List<string>();
+                    string mainDishContent = "";
+                    string detailsContent = "";
 
-                    if (!string.IsNullOrEmpty(title))
+                    foreach (var recipe in menuRecipes)
                     {
-                        // Get the plain text content and clean it up
-                        var plainText = HtmlDecode(descriptionNode.InnerText?.Trim() ?? "");
-                        plainText = System.Text.RegularExpressions.Regex.Replace(plainText, @"\s+", " ").Trim();
+                        var title = recipe.SelectSingleNode(".//h4[contains(@class, 'menu-recipe-display__title')]")?.InnerText?.Trim();
+                        var descriptionNode = recipe.SelectSingleNode(".//p[contains(@class, 'menu-recipe-display__description')]");
 
-                        if (!string.IsNullOrEmpty(plainText))
+                        if (!string.IsNullOrEmpty(title))
                         {
-                            // For backward compatibility, also add to MenuItems
-                            var fullDescription = HtmlDecode(descriptionNode.InnerText?.Trim() ?? "");
-                            fullDescription = System.Text.RegularExpressions.Regex.Replace(fullDescription, @"\s+", " ").Trim();
-                            dayMenuItems.Add($"{title}: {fullDescription}");
+                            // Get the plain text content and clean it up
+                            var plainText = HtmlDecode(descriptionNode?.InnerText?.Trim() ?? "");
+                            plainText = System.Text.RegularExpressions.Regex.Replace(plainText, @"\s+", " ").Trim();
 
-                            // Only extract main dish from "Varm ret med tilbehør" section
-                            if (title.Contains("Varm ret med tilbehør", StringComparison.OrdinalIgnoreCase))
+                            if (!string.IsNullOrEmpty(plainText))
                             {
-                                // Find the first sentence or phrase (up to the first period followed by space, or first 100 chars)
-                                var firstSentenceMatch = System.Text.RegularExpressions.Regex.Match(plainText, @"^([^.]*\.)");
+                                // For backward compatibility, also add to MenuItems
+                                var fullDescription = HtmlDecode(descriptionNode?.InnerText?.Trim() ?? "");
+                                fullDescription = System.Text.RegularExpressions.Regex.Replace(fullDescription, @"\s+", " ").Trim();
+                                dayMenuItems.Add($"{title}: {fullDescription}");
 
-                                string mainDish, details;
-
-                                if (firstSentenceMatch.Success && firstSentenceMatch.Groups[1].Value.Length < 150)
+                                // Only extract main dish from "Varm ret med tilbehør" section
+                                if (title.Contains("Varm ret med tilbehør", StringComparison.OrdinalIgnoreCase))
                                 {
-                                    // Use the first sentence as main dish
-                                    mainDish = firstSentenceMatch.Groups[1].Value.Trim();
-                                    details = plainText.Substring(firstSentenceMatch.Length).Trim();
+                                    var (mainDish, details) = ExtractMainDishAndDetails(plainText);
+                                    mainDishContent = mainDish;
+                                    detailsContent = details;
                                 }
-                                else
-                                {
-                                    // Fallback: use first 100 characters as main dish
-                                    if (plainText.Length > 100)
-                                    {
-                                        var cutPoint = plainText.LastIndexOf(' ', 100);
-                                        if (cutPoint > 50)
-                                        {
-                                            mainDish = plainText.Substring(0, cutPoint).Trim() + "...";
-                                            details = plainText.Substring(cutPoint).Trim();
-                                        }
-                                        else
-                                        {
-                                            mainDish = plainText.Substring(0, 100) + "...";
-                                            details = plainText.Substring(100).Trim();
-                                        }
-                                    }
-                                    else
-                                    {
-                                        mainDish = plainText;
-                                        details = "";
-                                    }
-                                }
-
-                                // Remove allergen info for cleaner display
-                                mainDish = AllergenRegex().Replace(mainDish, "").Trim();
-                                details = AllergenRegex().Replace(details, "").Trim();
-
-                                mainDishContent = mainDish;
-                                detailsContent = details;
                             }
                         }
                     }
-                }
 
-                if (dayMenuItems.Any())
-                {
-                    // If we didn't find a main dish in "Varm ret med tilbehør", use the first menu item
-                    if (string.IsNullOrEmpty(mainDishContent) && dayMenuItems.Count > 0)
+                    if (dayMenuItems.Any())
                     {
-                        var firstItem = dayMenuItems[0];
-                        var colonIndex = firstItem.IndexOf(':');
-                        if (colonIndex > 0 && colonIndex < firstItem.Length - 1)
+                        // If we didn't find a main dish in "Varm ret med tilbehør", use the first menu item
+                        if (string.IsNullOrEmpty(mainDishContent) && dayMenuItems.Count > 0)
                         {
-                            mainDishContent = firstItem.Substring(colonIndex + 1).Trim();
-                            if (mainDishContent.Length > 100)
-                            {
-                                mainDishContent = mainDishContent.Substring(0, 100).Trim() + "...";
-                            }
+                            mainDishContent = ExtractMainDishFromFirstItem(dayMenuItems[0]);
                         }
-                        else
+
+                        menuDays.Add(new MenuDay
                         {
-                            mainDishContent = firstItem;
-                        }
+                            DayName = dayInfo.DayName,
+                            Date = dayInfo.Date,
+                            MenuItems = dayMenuItems,
+                            MainDish = mainDishContent,
+                            Details = detailsContent,
+                            MenuType = menuType
+                        });
                     }
-
-                    menuDays.Add(new MenuDay
-                    {
-                        DayName = dayInfo.DayName,
-                        Date = dayInfo.Date,
-                        MenuItems = dayMenuItems,
-                        MainDish = mainDishContent,
-                        Details = detailsContent
-                    });
                 }
 
                 dayIndex++;
@@ -216,6 +181,65 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
         }
 
         return menuDays;
+    }
+
+    private (string mainDish, string details) ExtractMainDishAndDetails(string plainText)
+    {
+        // Find the first sentence or phrase (up to the first period followed by space, or first 100 chars)
+        var firstSentenceMatch = System.Text.RegularExpressions.Regex.Match(plainText, @"^([^.]*\.)");
+
+        string mainDish, details;
+
+        if (firstSentenceMatch.Success && firstSentenceMatch.Groups[1].Value.Length < 150)
+        {
+            // Use the first sentence as main dish
+            mainDish = firstSentenceMatch.Groups[1].Value.Trim();
+            details = plainText.Substring(firstSentenceMatch.Length).Trim();
+        }
+        else
+        {
+            // Fallback: use first 100 characters as main dish
+            if (plainText.Length > 100)
+            {
+                var cutPoint = plainText.LastIndexOf(' ', 100);
+                if (cutPoint > 50)
+                {
+                    mainDish = plainText.Substring(0, cutPoint).Trim() + "...";
+                    details = plainText.Substring(cutPoint).Trim();
+                }
+                else
+                {
+                    mainDish = plainText.Substring(0, 100) + "...";
+                    details = plainText.Substring(100).Trim();
+                }
+            }
+            else
+            {
+                mainDish = plainText;
+                details = "";
+            }
+        }
+
+        // Remove allergen info for cleaner display
+        mainDish = AllergenRegex().Replace(mainDish, "").Trim();
+        details = AllergenRegex().Replace(details, "").Trim();
+
+        return (mainDish, details);
+    }
+
+    private string ExtractMainDishFromFirstItem(string firstItem)
+    {
+        var colonIndex = firstItem.IndexOf(':');
+        if (colonIndex > 0 && colonIndex < firstItem.Length - 1)
+        {
+            var content = firstItem.Substring(colonIndex + 1).Trim();
+            if (content.Length > 100)
+            {
+                content = content.Substring(0, 100).Trim() + "...";
+            }
+            return content;
+        }
+        return firstItem;
     }
 
     private List<(string DayName, DateTime Date)> ExtractDatesFromWeekHeaders(HtmlDocument doc)
@@ -305,4 +329,5 @@ public class MenuDay
     public List<string> MenuItems { get; set; } = [];
     public string MainDish { get; set; } = string.Empty;
     public string Details { get; set; } = string.Empty;
+    public string MenuType { get; set; } = string.Empty;
 }

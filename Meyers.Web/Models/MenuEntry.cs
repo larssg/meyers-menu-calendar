@@ -20,7 +20,13 @@ public class MenuEntry
     
     public string Details { get; set; } = string.Empty;
     
+    [Required]
+    public int MenuTypeId { get; set; }
+    
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    // Navigation property
+    public MenuType MenuType { get; set; } = null!;
 }

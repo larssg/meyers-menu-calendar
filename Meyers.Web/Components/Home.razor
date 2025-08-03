@@ -21,9 +21,9 @@
             automatic, and always up to date.
         </p>
         <div class="mt-6 flex items-center justify-center">
-            <button class="btn-primary"
-                    onclick="copyToClipboard('@GetCalendarIcsUrl()')">
-                Copy Calendar Feed URL
+            <button class="btn-primary" id="heroCopyButton"
+                    onclick="copyToClipboard(document.getElementById('calendarUrl')?.value || '@GetCalendarIcsUrl()')">
+                Copy Calendar Feed URL (<span id="heroMenuTypeName">@GetSelectedMenuTypeName()</span>)
             </button>
         </div>
         <div class="mt-3">
@@ -39,14 +39,36 @@
                 Calendar Feed URL
             </h3>
 
+            @if (menuTypes.Any())
+            {
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        Menu Type
+                    </label>
+                    <select id="menuTypeSelector" 
+                            class="w-full px-4 py-3 rounded-lg border border-slate-300/60 dark:border-slate-600/60
+                                   bg-white/80 dark:bg-slate-800/60 backdrop-blur text-slate-800 dark:text-slate-100
+                                   focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            onchange="updateMenuType(this.value)">
+                        @foreach (var menuType in menuTypes)
+                        {
+                            <option value="@menuType.Id" data-slug="@menuType.Slug" data-name="@menuType.Name" 
+                                    @(menuType.Id == selectedMenuTypeId ? "selected" : "")>
+                                @menuType.Name
+                            </option>
+                        }
+                    </select>
+                </div>
+            }
+
             <div>
                 <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    Calendar Feed URL (.ics)
+                    Calendar Feed URL (.ics) - <span id="selectedMenuTypeName">@GetSelectedMenuTypeName()</span>
                 </label>
                 <div class="flex rounded-lg border border-slate-300/60 dark:border-slate-600/60 overflow-hidden
                     bg-white/80 dark:bg-slate-800/60 backdrop-blur">
-                    <input type="text" value="@GetCalendarIcsUrl()" readonly class="copy-input"/>
-                    <button onclick="copyToClipboard('@GetCalendarIcsUrl()')"
+                    <input type="text" id="calendarUrl" value="@GetCalendarIcsUrl()" readonly class="copy-input"/>
+                    <button id="copyButton" onclick="copyToClipboard(document.getElementById('calendarUrl').value)"
                             class="px-5 py-3 font-medium text-white bg-teal-700 hover:bg-teal-600 transition-colors">
                         Copy
                     </button>
@@ -76,7 +98,7 @@
         <div class="card p-8">
             <h3 class="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-6 flex items-center">
                 <span class="text-2xl mr-3">🍽️</span>
-                Menu Preview
+                Menu Preview - <span id="previewMenuTypeName">@GetSelectedMenuTypeName()</span>
             </h3>
 
             <div class="space-y-6">
@@ -134,6 +156,10 @@
                     }
                 </div>
             </div>
+            
+            <div class="mt-4 text-xs text-slate-500 dark:text-slate-400 text-center">
+                <p id="refreshNote" class="hidden">Refresh the page to see the menu preview for the selected type</p>
+            </div>
         </div>
     </div>
 
@@ -160,6 +186,30 @@
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 1800);
         });
+    }
+
+    function updateMenuType(menuTypeId) {
+        const selector = document.getElementById('menuTypeSelector');
+        const selectedOption = selector.options[selector.selectedIndex];
+        const slug = selectedOption.getAttribute('data-slug');
+        const name = selectedOption.getAttribute('data-name');
+        const baseUrl = window.location.origin;
+        
+        // Update the calendar URL
+        const calendarUrl = `${baseUrl}/calendar/${slug}.ics`;
+        
+        document.getElementById('calendarUrl').value = calendarUrl;
+        
+        // Update all menu type name displays
+        document.getElementById('selectedMenuTypeName').textContent = name;
+        document.getElementById('heroMenuTypeName').textContent = name;
+        document.getElementById('previewMenuTypeName').textContent = name;
+        
+        // Show the refresh note if menu type has changed
+        const refreshNote = document.getElementById('refreshNote');
+        if (refreshNote) {
+            refreshNote.classList.remove('hidden');
+        }
     }
 
     let refreshInterval;
@@ -190,11 +240,27 @@
     private MenuEntry? todayMenu;
     private MenuEntry? tomorrowMenu;
     private DateTime? lastUpdated;
+    private List<MenuType> menuTypes = new();
+    private int selectedMenuTypeId = 1; // Default to "Det velkendte"
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
+            // Load available menu types
+            menuTypes = await MenuRepository.GetMenuTypesAsync();
+            
+            // Set default to "Det velkendte" if available
+            var defaultMenuType = menuTypes.FirstOrDefault(mt => mt.Slug == "det-velkendte");
+            if (defaultMenuType != null)
+            {
+                selectedMenuTypeId = defaultMenuType.Id;
+            }
+            else if (menuTypes.Any())
+            {
+                selectedMenuTypeId = menuTypes.First().Id;
+            }
+
             TimeZoneInfo copenhagenTimeZone;
             try
             {
@@ -216,8 +282,7 @@
             var today = copenhagenNow.Date;
             var tomorrow = today.AddDays(1);
 
-            todayMenu = await MenuRepository.GetMenuForDateAsync(today);
-            tomorrowMenu = await MenuRepository.GetMenuForDateAsync(tomorrow);
+            await LoadMenusForSelectedType(today, tomorrow);
             lastUpdated = await MenuRepository.GetLastUpdateTimeAsync();
         }
         catch
@@ -227,6 +292,13 @@
             lastUpdated = null;
         }
     }
+
+    private async Task LoadMenusForSelectedType(DateTime today, DateTime tomorrow)
+    {
+        todayMenu = await MenuRepository.GetMenuForDateAsync(today, selectedMenuTypeId);
+        tomorrowMenu = await MenuRepository.GetMenuForDateAsync(tomorrow, selectedMenuTypeId);
+    }
+
 
     private string FormatLastUpdated()
     {
@@ -246,18 +318,26 @@
             return $"Menu updated {localTime:MMM d, yyyy 'at' h:mm tt}";
     }
 
-    private string GetCalendarUrl()
-    {
-        var request = HttpContextAccessor?.HttpContext?.Request;
-        if (request == null) return "/calendar";
-        return $"{request.Scheme}://{request.Host}/calendar";
-    }
-
     private string GetCalendarIcsUrl()
     {
         var request = HttpContextAccessor?.HttpContext?.Request;
-        if (request == null) return "/calendar.ics";
-        return $"{request.Scheme}://{request.Host}/calendar.ics";
+        var selectedMenuType = menuTypes.FirstOrDefault(mt => mt.Id == selectedMenuTypeId);
+        
+        if (selectedMenuType != null)
+        {
+            if (request == null) return $"/calendar/{selectedMenuType.Slug}.ics";
+            return $"{request.Scheme}://{request.Host}/calendar/{selectedMenuType.Slug}.ics";
+        }
+        
+        // Fallback to det-velkendte if no menu type found
+        if (request == null) return "/calendar/det-velkendte.ics";
+        return $"{request.Scheme}://{request.Host}/calendar/det-velkendte.ics";
+    }
+
+    private string GetSelectedMenuTypeName()
+    {
+        var selectedMenuType = menuTypes.FirstOrDefault(mt => mt.Id == selectedMenuTypeId);
+        return selectedMenuType?.Name ?? "Det velkendte";
     }
 
 }

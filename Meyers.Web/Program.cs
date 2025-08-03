@@ -80,9 +80,16 @@ app.UseAntiforgery();
 // Map Blazor components
 app.MapRazorComponents<App>();
 
-// Map both endpoints to the calendar handler
-app.MapGet("/calendar", async (CalendarEndpointHandler handler) => await handler.GetCalendarAsync());
-app.MapGet("/calendar.ics", async (CalendarEndpointHandler handler) => await handler.GetCalendarAsync());
+// Map calendar endpoints
+app.MapGet("/calendar/{menuTypeSlug}.ics", async (string menuTypeSlug, CalendarEndpointHandler handler) => 
+    await handler.GetCalendarAsync(menuTypeSlug));
+
+// API endpoint for available menu types
+app.MapGet("/api/menu-types", async (IMenuRepository menuRepository) =>
+{
+    var menuTypes = await menuRepository.GetMenuTypesAsync();
+    return Results.Ok(menuTypes.Select(mt => new { mt.Id, mt.Name, mt.Slug }).ToList());
+});
 
 app.Run();
 

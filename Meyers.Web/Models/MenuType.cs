@@ -1,0 +1,65 @@
+using System.ComponentModel.DataAnnotations;
+using System.Text;
+using System.Text.RegularExpressions;
+
+namespace Meyers.Web.Models;
+
+public class MenuType
+{
+    public int Id { get; set; }
+    
+    [Required]
+    [MaxLength(100)]
+    public string Name { get; set; } = string.Empty;
+    
+    [Required]
+    [MaxLength(100)]
+    public string Slug { get; set; } = string.Empty;
+    
+    public bool IsActive { get; set; } = true;
+    
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    // Navigation property
+    public ICollection<MenuEntry> MenuEntries { get; set; } = new List<MenuEntry>();
+
+    /// <summary>
+    /// Generates a URL-friendly slug from the menu type name.
+    /// Handles Danish characters: ø→oe, å→aa, æ→ae
+    /// </summary>
+    public static string GenerateSlug(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return string.Empty;
+
+        // Convert to lowercase and handle Danish characters
+        var slug = name.ToLowerInvariant()
+            .Replace("ø", "oe")
+            .Replace("å", "aa") 
+            .Replace("æ", "ae")
+            .Replace("é", "e")
+            .Replace("ü", "u");
+
+        // Replace spaces and special characters with hyphens
+        slug = Regex.Replace(slug, @"[^a-z0-9\-]", "-");
+        
+        // Remove multiple consecutive hyphens
+        slug = Regex.Replace(slug, @"-+", "-");
+        
+        // Trim hyphens from start and end
+        slug = slug.Trim('-');
+
+        return slug;
+    }
+
+    /// <summary>
+    /// Sets the slug based on the name when creating or updating
+    /// </summary>
+    public void UpdateSlug()
+    {
+        Slug = GenerateSlug(Name);
+        UpdatedAt = DateTime.UtcNow;
+    }
+}

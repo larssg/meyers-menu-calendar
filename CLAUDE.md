@@ -76,8 +76,8 @@ dotnet ef database update --project Meyers.Web
 ## Endpoints
 
 - `GET /` - Beautiful Blazor SSR homepage with menu preview and calendar feed URLs
-- `GET /calendar` - Returns iCal calendar feed with Meyers "Det velkendte" menu (current + historical data)
-- `GET /calendar.ics` - Alternative endpoint for the same iCal feed
+- `GET /calendar/{menuType}.ics` - Returns iCal calendar feed for specific menu type (e.g., `/calendar/det-velkendte.ics`, `/calendar/den-groenne.ics`)
+- `GET /api/menu-types` - Returns available menu types with slugs
 
 ## Data Persistence
 
