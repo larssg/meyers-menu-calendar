@@ -9,28 +9,28 @@
 
 <div class="max-w-5xl mx-auto">
     <div class="text-center mb-12">
-        <h2 class="text-4xl font-bold text-slate-800 mb-4">Welcome to Meyers Menu Calendar</h2>
-        <p class="text-lg text-slate-600 max-w-2xl mx-auto">
-            Never miss lunch again! Get Meyers daily menus delivered straight to your calendar with clean, readable event titles.
+        <h2 class="text-4xl font-bold text-slate-800 dark:text-slate-100 mb-4">Welcome to Meyers Menu Calendar</h2>
+        <p class="text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
+            Never miss lunch again! Get Meyers daily menus delivered straight to your calendar.
         </p>
     </div>
 
     <div class="grid lg:grid-cols-2 gap-8">
         <!-- Calendar Feed Section -->
-        <div class="bg-white/70 backdrop-blur-sm rounded-xl border border-slate-200 p-8 shadow-sm">
-            <h3 class="text-xl font-semibold text-slate-800 mb-6 flex items-center">
+        <div class="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-xl border border-slate-200 dark:border-slate-600 p-8 shadow-sm">
+            <h3 class="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-6 flex items-center">
                 <span class="text-2xl mr-3">📅</span>
                 Calendar Feed URLs
             </h3>
 
             <div class="space-y-6">
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-3">iCal Feed URL:</label>
-                    <div class="flex rounded-lg border border-slate-300 overflow-hidden bg-white">
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">iCal Feed URL:</label>
+                    <div class="flex rounded-lg border border-slate-300 dark:border-slate-600 overflow-hidden bg-white dark:bg-slate-700">
                         <input type="text"
                                value="@GetCalendarUrl()"
                                readonly
-                               class="flex-1 px-4 py-3 bg-transparent text-sm text-slate-600 focus:outline-none" />
+                               class="flex-1 px-4 py-3 bg-transparent text-sm text-slate-600 dark:text-slate-200 focus:outline-none" />
                         <button onclick="copyToClipboard('@GetCalendarUrl()')"
                                 class="bg-emerald-500 text-white px-6 py-3 hover:bg-emerald-600 transition-colors font-medium">
                             Copy
@@ -39,12 +39,12 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-3">Alternative URL (.ics):</label>
-                    <div class="flex rounded-lg border border-slate-300 overflow-hidden bg-white">
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Alternative URL (.ics):</label>
+                    <div class="flex rounded-lg border border-slate-300 dark:border-slate-600 overflow-hidden bg-white dark:bg-slate-700">
                         <input type="text"
                                value="@GetCalendarIcsUrl()"
                                readonly
-                               class="flex-1 px-4 py-3 bg-transparent text-sm text-slate-600 focus:outline-none" />
+                               class="flex-1 px-4 py-3 bg-transparent text-sm text-slate-600 dark:text-slate-200 focus:outline-none" />
                         <button onclick="copyToClipboard('@GetCalendarIcsUrl()')"
                                 class="bg-emerald-500 text-white px-6 py-3 hover:bg-emerald-600 transition-colors font-medium">
                             Copy
@@ -53,9 +53,9 @@
                 </div>
             </div>
 
-            <div class="mt-8 p-6 bg-sky-50 rounded-xl border border-sky-200">
-                <h4 class="font-semibold text-sky-900 mb-3">How to add to your calendar:</h4>
-                <ul class="text-sm text-sky-800 space-y-2">
+            <div class="mt-8 p-6 bg-sky-50 dark:bg-sky-900/30 rounded-xl border border-sky-200 dark:border-sky-700">
+                <h4 class="font-semibold text-sky-900 dark:text-sky-300 mb-3">How to add to your calendar:</h4>
+                <ul class="text-sm text-sky-800 dark:text-sky-200 space-y-2">
                     <li class="flex items-start">
                         <span class="font-medium mr-2">Google Calendar:</span>
                         <span>Settings → Add calendar → From URL</span>
@@ -73,59 +73,59 @@
         </div>
 
         <!-- Menu Preview Section -->
-        <div class="bg-white/70 backdrop-blur-sm rounded-xl border border-slate-200 p-8 shadow-sm">
-            <h3 class="text-xl font-semibold text-slate-800 mb-6 flex items-center">
+        <div class="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-xl border border-slate-200 dark:border-slate-600 p-8 shadow-sm">
+            <h3 class="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-6 flex items-center">
                 <span class="text-2xl mr-3">🍽️</span>
                 Menu Preview
             </h3>
 
             <div class="space-y-6">
-                <div class="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-6 border border-orange-200">
-                    <h4 class="font-semibold text-orange-900 mb-3 flex items-center">
+                <div class="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/30 dark:to-amber-900/30 rounded-xl p-6 border border-orange-200 dark:border-orange-600">
+                    <h4 class="font-semibold text-orange-900 dark:text-orange-300 mb-3 flex items-center">
                         <span class="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
                         Today's Menu
                     </h4>
                     @if (todayMenu != null)
                     {
                         <div>
-                            <p class="font-medium text-slate-800 text-base">@todayMenu.MainDish</p>
+                            <p class="font-medium text-slate-800 dark:text-slate-100 text-base">@todayMenu.MainDish</p>
                             @if (!string.IsNullOrEmpty(todayMenu.Details))
                             {
-                                <p class="text-slate-600 mt-2 text-sm">@todayMenu.Details</p>
+                                <p class="text-slate-600 dark:text-slate-300 mt-2 text-sm">@todayMenu.Details</p>
                             }
                         </div>
                     }
                     else
                     {
-                        <p class="text-slate-500 text-sm">No menu available for today</p>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm">No menu available for today</p>
                     }
                 </div>
 
-                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
-                    <h4 class="font-semibold text-blue-900 mb-3 flex items-center">
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl p-6 border border-blue-200 dark:border-blue-600">
+                    <h4 class="font-semibold text-blue-900 dark:text-blue-300 mb-3 flex items-center">
                         <span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
                         Tomorrow's Menu
                     </h4>
                     @if (tomorrowMenu != null)
                     {
                         <div>
-                            <p class="font-medium text-slate-800 text-base">@tomorrowMenu.MainDish</p>
+                            <p class="font-medium text-slate-800 dark:text-slate-100 text-base">@tomorrowMenu.MainDish</p>
                             @if (!string.IsNullOrEmpty(tomorrowMenu.Details))
                             {
-                                <p class="text-slate-600 mt-2 text-sm">@tomorrowMenu.Details</p>
+                                <p class="text-slate-600 dark:text-slate-300 mt-2 text-sm">@tomorrowMenu.Details</p>
                             }
                         </div>
                     }
                     else
                     {
-                        <p class="text-slate-500 text-sm">No menu available for tomorrow</p>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm">No menu available for tomorrow</p>
                     }
                 </div>
             </div>
 
-            <div class="mt-8 p-6 bg-emerald-50 rounded-xl border border-emerald-200">
-                <h4 class="font-semibold text-emerald-900 mb-4">✨ Features</h4>
-                <ul class="text-sm text-emerald-800 space-y-2">
+            <div class="mt-8 p-6 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl border border-emerald-200 dark:border-emerald-600">
+                <h4 class="font-semibold text-emerald-900 dark:text-emerald-300 mb-4">✨ Features</h4>
+                <ul class="text-sm text-emerald-800 dark:text-emerald-200 space-y-2">
                     <li class="flex items-start">
                         <span class="text-emerald-500 mr-2 text-lg">•</span>
                         <span>Automatic daily menu updates</span>
