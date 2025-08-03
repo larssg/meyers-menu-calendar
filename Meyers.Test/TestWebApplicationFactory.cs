@@ -3,7 +3,10 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Meyers.Web.Data;
+using Meyers.Web.Repositories;
+using Meyers.Web.Services;
 
 namespace Meyers.Test;
 
@@ -32,6 +35,19 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IDispos
             services.AddDbContext<MenuDbContext>(options =>
             {
                 options.UseSqlite(_connection);
+            });
+
+            // Replace MenuScrapingService with test version
+            services.RemoveAll<MenuScrapingService>();
+            
+            // Create a test version that uses local data
+            var testHtmlPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TestData", "meyers-menu-page.html");
+            var mockHttpClient = new MockHttpClient(testHtmlPath);
+            services.AddSingleton<HttpClient>(mockHttpClient);
+            services.AddScoped<MenuScrapingService>(provider =>
+            {
+                var repository = provider.GetRequiredService<IMenuRepository>();
+                return new MenuScrapingService(mockHttpClient, repository);
             });
 
             // Build the service provider and ensure the database is created
