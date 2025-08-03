@@ -40,13 +40,13 @@ public class CalendarService
                 if (!string.IsNullOrEmpty(menuDay.MainDish))
                 {
                     title = CleanupTitle(menuDay.MainDish);
-                    description = !string.IsNullOrEmpty(menuDay.Details) ? menuDay.Details : string.Join(", ", menuDay.MenuItems);
+                    description = !string.IsNullOrEmpty(menuDay.Details) ? FormatDescription(menuDay.Details) : FormatDescription(string.Join(", ", menuDay.MenuItems));
                 }
                 else
                 {
                     // Fallback to old format
                     title = $"Meyers Menu - {menuDay.DayName}";
-                    description = string.Join(", ", menuDay.MenuItems);
+                    description = FormatDescription(string.Join(", ", menuDay.MenuItems));
                 }
 
                 var calendarEvent = new CalendarEvent
@@ -131,5 +131,32 @@ public class CalendarService
         }
 
         return mainSection;
+    }
+    
+    private static string FormatDescription(string description)
+    {
+        if (string.IsNullOrEmpty(description))
+            return description;
+        
+        // Decode HTML entities first
+        var formatted = System.Net.WebUtility.HtmlDecode(description);
+        
+        // Add line breaks before section headers for better readability
+        // Use actual newlines - the iCal library will handle proper encoding
+        formatted = formatted.Replace(", Delikatesser:", "\n\nDelikatesser:")
+                           .Replace(", Dagens salater:", "\n\nDagens salater:")
+                           .Replace(", Brød:", "\n\nBrød:")
+                           .Replace(" | ", "\n");
+        
+        // Break up long lines by adding line breaks after sentences
+        formatted = System.Text.RegularExpressions.Regex.Replace(formatted, @"(\. )([A-ZÆØÅ])", "$1\n$2");
+        
+        // Clean up any multiple spaces and normalize whitespace
+        formatted = System.Text.RegularExpressions.Regex.Replace(formatted, @"[ ]+", " ");
+        
+        // Clean up any extra line breaks at the start
+        formatted = formatted.TrimStart('\n', ' ');
+        
+        return formatted;
     }
 }
