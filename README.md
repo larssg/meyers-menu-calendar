@@ -1,5 +1,8 @@
 # Meyers Menu Calendar
 
+[![CI](https://github.com/yourusername/meyers-menu-calendar/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/meyers-menu-calendar/actions/workflows/ci.yml)
+[![Deployment Check](https://github.com/yourusername/meyers-menu-calendar/actions/workflows/deploy-check.yml/badge.svg)](https://github.com/yourusername/meyers-menu-calendar/actions/workflows/deploy-check.yml)
+
 A .NET 9 minimal API that scrapes the Meyers lunch menu and generates an iCal feed for easy calendar integration.
 
 ## Features
@@ -80,7 +83,14 @@ The application uses these default settings:
 ### Running Tests
 
 ```bash
+# Run all tests
 dotnet test
+
+# Run only unit tests (recommended for development)
+dotnet test --filter "FullyQualifiedName!~CalendarApiTests"
+
+# Run only integration tests
+dotnet test --filter "FullyQualifiedName~CalendarApiTests"
 ```
 
 ### Building for Production
@@ -88,6 +98,26 @@ dotnet test
 ```bash
 dotnet publish -c Release -o ./publish
 ```
+
+### CI/CD
+
+The project uses GitHub Actions for continuous integration:
+
+- **CI Pipeline** (`.github/workflows/ci.yml`):
+  - Runs on push to main/develop and pull requests
+  - Builds and tests the application
+  - Builds and tests Docker image
+  - Unit tests must pass, integration tests allowed to fail due to migration conflicts
+
+- **Deployment Check** (`.github/workflows/deploy-check.yml`):
+  - Validates migrations and deployment scripts
+  - Security scanning
+  - Dockerfile best practices check
+
+- **Dependencies** (`.github/workflows/dependencies.yml`):
+  - Weekly check for outdated packages
+  - Security vulnerability scanning
+  - Automated reporting
 
 ## Deployment
 

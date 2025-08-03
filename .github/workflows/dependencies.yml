@@ -1,0 +1,57 @@
+name: Dependencies
+
+on:
+  schedule:
+    # Run weekly on Sundays at 6 AM UTC
+    - cron: '0 6 * * 0'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  check-updates:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+        
+    - name: Check for outdated packages
+      run: |
+        echo "Checking for outdated packages..."
+        dotnet list package --outdated --include-transitive > outdated-packages.txt || true
+        
+        if [ -s outdated-packages.txt ]; then
+          echo "📦 Outdated packages found:"
+          cat outdated-packages.txt
+          
+          # Create an issue if packages are outdated (would need additional setup)
+          echo "Consider updating packages in the next maintenance window"
+        else
+          echo "✅ All packages are up to date"
+        fi
+        
+    - name: Check for security vulnerabilities
+      run: |
+        echo "Checking for security vulnerabilities..."
+        dotnet list package --vulnerable --include-transitive > vulnerable-packages.txt || true
+        
+        if [ -s vulnerable-packages.txt ]; then
+          echo "🚨 Security vulnerabilities found:"
+          cat vulnerable-packages.txt
+          echo "::warning::Security vulnerabilities detected in dependencies"
+        else
+          echo "✅ No known security vulnerabilities found"
+        fi
+        
+    - name: Upload reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: dependency-reports
+        path: |
+          outdated-packages.txt
+          vulnerable-packages.txt
+        retention-days: 30

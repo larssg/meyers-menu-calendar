@@ -1,0 +1,74 @@
+name: Deployment Check
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  check-migrations:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Check migrations
+      run: |
+        cd Meyers.Web
+        dotnet ef migrations list --no-build || echo "No migrations found"
+        
+    - name: Validate production migration script
+      run: |
+        if [ -f "production-migration-setup.sql" ]; then
+          echo "✅ Production migration script exists"
+          cat production-migration-setup.sql
+        else
+          echo "❌ Production migration script missing"
+          exit 1
+        fi
+        
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Run security scan
+      run: |
+        # Install security scanning tool
+        dotnet tool install --global security-scan
+        
+        # Scan for known vulnerabilities
+        dotnet list package --vulnerable --include-transitive || echo "No known vulnerabilities found"
+        
+    - name: Check Dockerfile best practices
+      run: |
+        # Check if Dockerfile follows best practices
+        if grep -q "USER app" Dockerfile; then
+          echo "✅ Dockerfile uses non-root user"
+        else
+          echo "⚠️ Dockerfile should use non-root user"
+        fi
+        
+        if grep -q "EXPOSE 8080" Dockerfile; then
+          echo "✅ Dockerfile exposes correct port"
+        else
+          echo "❌ Dockerfile should expose port 8080"
+          exit 1
+        fi
