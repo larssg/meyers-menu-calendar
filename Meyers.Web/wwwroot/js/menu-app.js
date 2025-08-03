@@ -9,7 +9,6 @@ const TAB_INACTIVE_CLASS = 'bg-white dark:bg-slate-800 text-slate-700 dark:text-
 
 // Templates
 const templates = {
-    loading: '<p class="text-slate-500 dark:text-slate-400 text-sm">Loading...</p>',
     error: '<p class="text-slate-500 dark:text-slate-400 text-sm">Failed to load menu</p>',
     noMenu: '<p class="text-slate-500 dark:text-slate-400 text-sm">No menu available for {period}</p>',
     menuItem: (title, details) => {
@@ -115,13 +114,6 @@ function updateMenuContent(containerId, data, period) {
 }
 
 async function loadMenuPreview(menuTypeId) {
-    const todayContent = $('todayMenuContent');
-    const tomorrowContent = $('tomorrowMenuContent');
-    
-    // Show loading state
-    if (todayContent) todayContent.innerHTML = templates.loading;
-    if (tomorrowContent) tomorrowContent.innerHTML = templates.loading;
-    
     try {
         const response = await fetch(`/api/menu-preview/${menuTypeId}`);
         if (response.ok) {
@@ -133,6 +125,8 @@ async function loadMenuPreview(menuTypeId) {
         }
     } catch (error) {
         console.error('Failed to fetch menu preview:', error);
+        const todayContent = $('todayMenuContent');
+        const tomorrowContent = $('tomorrowMenuContent');
         if (todayContent) todayContent.innerHTML = templates.error;
         if (tomorrowContent) tomorrowContent.innerHTML = templates.error;
     }
