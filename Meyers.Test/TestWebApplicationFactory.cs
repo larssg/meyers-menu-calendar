@@ -37,6 +37,9 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IDispos
                 options.UseSqlite(_connection);
             });
 
+            // Ensure HttpContextAccessor is registered for Blazor SSR
+            services.AddHttpContextAccessor();
+
             // Replace MenuScrapingService with test version
             services.RemoveAll<MenuScrapingService>();
             

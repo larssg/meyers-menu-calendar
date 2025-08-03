@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Meyers.Web;
 using Meyers.Web.Configuration;
 using Meyers.Web.Data;
 using Meyers.Web.Handlers;
@@ -29,10 +30,10 @@ builder.Services.AddScoped<CalendarService>();
 // Handler registration
 builder.Services.AddScoped<CalendarEndpointHandler>();
 
-// Blazor services
-builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
+// Blazor SSR services
+builder.Services.AddRazorComponents();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddAntiforgery();
 
 // Background service registration
 builder.Services.AddHostedService<MenuCacheBackgroundService>();
@@ -52,18 +53,15 @@ app.UseStaticFiles();
 // Configure routing
 app.UseRouting();
 
-// Map Blazor hub
-app.MapBlazorHub();
+// Add anti-forgery middleware for Blazor SSR
+app.UseAntiforgery();
 
-// Map fallback to page for Blazor
-app.MapFallbackToPage("/_Host");
+// Map Blazor components
+app.MapRazorComponents<App>();
 
 // Map both endpoints to the calendar handler
 app.MapGet("/calendar", async (CalendarEndpointHandler handler) => await handler.GetCalendarAsync());
 app.MapGet("/calendar.ics", async (CalendarEndpointHandler handler) => await handler.GetCalendarAsync());
-
-// Map Razor Pages
-app.MapRazorPages();
 
 app.Run();
 

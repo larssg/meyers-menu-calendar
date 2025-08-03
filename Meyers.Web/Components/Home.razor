@@ -1,48 +1,51 @@
 @page "/"
 @using Meyers.Web.Services
+@using Meyers.Web.Repositories
+@using Meyers.Web.Models
 @inject IHttpContextAccessor HttpContextAccessor
+@inject IMenuRepository MenuRepository
 
 <PageTitle>Meyers Menu Calendar</PageTitle>
 
 <div class="max-w-4xl mx-auto">
     <div class="bg-white rounded-lg shadow-lg p-8">
         <h2 class="text-3xl font-bold text-meyers-green mb-6">Welcome to Meyers Menu Calendar</h2>
-        
+
         <div class="grid md:grid-cols-2 gap-8">
             <!-- Calendar Feed Section -->
             <div class="bg-gray-50 rounded-lg p-6">
                 <h3 class="text-xl font-semibold text-gray-800 mb-4">📅 Calendar Feed URLs</h3>
-                
+
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">iCal Feed URL:</label>
                         <div class="flex">
-                            <input type="text" 
-                                   value="@GetCalendarUrl()" 
-                                   readonly 
+                            <input type="text"
+                                   value="@GetCalendarUrl()"
+                                   readonly
                                    class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md bg-white text-sm" />
-                            <button onclick="copyToClipboard('@GetCalendarUrl()')" 
+                            <button onclick="copyToClipboard('@GetCalendarUrl()')"
                                     class="bg-meyers-green text-white px-4 py-2 rounded-r-md hover:bg-opacity-90 transition-colors">
                                 Copy
                             </button>
                         </div>
                     </div>
-                    
+
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Alternative URL (.ics):</label>
                         <div class="flex">
-                            <input type="text" 
-                                   value="@GetCalendarIcsUrl()" 
-                                   readonly 
+                            <input type="text"
+                                   value="@GetCalendarIcsUrl()"
+                                   readonly
                                    class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md bg-white text-sm" />
-                            <button onclick="copyToClipboard('@GetCalendarIcsUrl()')" 
+                            <button onclick="copyToClipboard('@GetCalendarIcsUrl()')"
                                     class="bg-meyers-green text-white px-4 py-2 rounded-r-md hover:bg-opacity-90 transition-colors">
                                 Copy
                             </button>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="mt-6 p-4 bg-blue-50 rounded-md">
                     <h4 class="font-medium text-blue-800 mb-2">How to add to your calendar:</h4>
                     <ul class="text-sm text-blue-700 space-y-1">
@@ -52,30 +55,54 @@
                     </ul>
                 </div>
             </div>
-            
+
             <!-- Menu Preview Section -->
             <div class="bg-gray-50 rounded-lg p-6">
                 <h3 class="text-xl font-semibold text-gray-800 mb-4">🍽️ Menu Preview</h3>
-                
+
                 <div class="space-y-4">
                     <div class="bg-white rounded-md p-4 border">
                         <h4 class="font-semibold text-meyers-green mb-2">Today's Menu</h4>
-                        <p class="text-gray-600 text-sm">Loading today's menu...</p>
+                        @if (todayMenu != null)
+                        {
+                            <div class="text-sm">
+                                <p class="font-medium text-gray-800">@todayMenu.MainDish</p>
+                                @if (!string.IsNullOrEmpty(todayMenu.Details))
+                                {
+                                    <p class="text-gray-600 mt-1">@todayMenu.Details</p>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-gray-600 text-sm">No menu available for today</p>
+                        }
                     </div>
-                    
+
                     <div class="bg-white rounded-md p-4 border">
                         <h4 class="font-semibold text-meyers-green mb-2">Tomorrow's Menu</h4>
-                        <p class="text-gray-600 text-sm">Loading tomorrow's menu...</p>
+                        @if (tomorrowMenu != null)
+                        {
+                            <div class="text-sm">
+                                <p class="font-medium text-gray-800">@tomorrowMenu.MainDish</p>
+                                @if (!string.IsNullOrEmpty(tomorrowMenu.Details))
+                                {
+                                    <p class="text-gray-600 mt-1">@tomorrowMenu.Details</p>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-gray-600 text-sm">No menu available for tomorrow</p>
+                        }
                     </div>
                 </div>
-                
+
                 <div class="mt-6 p-4 bg-green-50 rounded-md">
                     <h4 class="font-medium text-green-800 mb-2">Features:</h4>
                     <ul class="text-sm text-green-700 space-y-1">
                         <li>• Automatic daily menu updates</li>
-                        <li>• Clean calendar event titles</li>
                         <li>• Detailed descriptions with full menu</li>
-                        <li>• Copenhagen timezone support</li>
                     </ul>
                 </div>
             </div>
@@ -93,13 +120,54 @@
 </script>
 
 @code {
+    private MenuEntry? todayMenu;
+    private MenuEntry? tomorrowMenu;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Try different timezone identifiers for Copenhagen
+            TimeZoneInfo copenhagenTimeZone;
+            try
+            {
+                copenhagenTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
+            }
+            catch
+            {
+                try
+                {
+                    copenhagenTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Copenhagen");
+                }
+                catch
+                {
+                    // Fallback to UTC if timezone lookup fails (e.g., in tests)
+                    copenhagenTimeZone = TimeZoneInfo.Utc;
+                }
+            }
+
+            var copenhagenNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, copenhagenTimeZone);
+            var today = copenhagenNow.Date;
+            var tomorrow = today.AddDays(1);
+
+            todayMenu = await MenuRepository.GetMenuForDateAsync(today);
+            tomorrowMenu = await MenuRepository.GetMenuForDateAsync(tomorrow);
+        }
+        catch
+        {
+            // If anything fails, just use empty menus - better than crashing the page
+            todayMenu = null;
+            tomorrowMenu = null;
+        }
+    }
+
     private string GetCalendarUrl()
     {
         var request = HttpContextAccessor?.HttpContext?.Request;
         if (request == null) return "/calendar";
         return $"{request.Scheme}://{request.Host}/calendar";
     }
-    
+
     private string GetCalendarIcsUrl()
     {
         var request = HttpContextAccessor?.HttpContext?.Request;

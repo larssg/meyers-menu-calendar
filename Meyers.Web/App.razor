@@ -1,20 +1,15 @@
-<Router AppAssembly="@typeof(App).Assembly">
-    <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
-        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
-    </Found>
-    <NotFound>
-        <PageTitle>Not found</PageTitle>
-        <LayoutView Layout="@typeof(MainLayout)">
-            <div class="min-h-screen flex items-center justify-center bg-gray-50">
-                <div class="text-center">
-                    <h1 class="text-6xl font-bold text-gray-300">404</h1>
-                    <p class="text-xl text-gray-600 mt-4">Sorry, there's nothing at this address.</p>
-                    <a href="/" class="mt-6 inline-block bg-meyers-green text-white px-6 py-3 rounded-lg hover:bg-opacity-90 transition-colors">
-                        Go to Home
-                    </a>
-                </div>
-            </div>
-        </LayoutView>
-    </NotFound>
-</Router>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Meyers Menu Calendar</title>
+    <base href="/" />
+    <link href="css/app.css" rel="stylesheet" />
+    <link rel="icon" type="image/png" href="favicon.png"/>
+    <HeadOutlet />
+</head>
+<body class="bg-gray-50 text-gray-900">
+    <Routes />
+</body>
+</html>
