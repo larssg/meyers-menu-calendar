@@ -25,7 +25,7 @@
         {
             <div class="mt-6">
                 <div role="tablist" aria-label="Menu types"
-                     class="inline-flex rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+                     class="flex flex-wrap justify-center gap-2">
                     @foreach (var menuType in menuTypes)
                     {
                         var isActive = menuType.Id == selectedMenuTypeId;
@@ -34,9 +34,10 @@
                             aria-selected="@(isActive.ToString().ToLower())"
                             aria-controls="menuTypePanel"
                             id="tab-@menuType.Id"
-                            class="px-4 py-2 text-sm font-medium transition-colors @(isActive
-                                   ? "bg-teal-600 text-white"
-                                   : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/60 border-l border-slate-200 dark:border-slate-700")"
+                            class="px-4 py-2 text-sm font-medium transition-colors rounded-lg border border-slate-200 dark:border-slate-700
+                                   @(isActive
+                                   ? "bg-teal-600 text-white border-teal-600"
+                                   : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/60")"
                             onclick="selectMenuTab(@menuType.Id, '@menuType.Slug', '@menuType.Name')">
                             @menuType.Name
                         </button>
@@ -99,7 +100,7 @@
 
         <!-- Menu Preview Section -->
         <div class="card p-8">
-            <div class="mb-6">
+            <div class="mb-4">
                 <h3 class="text-xl font-semibold text-slate-900 dark:text-slate-100 flex items-center">
                     <span class="text-2xl mr-3">🍽️</span>
                     Menu Preview
@@ -269,7 +270,7 @@
         if (selectedMenuType != null)
         {
             if (request == null) return $"/calendar/{selectedMenuType.Slug}.ics";
-            
+
             // Always use HTTPS for production URLs
             var scheme = request.IsHttps || request.Headers.ContainsKey("X-Forwarded-Proto") ? "https" : request.Scheme;
             return $"{scheme}://{request.Host}/calendar/{selectedMenuType.Slug}.ics";
@@ -277,7 +278,7 @@
 
         // Fallback to det-velkendte if no menu type found
         if (request == null) return "/calendar/det-velkendte.ics";
-        
+
         // Always use HTTPS for production URLs
         var fallbackScheme = request.IsHttps || request.Headers.ContainsKey("X-Forwarded-Proto") ? "https" : request.Scheme;
         return $"{fallbackScheme}://{request.Host}/calendar/det-velkendte.ics";

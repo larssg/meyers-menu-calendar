@@ -4,8 +4,8 @@ const AUTO_REFRESH_INTERVAL = 3600000; // 1 hour
 const BASE_URL = window.location.origin;
 
 const MENU_NAME_IDS = ['selectedMenuTypeName', 'heroMenuTypeName', 'previewMenuTypeName'];
-const TAB_ACTIVE_CLASS = 'bg-teal-600 text-white';
-const TAB_INACTIVE_CLASS = 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/60 border-l border-slate-200 dark:border-slate-700';
+const TAB_ACTIVE_CLASS = 'bg-teal-600 text-white border-teal-600';
+const TAB_INACTIVE_CLASS = 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/60';
 
 // Templates
 const templates = {
@@ -145,7 +145,7 @@ function selectMenuTab(menuTypeId, slug, name) {
         tablist.querySelectorAll('[role="tab"]').forEach(tab => {
             const isActive = tab.id === `tab-${menuTypeId}`;
             tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
-            tab.className = `px-4 py-2 text-sm font-medium transition-colors ${
+            tab.className = `px-4 py-2 text-sm font-medium transition-colors rounded-lg border border-slate-200 dark:border-slate-700 ${
                 isActive ? TAB_ACTIVE_CLASS : TAB_INACTIVE_CLASS
             }`;
             
