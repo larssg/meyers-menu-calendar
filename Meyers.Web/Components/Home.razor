@@ -7,104 +7,134 @@
 
 <PageTitle>Meyers Menu Calendar</PageTitle>
 
-<div class="max-w-4xl mx-auto">
-    <div class="bg-white rounded-lg shadow-lg p-8">
-        <h2 class="text-3xl font-bold text-meyers-green mb-6">Welcome to Meyers Menu Calendar</h2>
+<div class="max-w-5xl mx-auto">
+    <div class="text-center mb-12">
+        <h2 class="text-4xl font-bold text-slate-800 mb-4">Welcome to Meyers Menu Calendar</h2>
+        <p class="text-lg text-slate-600 max-w-2xl mx-auto">
+            Never miss lunch again! Get Meyers daily menus delivered straight to your calendar with clean, readable event titles.
+        </p>
+    </div>
 
-        <div class="grid md:grid-cols-2 gap-8">
-            <!-- Calendar Feed Section -->
-            <div class="bg-gray-50 rounded-lg p-6">
-                <h3 class="text-xl font-semibold text-gray-800 mb-4">📅 Calendar Feed URLs</h3>
+    <div class="grid lg:grid-cols-2 gap-8">
+        <!-- Calendar Feed Section -->
+        <div class="bg-white/70 backdrop-blur-sm rounded-xl border border-slate-200 p-8 shadow-sm">
+            <h3 class="text-xl font-semibold text-slate-800 mb-6 flex items-center">
+                <span class="text-2xl mr-3">📅</span>
+                Calendar Feed URLs
+            </h3>
 
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">iCal Feed URL:</label>
-                        <div class="flex">
-                            <input type="text"
-                                   value="@GetCalendarUrl()"
-                                   readonly
-                                   class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md bg-white text-sm" />
-                            <button onclick="copyToClipboard('@GetCalendarUrl()')"
-                                    class="bg-meyers-green text-white px-4 py-2 rounded-r-md hover:bg-opacity-90 transition-colors">
-                                Copy
-                            </button>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Alternative URL (.ics):</label>
-                        <div class="flex">
-                            <input type="text"
-                                   value="@GetCalendarIcsUrl()"
-                                   readonly
-                                   class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md bg-white text-sm" />
-                            <button onclick="copyToClipboard('@GetCalendarIcsUrl()')"
-                                    class="bg-meyers-green text-white px-4 py-2 rounded-r-md hover:bg-opacity-90 transition-colors">
-                                Copy
-                            </button>
-                        </div>
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-3">iCal Feed URL:</label>
+                    <div class="flex rounded-lg border border-slate-300 overflow-hidden bg-white">
+                        <input type="text"
+                               value="@GetCalendarUrl()"
+                               readonly
+                               class="flex-1 px-4 py-3 bg-transparent text-sm text-slate-600 focus:outline-none" />
+                        <button onclick="copyToClipboard('@GetCalendarUrl()')"
+                                class="bg-emerald-500 text-white px-6 py-3 hover:bg-emerald-600 transition-colors font-medium">
+                            Copy
+                        </button>
                     </div>
                 </div>
 
-                <div class="mt-6 p-4 bg-blue-50 rounded-md">
-                    <h4 class="font-medium text-blue-800 mb-2">How to add to your calendar:</h4>
-                    <ul class="text-sm text-blue-700 space-y-1">
-                        <li><strong>Google Calendar:</strong> Settings → Add calendar → From URL</li>
-                        <li><strong>Outlook:</strong> Add calendar → Subscribe from web</li>
-                        <li><strong>Apple Calendar:</strong> File → New Calendar Subscription</li>
-                    </ul>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-3">Alternative URL (.ics):</label>
+                    <div class="flex rounded-lg border border-slate-300 overflow-hidden bg-white">
+                        <input type="text"
+                               value="@GetCalendarIcsUrl()"
+                               readonly
+                               class="flex-1 px-4 py-3 bg-transparent text-sm text-slate-600 focus:outline-none" />
+                        <button onclick="copyToClipboard('@GetCalendarIcsUrl()')"
+                                class="bg-emerald-500 text-white px-6 py-3 hover:bg-emerald-600 transition-colors font-medium">
+                            Copy
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Menu Preview Section -->
-            <div class="bg-gray-50 rounded-lg p-6">
-                <h3 class="text-xl font-semibold text-gray-800 mb-4">🍽️ Menu Preview</h3>
+            <div class="mt-8 p-6 bg-sky-50 rounded-xl border border-sky-200">
+                <h4 class="font-semibold text-sky-900 mb-3">How to add to your calendar:</h4>
+                <ul class="text-sm text-sky-800 space-y-2">
+                    <li class="flex items-start">
+                        <span class="font-medium mr-2">Google Calendar:</span>
+                        <span>Settings → Add calendar → From URL</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="font-medium mr-2">Outlook:</span>
+                        <span>Add calendar → Subscribe from web</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="font-medium mr-2">Apple Calendar:</span>
+                        <span>File → New Calendar Subscription</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
 
-                <div class="space-y-4">
-                    <div class="bg-white rounded-md p-4 border">
-                        <h4 class="font-semibold text-meyers-green mb-2">Today's Menu</h4>
-                        @if (todayMenu != null)
-                        {
-                            <div class="text-sm">
-                                <p class="font-medium text-gray-800">@todayMenu.MainDish</p>
-                                @if (!string.IsNullOrEmpty(todayMenu.Details))
-                                {
-                                    <p class="text-gray-600 mt-1">@todayMenu.Details</p>
-                                }
-                            </div>
-                        }
-                        else
-                        {
-                            <p class="text-gray-600 text-sm">No menu available for today</p>
-                        }
-                    </div>
+        <!-- Menu Preview Section -->
+        <div class="bg-white/70 backdrop-blur-sm rounded-xl border border-slate-200 p-8 shadow-sm">
+            <h3 class="text-xl font-semibold text-slate-800 mb-6 flex items-center">
+                <span class="text-2xl mr-3">🍽️</span>
+                Menu Preview
+            </h3>
 
-                    <div class="bg-white rounded-md p-4 border">
-                        <h4 class="font-semibold text-meyers-green mb-2">Tomorrow's Menu</h4>
-                        @if (tomorrowMenu != null)
-                        {
-                            <div class="text-sm">
-                                <p class="font-medium text-gray-800">@tomorrowMenu.MainDish</p>
-                                @if (!string.IsNullOrEmpty(tomorrowMenu.Details))
-                                {
-                                    <p class="text-gray-600 mt-1">@tomorrowMenu.Details</p>
-                                }
-                            </div>
-                        }
-                        else
-                        {
-                            <p class="text-gray-600 text-sm">No menu available for tomorrow</p>
-                        }
-                    </div>
+            <div class="space-y-6">
+                <div class="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-6 border border-orange-200">
+                    <h4 class="font-semibold text-orange-900 mb-3 flex items-center">
+                        <span class="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
+                        Today's Menu
+                    </h4>
+                    @if (todayMenu != null)
+                    {
+                        <div>
+                            <p class="font-medium text-slate-800 text-base">@todayMenu.MainDish</p>
+                            @if (!string.IsNullOrEmpty(todayMenu.Details))
+                            {
+                                <p class="text-slate-600 mt-2 text-sm">@todayMenu.Details</p>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-slate-500 text-sm">No menu available for today</p>
+                    }
                 </div>
 
-                <div class="mt-6 p-4 bg-green-50 rounded-md">
-                    <h4 class="font-medium text-green-800 mb-2">Features:</h4>
-                    <ul class="text-sm text-green-700 space-y-1">
-                        <li>• Automatic daily menu updates</li>
-                        <li>• Detailed descriptions with full menu</li>
-                    </ul>
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+                    <h4 class="font-semibold text-blue-900 mb-3 flex items-center">
+                        <span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                        Tomorrow's Menu
+                    </h4>
+                    @if (tomorrowMenu != null)
+                    {
+                        <div>
+                            <p class="font-medium text-slate-800 text-base">@tomorrowMenu.MainDish</p>
+                            @if (!string.IsNullOrEmpty(tomorrowMenu.Details))
+                            {
+                                <p class="text-slate-600 mt-2 text-sm">@tomorrowMenu.Details</p>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-slate-500 text-sm">No menu available for tomorrow</p>
+                    }
                 </div>
+            </div>
+
+            <div class="mt-8 p-6 bg-emerald-50 rounded-xl border border-emerald-200">
+                <h4 class="font-semibold text-emerald-900 mb-4">✨ Features</h4>
+                <ul class="text-sm text-emerald-800 space-y-2">
+                    <li class="flex items-start">
+                        <span class="text-emerald-500 mr-2 text-lg">•</span>
+                        <span>Automatic daily menu updates</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-emerald-500 mr-2 text-lg">•</span>
+                        <span>Detailed descriptions with full menu</span>
+                    </li>
+                </ul>
             </div>
         </div>
     </div>
