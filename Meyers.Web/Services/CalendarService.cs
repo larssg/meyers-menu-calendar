@@ -15,6 +15,10 @@ public class CalendarService
             Version = "2.0"
         };
 
+        // Add timezone information for Copenhagen
+        var copenhagenTz = new VTimeZone("Europe/Copenhagen");
+        calendar.TimeZones.Add(copenhagenTz);
+
         // If no menu days found, create a simple test event
         if (menuDays.Count == 0)
         {
@@ -23,8 +27,8 @@ public class CalendarService
                 Uid = "test-event",
                 Summary = "No menu found - Test Event",
                 Description = "Unable to scrape menu from Meyers website",
-                Start = new CalDateTime(DateTime.SpecifyKind(DateTime.Today.AddHours(12), DateTimeKind.Unspecified)),
-                End = new CalDateTime(DateTime.SpecifyKind(DateTime.Today.AddHours(13), DateTimeKind.Unspecified))
+                Start = new CalDateTime(DateTime.SpecifyKind(DateTime.Today.AddHours(12), DateTimeKind.Unspecified), "Europe/Copenhagen"),
+                End = new CalDateTime(DateTime.SpecifyKind(DateTime.Today.AddHours(13), DateTimeKind.Unspecified), "Europe/Copenhagen")
             };
             calendar.Events.Add(testEvent);
         }
@@ -33,6 +37,10 @@ public class CalendarService
             foreach (var menuDay in menuDays)
             {
                 var date = DateTime.SpecifyKind(menuDay.Date, DateTimeKind.Unspecified);
+
+                // Create dates with Copenhagen timezone
+                var startTime = new CalDateTime(date.AddHours(12), "Europe/Copenhagen");
+                var endTime = new CalDateTime(date.AddHours(13), "Europe/Copenhagen");
 
                 // Use new MainDish and Details if available, otherwise fall back to MenuItems
                 string title, description;
@@ -54,8 +62,8 @@ public class CalendarService
                     Uid = $"meyers-menu-{date:yyyy-MM-dd}",
                     Summary = title,
                     Description = description,
-                    Start = new CalDateTime(date.AddHours(12)),
-                    End = new CalDateTime(date.AddHours(13))
+                    Start = startTime,
+                    End = endTime
                 };
 
                 calendar.Events.Add(calendarEvent);
@@ -112,17 +120,18 @@ public class CalendarService
         }
 
         // If the result is too long, take only the first sentence or reasonable portion
-        if (mainSection.Length > 80)
+        const int maxTitleLength = 80;
+        if (mainSection.Length > maxTitleLength)
         {
             var firstSentence = mainSection.Split('.')[0];
             if (firstSentence.Length > 20 && firstSentence.Length < mainSection.Length)
             {
                 mainSection = firstSentence.Trim();
             }
-            else if (mainSection.Length > 80)
+            else if (mainSection.Length > maxTitleLength)
             {
                 // Find a good breaking point (space) around 60-80 characters
-                var breakPoint = mainSection.LastIndexOf(' ', Math.Min(80, mainSection.Length - 1));
+                var breakPoint = mainSection.LastIndexOf(' ', Math.Min(maxTitleLength, mainSection.Length - 1));
                 if (breakPoint > 40)
                 {
                     mainSection = mainSection.Substring(0, breakPoint).Trim() + "...";
@@ -132,31 +141,31 @@ public class CalendarService
 
         return mainSection;
     }
-    
+
     private static string FormatDescription(string description)
     {
         if (string.IsNullOrEmpty(description))
             return description;
-        
+
         // Decode HTML entities first
         var formatted = System.Net.WebUtility.HtmlDecode(description);
-        
+
         // Add line breaks before section headers for better readability
         // Use actual newlines - the iCal library will handle proper encoding
         formatted = formatted.Replace(", Delikatesser:", "\n\nDelikatesser:")
                            .Replace(", Dagens salater:", "\n\nDagens salater:")
                            .Replace(", Brød:", "\n\nBrød:")
                            .Replace(" | ", "\n");
-        
+
         // Break up long lines by adding line breaks after sentences
         formatted = System.Text.RegularExpressions.Regex.Replace(formatted, @"(\. )([A-ZÆØÅ])", "$1\n$2");
-        
+
         // Clean up any multiple spaces and normalize whitespace
         formatted = System.Text.RegularExpressions.Regex.Replace(formatted, @"[ ]+", " ");
-        
+
         // Clean up any extra line breaks at the start
         formatted = formatted.TrimStart('\n', ' ');
-        
+
         return formatted;
     }
 }
