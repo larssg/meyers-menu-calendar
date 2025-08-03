@@ -16,6 +16,9 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IDispos
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        // Set test environment variable for refresh secret
+        Environment.SetEnvironmentVariable("REFRESH_SECRET", "test-secret-123");
+        
         builder.ConfigureServices(services =>
         {
             // Remove the existing database context registration

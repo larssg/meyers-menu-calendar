@@ -8,6 +8,12 @@ using Meyers.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure Kestrel to remove Server header
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.AddServerHeader = false;
+});
+
 // Configuration
 builder.Services.Configure<MenuCacheOptions>(
     builder.Configuration.GetSection(MenuCacheOptions.SectionName));
