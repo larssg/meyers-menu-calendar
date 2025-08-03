@@ -260,4 +260,35 @@ public class CalendarApiTests : IClassFixture<TestWebApplicationFactory>
         // Clean up
         _client.DefaultRequestHeaders.Remove("X-Forwarded-Proto");
     }
+
+    [Fact]
+    public async Task Get_Root_Includes_Versioned_JavaScript_File()
+    {
+        var response = await _client.GetAsync("/");
+        
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        
+        var content = await response.Content.ReadAsStringAsync();
+        
+        // Verify that the JavaScript file is included with proper path resolution and versioning
+        Assert.Contains("menu-app.js?v=", content);
+        Assert.Contains("src=\"/js/menu-app.js", content);
+    }
+
+    [Fact]
+    public async Task Get_JavaScript_File_Returns_Correct_Content()
+    {
+        // Request the JavaScript file directly
+        var jsResponse = await _client.GetAsync("/js/menu-app.js");
+        
+        Assert.Equal(HttpStatusCode.OK, jsResponse.StatusCode);
+        Assert.Equal("text/javascript", jsResponse.Content.Headers.ContentType?.ToString());
+        
+        var jsContent = await jsResponse.Content.ReadAsStringAsync();
+        
+        // Verify the JavaScript contains our functions
+        Assert.Contains("function copyToClipboard", jsContent);
+        Assert.Contains("function selectMenuTab", jsContent);
+        Assert.Contains("TOAST_DURATION", jsContent);
+    }
 }

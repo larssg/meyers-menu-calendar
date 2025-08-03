@@ -26,6 +26,7 @@ This is a .NET application that scrapes menu content from the Meyers restaurant 
   - `Configuration/MenuCacheOptions.cs`: Configuration options for cache intervals
   - `Styles/app.css`: Tailwind CSS v4 source configuration
   - `wwwroot/css/app.css`: Compiled CSS (auto-generated during build)
+  - `wwwroot/js/menu-app.js`: Client-side JavaScript for menu interactions and auto-refresh
   - `package.json`: Node.js dependencies for Tailwind CSS compilation
   - `Migrations/`: Entity Framework Core database migrations
 - **Meyers.Test**: xUnit test project with comprehensive test coverage including web interface tests
