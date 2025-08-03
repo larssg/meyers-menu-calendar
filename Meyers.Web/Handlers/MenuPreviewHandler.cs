@@ -38,16 +38,18 @@ public class MenuPreviewHandler(IMenuRepository menuRepository)
 
             return Results.Ok(new
             {
-                today = todayMenu != null ? new
-                {
-                    title = CalendarService.CleanupTitle(todayMenu.MainDish),
-                    details = todayMenu.Details
-                } : null,
-                tomorrow = tomorrowMenu != null ? new
-                {
-                    title = CalendarService.CleanupTitle(tomorrowMenu.MainDish),
-                    details = tomorrowMenu.Details
-                } : null
+                today = todayMenu != null
+                    ? new
+                    {
+                        title = CalendarService.CleanupTitle(todayMenu.MainDish)
+                    }
+                    : null,
+                tomorrow = tomorrowMenu != null
+                    ? new
+                    {
+                        title = CalendarService.CleanupTitle(tomorrowMenu.MainDish)
+                    }
+                    : null
             });
         }
         catch (Exception ex)
