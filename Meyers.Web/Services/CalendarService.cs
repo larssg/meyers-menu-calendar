@@ -74,7 +74,7 @@ public class CalendarService
         return serializer.SerializeToString(calendar) ?? string.Empty;
     }
 
-    private static string CleanupTitle(string title)
+    public static string CleanupTitle(string title)
     {
         if (string.IsNullOrEmpty(title))
             return title;

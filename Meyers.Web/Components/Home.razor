@@ -4,6 +4,7 @@
 @using Meyers.Web.Models
 @inject IHttpContextAccessor HttpContextAccessor
 @inject IMenuRepository MenuRepository
+@inject CalendarService CalendarService
 
 <PageTitle>Meyers Menu Calendar</PageTitle>
 
@@ -88,7 +89,7 @@
                     @if (todayMenu != null)
                     {
                         <div>
-                            <p class="font-medium text-slate-800 dark:text-slate-100 text-base">@todayMenu.MainDish</p>
+                            <p class="font-medium text-slate-800 dark:text-slate-100 text-base">@CalendarService.CleanupTitle(todayMenu.MainDish)</p>
                             @if (!string.IsNullOrEmpty(todayMenu.Details))
                             {
                                 <p class="text-slate-600 dark:text-slate-300 mt-2 text-sm">@todayMenu.Details</p>
@@ -109,7 +110,7 @@
                     @if (tomorrowMenu != null)
                     {
                         <div>
-                            <p class="font-medium text-slate-800 dark:text-slate-100 text-base">@tomorrowMenu.MainDish</p>
+                            <p class="font-medium text-slate-800 dark:text-slate-100 text-base">@CalendarService.CleanupTitle(tomorrowMenu.MainDish)</p>
                             @if (!string.IsNullOrEmpty(tomorrowMenu.Details))
                             {
                                 <p class="text-slate-600 dark:text-slate-300 mt-2 text-sm">@tomorrowMenu.Details</p>
