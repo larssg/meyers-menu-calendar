@@ -14,9 +14,6 @@ A .NET 9 application that scrapes the Meyers lunch menu and provides both an iCa
 - 📆 **Historical Data**: Preserves past menus and includes future data
 - 📱 **Universal**: Works with Google Calendar, Outlook, Apple Calendar, etc.
 - 🎨 **Modern Design**: Responsive UI with Tailwind CSS v4 and glassmorphism effects
-- 🍽️ **Multiple Menu Types**: Support for all Meyers menu types with dynamic discovery
-- 🔒 **Admin Controls**: Hidden endpoint for manual menu refresh with secret protection
-- ⚡ **Optimized Assets**: .NET 9 static assets with automatic cache busting
 
 ## Quick Start
 
@@ -47,17 +44,14 @@ dotnet run --project Meyers.Web
 ### Endpoints
 
 - `GET /` - Beautiful web interface with menu preview and calendar URLs
-- `GET /calendar/{menuType}.ics` - Returns iCal feed for specific menu type (e.g., `/calendar/det-velkendte.ics`, `/calendar/den-groenne.ics`)
-- `GET /api/menu-types` - Returns available menu types with slugs
-- `GET /api/menu-preview/{menuTypeId}` - Returns today's and tomorrow's menu preview for specific menu type
-- `GET /admin/refresh-menus?secret={REFRESH_SECRET}` - Hidden endpoint for manual menu refresh (requires REFRESH_SECRET environment variable)
+- `GET /calendar` - Returns the iCal feed with menu data
+- `GET /calendar.ics` - Same as /calendar (for compatibility with calendar apps expecting .ics extension)
 
 ### Subscribe to Calendar
 
 1. Visit the homepage at `http://localhost:5116` 
-2. Select your preferred menu type using the tabs (Det velkendte, Den grønne, etc.)
-3. Copy the calendar URL from the web interface
-4. Add to your calendar app:
+2. Copy either calendar URL from the web interface
+3. Add to your calendar app:
    - **Google Calendar**: Settings → Add calendar → From URL
    - **Outlook**: Add calendar → Subscribe from web
    - **Apple Calendar**: File → New Calendar Subscription
@@ -75,18 +69,15 @@ Meyers.Web/
 │   ├── CalendarService.cs        # Generates iCal format
 │   └── MenuCacheBackgroundService.cs # Background refresh
 ├── Handlers/
-│   ├── CalendarEndpointHandler.cs # Clean calendar API logic
-│   ├── MenuPreviewHandler.cs      # Menu preview API logic
-│   └── RefreshMenusHandler.cs     # Admin refresh endpoint logic
+│   └── CalendarEndpointHandler.cs # Clean calendar API logic
 ├── Data/
 │   └── MenuDbContext.cs          # Entity Framework setup
 ├── Models/
 │   └── MenuEntry.cs              # Database model
 ├── Styles/
 │   └── app.css                   # Tailwind CSS v4 configuration
-├── wwwroot/
-│   ├── css/app.css              # Compiled CSS (auto-generated, served via MapStaticAssets)
-│   └── js/menu-app.js           # Client-side JavaScript (served via MapStaticAssets with cache busting)
+├── wwwroot/css/
+│   └── app.css                   # Compiled CSS (auto-generated)
 ├── package.json                  # Node.js dependencies for Tailwind
 └── Program.cs                    # Blazor SSR + API setup
 ```
@@ -212,7 +203,6 @@ The repository includes a `Dockerfile` for deployment since .NET 9 may not be av
 3. **Set environment variables (optional):**
    - Go to **Environment** tab
    - Add: `DATABASE_PATH=Data Source=/app/data/menus.db` (already set in Dockerfile)
-   - Add: `REFRESH_SECRET=your-secret-here` (for admin refresh endpoint)
 
 4. **Deploy:**
    - Click Deploy
@@ -227,11 +217,10 @@ The repository includes a `Dockerfile` for deployment since .NET 9 may not be av
 ## How It Works
 
 1. **Scraping**: The service fetches the weekly menu from meyers.dk
-2. **Parsing**: Extracts menu items for all available menu types, focusing on the main warm dish
+2. **Parsing**: Extracts menu items, focusing on the main warm dish
 3. **Caching**: Stores in SQLite to reduce load on Meyers' servers
-4. **Calendar Generation**: Creates iCal events for each weekday lunch for each menu type
+4. **Calendar Generation**: Creates iCal events for each weekday lunch
 5. **Smart Titles**: Removes boilerplate text like "Varm ret med tilbehør" to show just the dish name
-6. **Dynamic Discovery**: Automatically detects and supports new menu types added by Meyers
 
 ## Calendar Event Format
 
