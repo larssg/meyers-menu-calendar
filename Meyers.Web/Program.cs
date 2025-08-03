@@ -13,8 +13,8 @@ builder.Services.Configure<MenuCacheOptions>(
     builder.Configuration.GetSection(MenuCacheOptions.SectionName));
 
 // Database configuration
-var databasePath = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? Environment.GetEnvironmentVariable("DATABASE_PATH") 
+var databasePath = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? Environment.GetEnvironmentVariable("DATABASE_PATH")
     ?? "Data Source=menus.db";
 
 builder.Services.AddDbContext<MenuDbContext>(options =>
@@ -62,12 +62,12 @@ app.Use(async (context, next) =>
                               userAgent.Contains("skypeuripreview") ||
                               userAgent.Contains("slackbot") ||
                               userAgent.Contains("discordbot");
-    
+
     if (!isSocialMediaCrawler)
     {
-        context.Response.Headers.Add("X-Robots-Tag", "noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate, nocache");
+        context.Response.Headers["X-Robots-Tag"] = "noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate, nocache";
     }
-    
+
     await next();
 });
 
