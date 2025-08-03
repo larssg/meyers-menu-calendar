@@ -18,11 +18,12 @@ public class MenuScrapingServiceTests
     private MenuDbContext CreateInMemoryContext()
     {
         var options = new DbContextOptionsBuilder<MenuDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .UseSqlite($"Data Source=:memory:")
             .Options;
         
         var context = new MenuDbContext(options);
-        context.Database.EnsureCreated();
+        context.Database.OpenConnection();
+        context.Database.Migrate();
         return context;
     }
     

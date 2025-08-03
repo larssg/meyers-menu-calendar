@@ -3,12 +3,12 @@ using System.Net;
 
 namespace Meyers.Test;
 
-public class CalendarApiTests : IClassFixture<WebApplicationFactory<Program>>
+public class CalendarApiTests : IClassFixture<TestWebApplicationFactory>
 {
-    private readonly WebApplicationFactory<Program> _factory;
+    private readonly TestWebApplicationFactory _factory;
     private readonly HttpClient _client;
 
-    public CalendarApiTests(WebApplicationFactory<Program> factory)
+    public CalendarApiTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = _factory.CreateClient();
