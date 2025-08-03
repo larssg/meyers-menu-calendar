@@ -2,10 +2,23 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
+# Install Node.js for Tailwind CSS compilation
+RUN apt-get update && apt-get install -y curl && \
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs && \
+    rm -rf /var/lib/apt/lists/*
+
 # Copy csproj files and restore dependencies
 COPY Meyers.Web/Meyers.Web.csproj Meyers.Web/
 COPY Meyers.Test/Meyers.Test.csproj Meyers.Test/
 RUN dotnet restore Meyers.Web/Meyers.Web.csproj
+
+# Copy package.json and Tailwind source files, install npm dependencies
+COPY Meyers.Web/package*.json Meyers.Web/
+COPY Meyers.Web/Styles/ Meyers.Web/Styles/
+WORKDIR /src/Meyers.Web
+RUN npm install
+WORKDIR /src
 
 # Copy everything else and build
 COPY . .
