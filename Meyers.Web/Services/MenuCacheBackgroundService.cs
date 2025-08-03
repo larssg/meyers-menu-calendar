@@ -50,17 +50,21 @@ public class MenuCacheBackgroundService(
         var menuScrapingService = scope.ServiceProvider.GetRequiredService<MenuScrapingService>();
 
         var lastUpdate = await menuRepository.GetLastUpdateTimeAsync();
-        var shouldRefresh = lastUpdate == null || DateTime.UtcNow - lastUpdate.Value > _options.RefreshInterval;
+        
+        // Refresh proactively BEFORE expiry to avoid request handlers triggering expensive operations
+        // Use 90% of refresh interval as the threshold (e.g., refresh at 5.4 hours instead of 6 hours)
+        var proactiveThreshold = TimeSpan.FromTicks((long)(_options.RefreshInterval.Ticks * 0.9));
+        var shouldRefresh = lastUpdate == null || DateTime.UtcNow - lastUpdate.Value > proactiveThreshold;
 
         if (shouldRefresh)
         {
-            logger.LogInformation("Cache is stale, refreshing menu data...");
+            var timeSinceUpdate = lastUpdate.HasValue ? DateTime.UtcNow - lastUpdate.Value : TimeSpan.Zero;
+            logger.LogInformation("Cache needs proactive refresh (last updated {TimeSinceUpdate} ago), refreshing menu data...", timeSinceUpdate);
 
             try
             {
-                // Force refresh by calling the scraping service
-                // The service will automatically cache the results
-                var menuDays = await menuScrapingService.ScrapeMenuAsync();
+                // Force refresh by calling the scraping service directly
+                var menuDays = await menuScrapingService.ScrapeMenuAsync(forceRefresh: true);
 
                 logger.LogInformation("Successfully refreshed menu cache with {Count} menu days", menuDays.Count);
             }

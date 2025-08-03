@@ -60,7 +60,7 @@ Scrapes meyers.dk tab structure. Auto-discovers menu types from `data-tab-conten
 
 ## Background Processing
 
-MenuCacheBackgroundService refreshes menu data every 6 hours without blocking API requests.
+MenuCacheBackgroundService proactively refreshes menu data at 90% of cache lifetime (5.4 hours) to prevent request handlers from triggering expensive scraping operations.
 
 ## Testing
 
