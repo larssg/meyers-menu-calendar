@@ -56,3 +56,21 @@ jobs:
         # Cleanup
         docker stop test-container
         docker rm test-container
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [test, build-docker]
+    # Only deploy from main branch
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - name: Trigger Dokploy deployment
+      run: |
+        curl -X POST https://app.dokploy.com/api/deploy/KQ6ULCtwhQ3OJM2FWlROb \
+          -H "Content-Type: application/json" \
+          -d '{"trigger": "github-action"}' \
+          --fail \
+          --show-error \
+          --silent \
+          --output /dev/null
+        echo "✅ Deployment triggered successfully"

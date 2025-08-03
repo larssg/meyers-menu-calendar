@@ -101,13 +101,14 @@ dotnet publish -c Release -o ./publish
 
 ### CI/CD
 
-The project uses GitHub Actions for continuous integration:
+The project uses GitHub Actions for continuous integration and deployment:
 
 - **CI Pipeline** (`.github/workflows/ci.yml`):
   - Runs on push to main/develop and pull requests
   - Builds and tests the application
   - Builds and tests Docker image
   - Unit tests must pass, integration tests allowed to fail due to migration conflicts
+  - **Automatic deployment**: When tests pass on the main branch, automatically triggers deployment to Dokploy
 
 - **Deployment Check** (`.github/workflows/deploy-check.yml`):
   - Validates migrations and deployment scripts
@@ -118,6 +119,10 @@ The project uses GitHub Actions for continuous integration:
   - Weekly check for outdated packages
   - Security vulnerability scanning
   - Automated reporting
+
+### Automatic Deployment
+
+When code is pushed to the `main` branch and all tests pass, the CI pipeline automatically triggers a deployment to Dokploy via webhook. This ensures that production always runs the latest tested code.
 
 ## Deployment
 
