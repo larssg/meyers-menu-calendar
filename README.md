@@ -1,6 +1,6 @@
 # Meyers Menu Calendar
 
-[![Build and Deploy](https://github.com/yourusername/meyers-menu-calendar/actions/workflows/build-and-deploy.yml/badge.svg)](https://github.com/yourusername/meyers-menu-calendar/actions/workflows/build-and-deploy.yml)
+[![Build and Deploy](https://github.com/larssg/meyers-menu-calendar/actions/workflows/build-and-deploy.yml/badge.svg)](https://github.com/larssg/meyers-menu-calendar/actions/workflows/build-and-deploy.yml)
 
 A .NET 9 minimal API that scrapes the Meyers lunch menu and generates an iCal feed for easy calendar integration.
 
