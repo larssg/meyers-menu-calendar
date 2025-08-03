@@ -29,6 +29,11 @@ builder.Services.AddScoped<CalendarService>();
 // Handler registration
 builder.Services.AddScoped<CalendarEndpointHandler>();
 
+// Blazor services
+builder.Services.AddRazorPages();
+builder.Services.AddServerSideBlazor();
+builder.Services.AddHttpContextAccessor();
+
 // Background service registration
 builder.Services.AddHostedService<MenuCacheBackgroundService>();
 
@@ -41,11 +46,24 @@ using (var scope = app.Services.CreateScope())
     context.Database.Migrate();
 }
 
-app.MapGet("/", () => "Meyers Menu Calendar API");
+// Configure static files
+app.UseStaticFiles();
+
+// Configure routing
+app.UseRouting();
+
+// Map Blazor hub
+app.MapBlazorHub();
+
+// Map fallback to page for Blazor
+app.MapFallbackToPage("/_Host");
 
 // Map both endpoints to the calendar handler
 app.MapGet("/calendar", async (CalendarEndpointHandler handler) => await handler.GetCalendarAsync());
 app.MapGet("/calendar.ics", async (CalendarEndpointHandler handler) => await handler.GetCalendarAsync());
+
+// Map Razor Pages
+app.MapRazorPages();
 
 app.Run();
 

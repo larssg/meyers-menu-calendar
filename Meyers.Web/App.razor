@@ -1,0 +1,20 @@
+<Router AppAssembly="@typeof(App).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+    </Found>
+    <NotFound>
+        <PageTitle>Not found</PageTitle>
+        <LayoutView Layout="@typeof(MainLayout)">
+            <div class="min-h-screen flex items-center justify-center bg-gray-50">
+                <div class="text-center">
+                    <h1 class="text-6xl font-bold text-gray-300">404</h1>
+                    <p class="text-xl text-gray-600 mt-4">Sorry, there's nothing at this address.</p>
+                    <a href="/" class="mt-6 inline-block bg-meyers-green text-white px-6 py-3 rounded-lg hover:bg-opacity-90 transition-colors">
+                        Go to Home
+                    </a>
+                </div>
+            </div>
+        </LayoutView>
+    </NotFound>
+</Router>

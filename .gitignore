@@ -373,3 +373,7 @@ yarn-error.log*
 *.db
 *.db-shm
 *.db-wal
+
+# Frontend build artifacts
+Meyers.Web/wwwroot/css/app.css
+Meyers.Web/package-lock.json

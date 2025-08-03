@@ -28,14 +28,16 @@ public class CalendarApiTests : IClassFixture<TestWebApplicationFactory>
     }
 
     [Fact]
-    public async Task Get_Root_Returns_API_Description()
+    public async Task Get_Root_Returns_HTML_Page()
     {
         var response = await _client.GetAsync("/");
         
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("text/html; charset=utf-8", response.Content.Headers.ContentType?.ToString());
         
         var content = await response.Content.ReadAsStringAsync();
-        Assert.Equal("Meyers Menu Calendar API", content);
+        Assert.Contains("Meyers Menu Calendar", content);
+        Assert.Contains("<!DOCTYPE html>", content);
     }
 
     [Fact]

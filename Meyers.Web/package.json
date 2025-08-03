@@ -1,0 +1,13 @@
+{
+  "name": "meyers-menu-calendar",
+  "version": "1.0.0",
+  "description": "Meyers Menu Calendar Web UI",
+  "scripts": {
+    "dev": "tailwindcss -i ./Styles/app.css -o ./wwwroot/css/app.css --watch",
+    "build": "tailwindcss -i ./Styles/app.css -o ./wwwroot/css/app.css --minify",
+    "watch": "tailwindcss -i ./Styles/app.css -o ./wwwroot/css/app.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "4.0.0-alpha.34"
+  }
+}

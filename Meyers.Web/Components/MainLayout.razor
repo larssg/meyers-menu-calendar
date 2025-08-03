@@ -1,0 +1,20 @@
+@inherits LayoutComponentBase
+
+<div class="min-h-screen bg-gray-50">
+    <header class="bg-meyers-green text-white shadow-lg">
+        <div class="container mx-auto px-4 py-6">
+            <h1 class="text-2xl font-bold">🍽️ Meyers Menu Calendar</h1>
+            <p class="text-meyers-light-green mt-1">Fresh lunch menus delivered to your calendar</p>
+        </div>
+    </header>
+    
+    <main class="container mx-auto px-4 py-8">
+        @Body
+    </main>
+    
+    <footer class="bg-gray-800 text-gray-300 mt-auto">
+        <div class="container mx-auto px-4 py-6 text-center">
+            <p>&copy; @DateTime.Now.Year Meyers Menu Calendar. Not affiliated with Meyers Kantiner.</p>
+        </div>
+    </footer>
+</div>

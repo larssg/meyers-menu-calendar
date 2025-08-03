@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+/* Tailwind v4 CSS-based configuration */
+@theme {
+  --color-meyers-green: #2D5016;
+  --color-meyers-light-green: #8FBC8F;
+  --color-meyers-orange: #FF8C00;
+  
+  --color-meyers-50: #f7f9f5;
+  --color-meyers-100: #e8f1e3;
+  --color-meyers-200: #d1e3c8;
+  --color-meyers-300: #aecfa0;
+  --color-meyers-400: #8FBC8F;
+  --color-meyers-500: #6b9d6b;
+  --color-meyers-600: #2D5016;
+  --color-meyers-700: #254113;
+  --color-meyers-800: #1e3410;
+  --color-meyers-900: #192a0d;
+  --color-meyers-950: #0f1a08;
+}
+
+/* Custom utilities */
+@layer utilities {
+  .text-meyers-green {
+    color: var(--color-meyers-green);
+  }
+  
+  .bg-meyers-green {
+    background-color: var(--color-meyers-green);
+  }
+  
+  .text-meyers-light-green {
+    color: var(--color-meyers-light-green);
+  }
+  
+  .bg-meyers-light-green {
+    background-color: var(--color-meyers-light-green);
+  }
+  
+  .text-meyers-orange {
+    color: var(--color-meyers-orange);
+  }
+  
+  .bg-meyers-orange {
+    background-color: var(--color-meyers-orange);
+  }
+}
