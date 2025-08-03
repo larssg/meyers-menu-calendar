@@ -11,8 +11,12 @@ builder.Services.Configure<MenuCacheOptions>(
     builder.Configuration.GetSection(MenuCacheOptions.SectionName));
 
 // Database configuration
+var databasePath = builder.Configuration.GetConnectionString("DefaultConnection") 
+    ?? Environment.GetEnvironmentVariable("DATABASE_PATH") 
+    ?? "Data Source=menus.db";
+
 builder.Services.AddDbContext<MenuDbContext>(options =>
-    options.UseSqlite("Data Source=menus.db"));
+    options.UseSqlite(databasePath));
 
 // Repository registration
 builder.Services.AddScoped<IMenuRepository, MenuRepository>();

@@ -120,7 +120,10 @@ The unique index on the Date field will be automatically created when you deploy
 # Build the Docker image
 docker build -t meyers-menu-calendar .
 
-# Run the container
+# Run the container with persistent database storage
+docker run -p 8080:8080 -v meyers-data:/app/data meyers-menu-calendar
+
+# Or run without persistence (for testing)
 docker run -p 8080:8080 meyers-menu-calendar
 ```
 
@@ -128,12 +131,39 @@ docker run -p 8080:8080 meyers-menu-calendar
 
 The repository includes a `Dockerfile` for deployment since .NET 9 may not be available in nixpacks yet.
 
-For Dokploy deployment:
-1. Connect your GitHub repository
-2. Set the port to 8080
-3. Deploy (it will automatically use the Dockerfile)
+#### Dokploy deployment steps:
 
-The database will be automatically created with the unique Date index when the app starts for the first time.
+1. **Create the application:**
+   - Connect your GitHub repository
+   - Set the port to 8080
+   - Deploy type: Docker
+
+2. **Configure persistent storage for the database:**
+   - Go to your application → **Mounts** tab
+   - Add a new mount:
+     - **Type**: Volume
+     - **Name**: `meyers-db-data`
+     - **Mount Path**: `/app/data`
+     - **Host Path**: Leave empty (Dokploy manages it)
+
+3. **Set environment variables (optional):**
+   - Go to **Environment** tab
+   - Add: `DATABASE_PATH=Data Source=/app/data/menus.db` (already set in Dockerfile)
+
+4. **Deploy:**
+   - Click Deploy
+   - The database will be automatically created with the unique Date index
+
+#### Database persistence:
+- The SQLite database is stored in `/app/data/menus.db` inside the container
+- This directory is mounted to a persistent volume, so data survives deployments
+- The database will be automatically migrated on each deployment
+
+#### First-time migration (if upgrading existing deployment):
+If you're upgrading from a version without persistent storage, you may need to manually apply the migration setup. Access your container console and run:
+```bash
+sqlite3 /app/data/menus.db < production-migration-setup.sql
+```
 
 ## How It Works
 
