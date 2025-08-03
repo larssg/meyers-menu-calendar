@@ -2,10 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Meyers Menu Calendar</title>
     <base href="/" />
     <link href="css/app.css" rel="stylesheet" />
@@ -13,28 +10,7 @@
     <HeadOutlet />
 </head>
 <body class="bg-app text-slate-900 dark:text-slate-100 antialiased">
-<Routes />
-
-<script src="/js/menu-app.js?v=@GetFileVersion()"></script>
-
-@code {
-    private static string GetFileVersion()
-    {
-        try
-        {
-            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "js", "menu-app.js");
-            if (File.Exists(filePath))
-            {
-                var hash = System.Security.Cryptography.MD5.HashData(File.ReadAllBytes(filePath));
-                return Convert.ToHexString(hash)[..8]; // Use first 8 characters
-            }
-        }
-        catch
-        {
-            // Fall back to timestamp if file reading fails
-        }
-        return DateTime.Now.Ticks.ToString("X")[..8];
-    }
-}
+    <Routes />
+    <script src="@Assets["js/menu-app.js"]"></script>
 </body>
 </html>
