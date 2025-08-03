@@ -12,7 +12,7 @@ public class MenuDbContext(DbContextOptions<MenuDbContext> options) : DbContext(
         modelBuilder.Entity<MenuEntry>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.HasIndex(e => e.Date);
+            entity.HasIndex(e => e.Date).IsUnique();
             entity.Property(e => e.Date).IsRequired();
             entity.Property(e => e.DayName).IsRequired().HasMaxLength(50);
             entity.Property(e => e.MenuItems).IsRequired();

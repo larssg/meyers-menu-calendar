@@ -91,6 +91,29 @@ dotnet publish -c Release -o ./publish
 
 ## Deployment
 
+### Database Migrations
+
+The application uses Entity Framework migrations to manage database schema changes. When you deploy, the app automatically applies any pending migrations at startup using `context.Database.Migrate()`.
+
+#### First-time deployment to existing production database:
+
+If you already have a production database with MenuEntries table but no migrations history, you need to manually mark the initial migration as applied to avoid trying to recreate the table:
+
+1. **Before deploying the new version**, connect to your production database and run:
+   ```sql
+   CREATE TABLE IF NOT EXISTS __EFMigrationsHistory (
+       MigrationId TEXT NOT NULL PRIMARY KEY, 
+       ProductVersion TEXT NOT NULL
+   );
+   INSERT INTO __EFMigrationsHistory (MigrationId, ProductVersion) 
+   VALUES ('20250803010915_InitialCreate', '9.0.7');
+   ```
+
+2. **Deploy the new version** - it will automatically apply the unique index migration
+
+#### New deployments:
+The unique index on the Date field will be automatically created when you deploy to a fresh environment.
+
 ### Using Docker (Recommended)
 
 ```bash
@@ -109,6 +132,8 @@ For Dokploy deployment:
 1. Connect your GitHub repository
 2. Set the port to 8080
 3. Deploy (it will automatically use the Dockerfile)
+
+The database will be automatically created with the unique Date index when the app starts for the first time.
 
 ## How It Works
 

@@ -26,11 +26,11 @@ builder.Services.AddHostedService<MenuCacheBackgroundService>();
 
 var app = builder.Build();
 
-// Ensure the database is created
+// Apply database migrations
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<MenuDbContext>();
-    context.Database.EnsureCreated();
+    context.Database.Migrate();
 }
 
 app.MapGet("/", () => "Meyers Menu Calendar API");
