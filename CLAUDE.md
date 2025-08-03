@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a .NET application that scrapes menu content from the Meyers restaurant website and provides both a beautiful web interface and an iCal calendar feed. The application uses Blazor Server-Side Rendering (SSR) for fast, static rendering with Tailwind CSS v4 for modern styling. It specifically extracts the "Det velkendte" menu section with persistent storage and automated caching.
+This is a .NET 9 application that scrapes menu content from the Meyers restaurant website and provides both a beautiful web interface and iCal calendar feeds. The application uses Blazor Server-Side Rendering (SSR) for fast, static rendering with Tailwind CSS v4 for modern styling. It supports all Meyers menu types with dynamic discovery, persistent storage, and automated caching. Users can select between different menu types (Det velkendte, Den grønne, etc.) via an interactive web interface.
 
 ## Architecture
 
@@ -96,12 +96,13 @@ The application uses SQLite database for menu data persistence:
 ## Web Scraping Implementation
 
 The scraper targets the Meyers website's tab-based structure:
+- **Dynamic discovery**: Automatically detects all available menu types from tab elements
 - Extracts actual dates from `week-menu-day__header-heading` elements (e.g., "mandag 28 jul, 2025")
-- Maps multiple `data-tab-content="Det velkendte"` elements to correct dates
-- Extracts menu items from `menu-recipe-display` CSS classes
+- Maps multiple `data-tab-content` elements (e.g., "Det velkendte", "Den grønne") to correct dates
+- Extracts menu items from `menu-recipe-display` CSS classes for each menu type
 - Returns structured menu data with correct dates (not calculated dates)
 - Handles HTML entity encoding (e.g., `&#248;` for ø)
-- **Persists scraped data** to database for historical access and performance
+- **Persists scraped data** to database with menu type associations for historical access and performance
 
 ## Background Processing
 
@@ -143,7 +144,7 @@ Tests verify complete weekly menu extraction, web interface rendering, and corre
 
 The application includes automatic Tailwind CSS compilation:
 - **MSBuild Targets**: `CheckNodeModules`, `BuildTailwindCss`, `CleanTailwindCss`
-- **Auto-compilation**: CSS is built before `ResolveStaticWebAssetsInputs` to ensure availability
+- **Auto-compilation**: CSS is built before `ComputeStaticWebAssetsTargetPaths` and `ResolveStaticWebAssetsInputs` to ensure availability for .NET 9's MapStaticAssets
 - **Docker Support**: Dockerfile includes Node.js 20.x installation for containerized builds
 - **Development**: Use `npm run dev` for watch mode during development
 - **Production**: Use `npm run build` for minified output
