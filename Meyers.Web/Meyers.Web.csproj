@@ -23,7 +23,7 @@
     <Exec Command="npm install" WorkingDirectory="$(MSBuildProjectDirectory)" Condition="!Exists('$(MSBuildProjectDirectory)/node_modules')" />
   </Target>
 
-  <Target Name="BuildTailwindCss" BeforeTargets="ComputeStaticWebAssetsTargetPaths;ResolveStaticWebAssetsInputs">
+  <Target Name="BuildTailwindCss" BeforeTargets="Build;CoreBuild;PreBuildEvent">
     <Message Text="Building Tailwind CSS..." Importance="high" />
     <Exec Command="npm run build" WorkingDirectory="$(MSBuildProjectDirectory)" />
   </Target>
