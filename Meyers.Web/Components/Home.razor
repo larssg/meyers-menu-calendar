@@ -273,7 +273,9 @@
     function updateUI(menuTypeId, slug, name) {
         // Update calendar URL
         if (slug) {
-            const calendarUrl = `${BASE_URL}/calendar/${slug}.ics`;
+            // Always use HTTPS for production URLs
+            const baseUrl = BASE_URL.replace(/^http:/, 'https:');
+            const calendarUrl = `${baseUrl}/calendar/${slug}.ics`;
             const input = $('calendarUrl');
             if (input) input.value = calendarUrl;
         }
@@ -458,12 +460,18 @@
         if (selectedMenuType != null)
         {
             if (request == null) return $"/calendar/{selectedMenuType.Slug}.ics";
-            return $"{request.Scheme}://{request.Host}/calendar/{selectedMenuType.Slug}.ics";
+            
+            // Always use HTTPS for production URLs
+            var scheme = request.IsHttps || request.Headers.ContainsKey("X-Forwarded-Proto") ? "https" : request.Scheme;
+            return $"{scheme}://{request.Host}/calendar/{selectedMenuType.Slug}.ics";
         }
 
         // Fallback to det-velkendte if no menu type found
         if (request == null) return "/calendar/det-velkendte.ics";
-        return $"{request.Scheme}://{request.Host}/calendar/det-velkendte.ics";
+        
+        // Always use HTTPS for production URLs
+        var fallbackScheme = request.IsHttps || request.Headers.ContainsKey("X-Forwarded-Proto") ? "https" : request.Scheme;
+        return $"{fallbackScheme}://{request.Host}/calendar/det-velkendte.ics";
     }
 
     private string GetSelectedMenuTypeName()

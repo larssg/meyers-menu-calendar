@@ -240,4 +240,24 @@ public class CalendarApiTests : IClassFixture<TestWebApplicationFactory>
         // Verify that the Server header is not present
         Assert.False(response.Headers.Contains("Server"), "Server header should not be present");
     }
+
+    [Fact]
+    public async Task Get_Root_Uses_HTTPS_URLs_When_Behind_Proxy()
+    {
+        // Add X-Forwarded-Proto header to simulate being behind a reverse proxy
+        _client.DefaultRequestHeaders.Add("X-Forwarded-Proto", "https");
+        
+        var response = await _client.GetAsync("/");
+        
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        
+        var content = await response.Content.ReadAsStringAsync();
+        
+        // Verify that calendar URLs use https:// even when the request appears to be http
+        Assert.Contains("https://", content);
+        Assert.DoesNotContain("http://localhost", content); // Should not contain http URLs
+        
+        // Clean up
+        _client.DefaultRequestHeaders.Remove("X-Forwarded-Proto");
+    }
 }
