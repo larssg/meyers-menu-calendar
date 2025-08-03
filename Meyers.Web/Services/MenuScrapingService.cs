@@ -10,11 +10,11 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
     private const string Url = "https://meyers.dk/erhverv/frokostordning/ugens-menuer/";
     private static readonly TimeSpan CacheRefreshInterval = TimeSpan.FromHours(6);
 
-    public async Task<List<MenuDay>> ScrapeMenuAsync()
+    public async Task<List<MenuDay>> ScrapeMenuAsync(bool forceRefresh = false)
     {
         // Check if we need to refresh the cache
         var lastUpdate = await menuRepository.GetLastUpdateTimeAsync();
-        var shouldRefresh = lastUpdate == null || DateTime.UtcNow - lastUpdate.Value > CacheRefreshInterval;
+        var shouldRefresh = forceRefresh || lastUpdate == null || DateTime.UtcNow - lastUpdate.Value > CacheRefreshInterval;
 
         if (!shouldRefresh)
         {

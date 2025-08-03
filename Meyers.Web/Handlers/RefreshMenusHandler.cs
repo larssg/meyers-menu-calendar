@@ -22,7 +22,7 @@ public class RefreshMenusHandler(MenuScrapingService scrapingService)
         
         try
         {
-            var result = await scrapingService.ScrapeMenuAsync();
+            var result = await scrapingService.ScrapeMenuAsync(forceRefresh: true);
             var count = result.Count;
             return Results.Ok(new { 
                 success = true, 
