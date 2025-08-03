@@ -1,0 +1,115 @@
+# Meyers Menu Calendar
+
+A .NET 9 minimal API that scrapes the Meyers lunch menu and generates an iCal feed for easy calendar integration.
+
+## Features
+
+- 🍽️ Scrapes daily lunch menus from meyers.dk
+- 📅 Generates iCal/ICS format for calendar subscriptions
+- 🚀 Automatic caching with SQLite for performance
+- 🔄 Background service refreshes menu data every 6 hours
+- 🧹 Clean calendar titles showing just the main dish
+- 📱 Works with Google Calendar, Outlook, Apple Calendar, etc.
+
+## Quick Start
+
+### Prerequisites
+
+- .NET 9.0 SDK
+- SQLite (included with .NET)
+
+### Running Locally
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/meyers-menu-calendar.git
+cd meyers-menu-calendar
+
+# Run the application
+dotnet run --project Meyers.Web
+
+# The API will be available at http://localhost:5116
+```
+
+### Endpoints
+
+- `GET /` - Returns API description
+- `GET /calendar` - Returns the iCal feed with menu data
+
+### Subscribe to Calendar
+
+1. Copy the calendar URL: `http://localhost:5116/calendar`
+2. Add to your calendar app:
+   - **Google Calendar**: Settings → Add calendar → From URL
+   - **Outlook**: Add calendar → Subscribe from web
+   - **Apple Calendar**: File → New Calendar Subscription
+
+## Architecture
+
+```
+Meyers.Web/
+├── Services/
+│   ├── MenuScrapingService.cs    # Scrapes meyers.dk
+│   ├── CalendarService.cs        # Generates iCal format
+│   └── MenuCacheBackgroundService.cs # Background refresh
+├── Data/
+│   └── MenuDbContext.cs          # Entity Framework setup
+├── Models/
+│   └── MenuEntry.cs              # Database model
+└── Program.cs                    # Minimal API setup
+```
+
+## Configuration
+
+The application uses these default settings:
+
+```json
+{
+  "MenuCache": {
+    "CheckInterval": "00:01:00",      // Check every minute
+    "RefreshInterval": "06:00:00",    // Refresh every 6 hours
+    "TimeoutSeconds": 30
+  }
+}
+```
+
+## Development
+
+### Running Tests
+
+```bash
+dotnet test
+```
+
+### Building for Production
+
+```bash
+dotnet publish -c Release -o ./publish
+```
+
+## How It Works
+
+1. **Scraping**: The service fetches the weekly menu from meyers.dk
+2. **Parsing**: Extracts menu items, focusing on the main warm dish
+3. **Caching**: Stores in SQLite to reduce load on Meyers' servers
+4. **Calendar Generation**: Creates iCal events for each weekday lunch
+5. **Smart Titles**: Removes boilerplate text like "Varm ret med tilbehør" to show just the dish name
+
+## Calendar Event Format
+
+Each lunch appears as a calendar event:
+- **Title**: Main dish (e.g., "Oksekødboller i krydret tomatsauce")
+- **Time**: 12:00-13:00
+- **Description**: Full menu details including sides and salads
+
+## Contributing
+
+Pull requests are welcome! Please feel free to submit issues or enhancement requests.
+
+## License
+
+This project is provided as-is for educational and personal use. Please respect Meyers' website terms of service when using this tool.
+
+## Disclaimer
+
+This is an unofficial tool and is not affiliated with or endorsed by Meyers Kantiner.
