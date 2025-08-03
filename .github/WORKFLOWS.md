@@ -1,27 +1,29 @@
 # GitHub Actions Workflows
 
-This repository uses GitHub Actions for continuous integration and deployment checks.
+This repository uses GitHub Actions for continuous integration and deployment.
 
 ## Workflows
 
-### 1. CI Pipeline (`ci.yml`)
+### 1. Build and Deploy Pipeline (`build-and-deploy.yml`)
 **Triggers:** Push to main/develop, Pull requests to main
 
-**Jobs:**
+**Parallel Jobs:** (Run simultaneously for faster feedback)
 - **test**: Runs unit and integration tests
   - Unit tests must pass ✅
   - Integration tests allowed to fail ⚠️ (due to migration conflicts in test environment)
+- **check-migrations**: Validates EF migrations
+- **security-scan**: Scans for vulnerabilities and Dockerfile best practices
 - **build-docker**: Builds and tests Docker image
 
-### 2. Deployment Check (`deploy-check.yml`)
-**Triggers:** When CI workflow completes on main branch, Manual dispatch
+**Sequential Job:**
+- **deploy**: Triggers Dokploy deployment (only on main branch after ALL parallel jobs succeed)
 
-**Jobs:**
-- **check-migrations**: Validates EF migrations and production scripts
-- **security-scan**: Scans for vulnerabilities and Dockerfile best practices
-- **deploy**: Triggers Dokploy deployment webhook (only if all checks pass)
+#### Required Secrets
+For deployment to work, configure these GitHub repository secrets:
+- `DOKPLOY_API_KEY`: Your Dokploy API key
+- `DOKPLOY_APPLICATION_ID`: Your Dokploy application ID
 
-### 3. Dependencies (`dependencies.yml`)
+### 2. Dependencies (`dependencies.yml`)
 **Triggers:** Weekly schedule (Sundays 6 AM UTC), Manual dispatch
 
 **Jobs:**
@@ -30,11 +32,10 @@ This repository uses GitHub Actions for continuous integration and deployment ch
 
 ## Status Badges
 
-Add these to your README after replacing `yourusername` with your actual GitHub username:
+Add this to your README after replacing `yourusername` with your actual GitHub username:
 
 ```markdown
-[![CI](https://github.com/yourusername/meyers-menu-calendar/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/meyers-menu-calendar/actions/workflows/ci.yml)
-[![Deployment Check](https://github.com/yourusername/meyers-menu-calendar/actions/workflows/deploy-check.yml/badge.svg)](https://github.com/yourusername/meyers-menu-calendar/actions/workflows/deploy-check.yml)
+[![Build and Deploy](https://github.com/yourusername/meyers-menu-calendar/actions/workflows/build-and-deploy.yml/badge.svg)](https://github.com/yourusername/meyers-menu-calendar/actions/workflows/build-and-deploy.yml)
 ```
 
 ## Integration Test Notes

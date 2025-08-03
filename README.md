@@ -1,7 +1,6 @@
 # Meyers Menu Calendar
 
-[![CI](https://github.com/yourusername/meyers-menu-calendar/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/meyers-menu-calendar/actions/workflows/ci.yml)
-[![Deployment Check](https://github.com/yourusername/meyers-menu-calendar/actions/workflows/deploy-check.yml/badge.svg)](https://github.com/yourusername/meyers-menu-calendar/actions/workflows/deploy-check.yml)
+[![Build and Deploy](https://github.com/yourusername/meyers-menu-calendar/actions/workflows/build-and-deploy.yml/badge.svg)](https://github.com/yourusername/meyers-menu-calendar/actions/workflows/build-and-deploy.yml)
 
 A .NET 9 minimal API that scrapes the Meyers lunch menu and generates an iCal feed for easy calendar integration.
 
@@ -103,18 +102,15 @@ dotnet publish -c Release -o ./publish
 
 The project uses GitHub Actions for continuous integration and deployment:
 
-- **CI Pipeline** (`.github/workflows/ci.yml`):
-  - Runs on push to main/develop and pull requests
-  - Builds and tests the application
-  - Builds and tests Docker image
-  - Unit tests must pass, integration tests allowed to fail due to migration conflicts
-
-- **Deployment Check** (`.github/workflows/deploy-check.yml`):
-  - Automatically runs after CI workflow completes successfully on main branch
-  - Validates migrations and deployment scripts
-  - Security scanning
-  - Dockerfile best practices check
-  - **Automatic deployment**: Triggers Dokploy deployment after all checks pass
+- **Build and Deploy Pipeline** (`.github/workflows/build-and-deploy.yml`):
+  - **Triggers**: Push to main/develop and pull requests to main
+  - **Parallel execution**: All checks run simultaneously for faster feedback
+  - **Jobs**:
+    - `test`: Runs unit and integration tests
+    - `check-migrations`: Validates EF migrations
+    - `security-scan`: Scans for vulnerabilities and Dockerfile best practices
+    - `build-docker`: Builds and tests Docker image
+    - `deploy`: Triggers Dokploy deployment (only on main branch after all jobs succeed)
 
 - **Dependencies** (`.github/workflows/dependencies.yml`):
   - Weekly check for outdated packages
@@ -124,12 +120,18 @@ The project uses GitHub Actions for continuous integration and deployment:
 ### Automatic Deployment
 
 When code is pushed to the `main` branch:
-1. The CI pipeline runs all tests and builds
-2. If CI succeeds, the Deployment Check workflow automatically runs
-3. Deployment checks validate migrations, security, and Dockerfile
-4. If all checks pass, deployment to Dokploy is triggered via webhook
+1. All jobs (test, migrations, security, docker) run in parallel
+2. If ALL jobs succeed, deployment to Dokploy is triggered automatically
+3. Deployment uses the Dokploy API with secure authentication
 
-This ensures that production only receives code that has passed all tests and security checks.
+This parallel approach provides faster feedback while ensuring production only receives code that has passed all tests and security checks.
+
+#### Required GitHub Secrets
+
+To enable automatic deployment, add these secrets to your GitHub repository (**Settings** → **Secrets and variables** → **Actions**):
+
+- `DOKPLOY_API_KEY`: Your Dokploy API key for authentication
+- `DOKPLOY_APPLICATION_ID`: Your Dokploy application ID
 
 ## Deployment
 
