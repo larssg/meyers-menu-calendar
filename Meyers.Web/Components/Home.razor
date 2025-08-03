@@ -36,36 +36,20 @@
     <div class="card p-8">
       <h3 class="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-6 flex items-center">
         <span class="text-2xl mr-3">📅</span>
-        Calendar Feed URLs
+        Calendar Feed URL
       </h3>
 
-      <div class="space-y-5">
-        <div>
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            iCal Feed URL
-          </label>
-          <div class="flex rounded-lg border border-slate-300/60 dark:border-slate-600/60 overflow-hidden
-                      bg-white/80 dark:bg-slate-800/60 backdrop-blur">
-            <input type="text" value="@GetCalendarUrl()" readonly class="copy-input" />
-            <button onclick="copyToClipboard('@GetCalendarUrl()')"
-                    class="px-5 py-3 font-medium text-white bg-teal-700 hover:bg-teal-600 transition-colors">
-              Copy
-            </button>
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            Alternative URL (.ics)
-          </label>
-          <div class="flex rounded-lg border border-slate-300/60 dark:border-slate-600/60 overflow-hidden
-                      bg-white/80 dark:bg-slate-800/60 backdrop-blur">
-            <input type="text" value="@GetCalendarIcsUrl()" readonly class="copy-input" />
-            <button onclick="copyToClipboard('@GetCalendarIcsUrl()')"
-                    class="px-5 py-3 font-medium text-white bg-teal-700 hover:bg-teal-600 transition-colors">
-              Copy
-            </button>
-          </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+          Calendar Feed URL (.ics)
+        </label>
+        <div class="flex rounded-lg border border-slate-300/60 dark:border-slate-600/60 overflow-hidden
+                    bg-white/80 dark:bg-slate-800/60 backdrop-blur">
+          <input type="text" value="@GetCalendarIcsUrl()" readonly class="copy-input" />
+          <button onclick="copyToClipboard('@GetCalendarIcsUrl()')"
+                  class="px-5 py-3 font-medium text-white bg-teal-700 hover:bg-teal-600 transition-colors">
+            Copy
+          </button>
         </div>
       </div>
 
