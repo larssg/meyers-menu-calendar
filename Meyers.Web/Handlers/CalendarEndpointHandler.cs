@@ -23,7 +23,7 @@ public class CalendarEndpointHandler(
             var menuType = await menuRepository.GetMenuTypeBySlugAsync(menuTypeSlug);
             if (menuType == null)
             {
-                return Results.NotFound($"Menu type '{menuTypeSlug}' not found");
+                return Results.NotFound($"Menu '{menuTypeSlug}' not found");
             }
 
             var menuTypeName = menuType.Name;

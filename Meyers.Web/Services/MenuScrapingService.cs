@@ -97,17 +97,21 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
         var allTabContentNodes = doc.DocumentNode.SelectNodes("//div[@data-tab-content]");
         if (allTabContentNodes == null) return menuDays;
 
-        // Get unique menu types
+        // Get unique menu types and decode HTML entities
         var menuTypes = allTabContentNodes
             .Select(node => node.GetAttributeValue("data-tab-content", ""))
             .Where(content => !string.IsNullOrEmpty(content))
+            .Select(content => HtmlDecode(content)) // Decode HTML entities like "Den Gr&#248;nne" -> "Den Grønne"
             .Distinct()
             .ToList();
 
         // Process each menu type
         foreach (var menuType in menuTypes)
         {
-            var tabNodes = doc.DocumentNode.SelectNodes($"//div[@data-tab-content='{menuType}']");
+            // We need to search for both the decoded and original encoded versions
+            // since the HTML might have the encoded version in attributes
+            var encodedMenuType = System.Net.WebUtility.HtmlEncode(menuType);
+            var tabNodes = doc.DocumentNode.SelectNodes($"//div[@data-tab-content='{menuType}' or @data-tab-content='{encodedMenuType}']");
             if (tabNodes == null) continue;
 
             var dayIndex = 0;

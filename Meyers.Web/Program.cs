@@ -84,7 +84,7 @@ app.MapRazorComponents<App>();
 app.MapGet("/calendar/{menuTypeSlug}.ics", async (string menuTypeSlug, CalendarEndpointHandler handler) => 
     await handler.GetCalendarAsync(menuTypeSlug));
 
-// API endpoint for available menu types
+// API endpoint for available menus
 app.MapGet("/api/menu-types", async (IMenuRepository menuRepository) =>
 {
     var menuTypes = await menuRepository.GetMenuTypesAsync();
