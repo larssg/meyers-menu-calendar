@@ -136,7 +136,7 @@ Tests verify complete weekly menu extraction, web interface rendering, and corre
 - **Component Structure**: Keep layout, routing, and page components separate for maintainability
 - **CSS Framework**: Use Tailwind CSS v4 with @theme directive for consistent design system
 - **Build Integration**: Ensure Tailwind CSS compilation is integrated into MSBuild process
-- **Static Assets**: Use .NET 9's MapStaticAssets() instead of UseStaticFiles() for improved performance and automatic cache busting
+- **Static Assets**: Use .NET 9's MapStaticAssets() for improved performance and automatic cache busting. For generated CSS files, ensure compilation happens before MSBuild static asset processing
 - **Asset References**: Use @Assets["path"] directive in Razor components for automatic fingerprinting and cache optimization
 - **Testing**: When adding new endpoints or features, comprehensive tests must be added and all existing tests must be updated to reflect the changes. Tests should cover both success and error scenarios.
 
@@ -144,7 +144,7 @@ Tests verify complete weekly menu extraction, web interface rendering, and corre
 
 The application includes automatic Tailwind CSS compilation:
 - **MSBuild Targets**: `CheckNodeModules`, `BuildTailwindCss`, `CleanTailwindCss`
-- **Auto-compilation**: CSS is built before `ComputeStaticWebAssetsTargetPaths` and `ResolveStaticWebAssetsInputs` to ensure availability for .NET 9's MapStaticAssets
+- **Auto-compilation**: CSS is built before `CoreCompile`, `ResolveAssemblyReferences`, and `PrepareForBuild` to ensure availability for .NET 9's MapStaticAssets processing
 - **Docker Support**: Dockerfile includes Node.js 20.x installation for containerized builds
 - **Development**: Use `npm run dev` for watch mode during development
 - **Production**: Use `npm run build` for minified output
