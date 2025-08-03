@@ -15,6 +15,8 @@ This is a .NET application that scrapes menu content from the Meyers restaurant 
   - `Components/Routes.razor`: Blazor routing configuration
   - `App.razor`: Root document with HTML structure
   - `Handlers/CalendarEndpointHandler.cs`: Clean separation of calendar API logic
+  - `Handlers/MenuPreviewHandler.cs`: Handler for menu preview API endpoint
+  - `Handlers/RefreshMenusHandler.cs`: Handler for admin menu refresh endpoint
   - `Services/MenuScrapingService.cs`: Web scraping logic using HtmlAgilityPack
   - `Services/CalendarService.cs`: iCal generation using Ical.Net
   - `Services/MenuCacheBackgroundService.cs`: Background service for automated menu data refresh

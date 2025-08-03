@@ -36,6 +36,7 @@ builder.Services.AddScoped<CalendarService>();
 // Handler registration
 builder.Services.AddScoped<CalendarEndpointHandler>();
 builder.Services.AddScoped<MenuPreviewHandler>();
+builder.Services.AddScoped<RefreshMenusHandler>();
 
 // Blazor SSR services
 builder.Services.AddRazorComponents();
@@ -103,38 +104,8 @@ app.MapGet("/api/menu-preview/{menuTypeId:int}", async (int menuTypeId, MenuPrev
     await handler.GetMenuPreviewAsync(menuTypeId));
 
 // Hidden endpoint for manual menu refresh (for development/troubleshooting)
-app.MapGet("/admin/refresh-menus", async (HttpContext context, MenuScrapingService scrapingService) =>
-{
-    // Check for required secret parameter
-    var secret = context.Request.Query["secret"].FirstOrDefault();
-    var expectedSecret = Environment.GetEnvironmentVariable("REFRESH_SECRET");
-    
-    if (string.IsNullOrEmpty(expectedSecret))
-    {
-        return Results.Problem("REFRESH_SECRET environment variable not configured", statusCode: 503);
-    }
-    
-    if (secret != expectedSecret)
-    {
-        return Results.Problem("Invalid or missing secret parameter", statusCode: 403);
-    }
-    
-    try
-    {
-        var result = await scrapingService.ScrapeMenuAsync();
-        var count = result.Count;
-        return Results.Ok(new { 
-            success = true, 
-            message = $"Successfully refreshed {count} menu entries",
-            timestamp = DateTime.UtcNow,
-            menuCount = count
-        });
-    }
-    catch (Exception ex)
-    {
-        return Results.Problem($"Failed to refresh menus: {ex.Message}");
-    }
-});
+app.MapGet("/admin/refresh-menus", async (HttpContext context, RefreshMenusHandler handler) =>
+    await handler.RefreshMenusAsync(context));
 
 app.Run();
 

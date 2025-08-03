@@ -229,4 +229,15 @@ public class CalendarApiTests : IClassFixture<TestWebApplicationFactory>
         var content = await response.Content.ReadAsStringAsync();
         Assert.Contains("Invalid or missing secret parameter", content);
     }
+
+    [Fact]
+    public async Task Get_Root_DoesNotInclude_ServerHeader()
+    {
+        var response = await _client.GetAsync("/");
+        
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        
+        // Verify that the Server header is not present
+        Assert.False(response.Headers.Contains("Server"), "Server header should not be present");
+    }
 }
