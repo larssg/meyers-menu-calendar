@@ -4,25 +4,17 @@ using Meyers.Web.Repositories;
 
 namespace Meyers.Web.Services;
 
-public class MenuCacheBackgroundService : BackgroundService
+public class MenuCacheBackgroundService(
+    IServiceProvider serviceProvider,
+    ILogger<MenuCacheBackgroundService> logger,
+    IOptions<MenuCacheOptions> options)
+    : BackgroundService
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<MenuCacheBackgroundService> _logger;
-    private readonly MenuCacheOptions _options;
-
-    public MenuCacheBackgroundService(
-        IServiceProvider serviceProvider, 
-        ILogger<MenuCacheBackgroundService> logger,
-        IOptions<MenuCacheOptions> options)
-    {
-        _serviceProvider = serviceProvider;
-        _logger = logger;
-        _options = options.Value;
-    }
+    private readonly MenuCacheOptions _options = options.Value;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("Menu Cache Background Service started (Check: {CheckInterval}, Refresh: {RefreshInterval})", 
+        logger.LogInformation("Menu Cache Background Service started (Check: {CheckInterval}, Refresh: {RefreshInterval})",
             _options.CheckInterval, _options.RefreshInterval);
 
         // Initial delay to let the application start up
@@ -42,18 +34,18 @@ public class MenuCacheBackgroundService : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred in Menu Cache Background Service");
+                logger.LogError(ex, "Error occurred in Menu Cache Background Service");
                 // Continue running even if an error occurs
                 await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken); // Wait 5 minutes before retrying
             }
         }
 
-        _logger.LogInformation("Menu Cache Background Service stopped");
+        logger.LogInformation("Menu Cache Background Service stopped");
     }
 
     private async Task RefreshCacheIfNeeded(CancellationToken cancellationToken)
     {
-        using var scope = _serviceProvider.CreateScope();
+        using var scope = serviceProvider.CreateScope();
         var menuRepository = scope.ServiceProvider.GetRequiredService<IMenuRepository>();
         var menuScrapingService = scope.ServiceProvider.GetRequiredService<MenuScrapingService>();
 
@@ -62,25 +54,25 @@ public class MenuCacheBackgroundService : BackgroundService
 
         if (shouldRefresh)
         {
-            _logger.LogInformation("Cache is stale, refreshing menu data...");
-            
+            logger.LogInformation("Cache is stale, refreshing menu data...");
+
             try
             {
                 // Force refresh by calling the scraping service
                 // The service will automatically cache the results
                 var menuDays = await menuScrapingService.ScrapeMenuAsync();
-                
-                _logger.LogInformation("Successfully refreshed menu cache with {Count} menu days", menuDays.Count);
+
+                logger.LogInformation("Successfully refreshed menu cache with {Count} menu days", menuDays.Count);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to refresh menu cache");
+                logger.LogError(ex, "Failed to refresh menu cache");
             }
         }
         else
         {
             var timeSinceLastUpdate = DateTime.UtcNow - lastUpdate!.Value;
-            _logger.LogDebug("Cache is fresh (last updated {TimeSinceUpdate} ago), skipping refresh", timeSinceLastUpdate);
+            logger.LogDebug("Cache is fresh (last updated {TimeSinceUpdate} ago), skipping refresh", timeSinceLastUpdate);
         }
     }
 }

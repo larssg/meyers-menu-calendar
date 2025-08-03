@@ -1,68 +1,62 @@
 using HtmlAgilityPack;
 using Meyers.Web.Models;
 using Meyers.Web.Repositories;
+using static System.Net.WebUtility;
 
 namespace Meyers.Web.Services;
 
-public class MenuScrapingService
+public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository menuRepository)
 {
-    private readonly HttpClient _httpClient;
-    private readonly IMenuRepository _menuRepository;
+    private const string Url = "https://meyers.dk/erhverv/frokostordning/ugens-menuer/";
     private static readonly TimeSpan CacheRefreshInterval = TimeSpan.FromHours(6);
-    
-    public MenuScrapingService(HttpClient httpClient, IMenuRepository menuRepository)
-    {
-        _httpClient = httpClient;
-        _menuRepository = menuRepository;
-    }
-    
+
     public async Task<List<MenuDay>> ScrapeMenuAsync()
     {
         // Check if we need to refresh the cache
-        var lastUpdate = await _menuRepository.GetLastUpdateTimeAsync();
+        var lastUpdate = await menuRepository.GetLastUpdateTimeAsync();
         var shouldRefresh = lastUpdate == null || DateTime.UtcNow - lastUpdate.Value > CacheRefreshInterval;
-        
+
         if (!shouldRefresh)
         {
             // Return cached data
             var cachedMenus = await GetCachedMenusAsync();
-            if (cachedMenus.Any())
+            if (cachedMenus.Count != 0)
             {
                 return cachedMenus;
             }
         }
-        
-        // Scrape fresh data from website
+
+        // Scrape fresh data from the website
         var freshMenus = await ScrapeFromWebsiteAsync();
-        
+
         // Save to cache
-        if (freshMenus.Any())
+        if (freshMenus.Count != 0)
         {
             await SaveMenusToCache(freshMenus);
         }
-        
+
         return freshMenus;
     }
-    
+
     private async Task<List<MenuDay>> GetCachedMenusAsync()
     {
         // Get all cached entries from the past week to future two weeks to ensure we don't miss any data
         var startDate = DateTime.Today.AddDays(-7);
         var endDate = DateTime.Today.AddDays(14);
-        var cachedEntries = await _menuRepository.GetMenusForDateRangeAsync(startDate, endDate);
-        
+        var cachedEntries = await menuRepository.GetMenusForDateRangeAsync(startDate, endDate);
+
         return cachedEntries.Select(entry => new MenuDay
         {
             DayName = entry.DayName,
             Date = entry.Date,
-            MenuItems = string.IsNullOrEmpty(entry.MenuItems) 
-                ? new List<string>() 
+            MenuItems = string.IsNullOrEmpty(entry.MenuItems)
+                ? []
                 : entry.MenuItems.Split('\n', StringSplitOptions.RemoveEmptyEntries).ToList(),
             MainDish = entry.MainDish,
             Details = entry.Details
         }).ToList();
     }
-    
+
     private async Task SaveMenusToCache(List<MenuDay> menuDays)
     {
         var menuEntries = menuDays.Select(day => new MenuEntry
@@ -73,71 +67,78 @@ public class MenuScrapingService
             MainDish = day.MainDish,
             Details = day.Details
         }).ToList();
-        
-        await _menuRepository.SaveMenusAsync(menuEntries);
+
+        await menuRepository.SaveMenusAsync(menuEntries);
     }
-    
+
     private async Task<List<MenuDay>> ScrapeFromWebsiteAsync()
     {
-        var url = "https://meyers.dk/erhverv/frokostordning/ugens-menuer/";
-        var html = await _httpClient.GetStringAsync(url);
-        
+        var html = await httpClient.GetStringAsync(Url);
+
         var doc = new HtmlDocument();
         doc.LoadHtml(html);
-        
+
         var menuDays = new List<MenuDay>();
-        
+
         // Look for text containing "Det velkendte" anywhere in the document
         var allText = doc.DocumentNode.InnerText;
         if (!allText.Contains("Det velkendte", StringComparison.OrdinalIgnoreCase))
         {
             return menuDays; // No "Det velkendte" found
         }
-        
+
         // First, extract the dates from the week menu headers
         var dateMapping = ExtractDatesFromWeekHeaders(doc);
-        
+
         // Look for "Det velkendte" tab content specifically
         var detVelkendteNodes = doc.DocumentNode.SelectNodes("//div[@data-tab-content='Det velkendte']");
-        
-        if (detVelkendteNodes != null && dateMapping.Any())
+
+        if (dateMapping.Count == 0) return menuDays;
+
+        var dayIndex = 0;
+
+        foreach (var tabNode in detVelkendteNodes)
         {
-            var dayIndex = 0;
-            
-            foreach (var tabNode in detVelkendteNodes)
+            // Only process weekdays and if we have date mapping
+            if (dayIndex >= dateMapping.Count) break;
+
+            var dayInfo = dateMapping[dayIndex];
+
+            // Look for menu recipe displays within this tab
+            var menuRecipes = tabNode.SelectNodes(".//div[contains(@class, 'menu-recipe-display')]");
+            if (menuRecipes != null)
             {
-                // Only process weekdays and if we have date mapping
-                if (dayIndex >= dateMapping.Count) break;
-                
-                var dayInfo = dateMapping[dayIndex];
-                
-                // Look for menu recipe displays within this tab
-                var menuRecipes = tabNode.SelectNodes(".//div[contains(@class, 'menu-recipe-display')]");
-                if (menuRecipes != null)
+                var dayMenuItems = new List<string>();
+
+                string mainDishContent = "";
+                string detailsContent = "";
+
+                foreach (var recipe in menuRecipes)
                 {
-                    var dayMenuItems = new List<string>();
-                    
-                    var mainDishParts = new List<string>();
-                    var detailsParts = new List<string>();
-                    
-                    foreach (var recipe in menuRecipes)
+                    var title = recipe.SelectSingleNode(".//h4[contains(@class, 'menu-recipe-display__title')]")?.InnerText?.Trim();
+                    var descriptionNode = recipe.SelectSingleNode(".//p[contains(@class, 'menu-recipe-display__description')]");
+
+                    if (!string.IsNullOrEmpty(title))
                     {
-                        var title = recipe.SelectSingleNode(".//h4[contains(@class, 'menu-recipe-display__title')]")?.InnerText?.Trim();
-                        var descriptionNode = recipe.SelectSingleNode(".//p[contains(@class, 'menu-recipe-display__description')]");
-                        
-                        if (!string.IsNullOrEmpty(title) && descriptionNode != null)
+                        // Get the plain text content and clean it up
+                        var plainText = HtmlDecode(descriptionNode.InnerText?.Trim() ?? "");
+                        plainText = System.Text.RegularExpressions.Regex.Replace(plainText, @"\s+", " ").Trim();
+
+                        if (!string.IsNullOrEmpty(plainText))
                         {
-                            // Get the plain text content and clean it up
-                            var plainText = System.Net.WebUtility.HtmlDecode(descriptionNode.InnerText?.Trim() ?? "");
-                            plainText = System.Text.RegularExpressions.Regex.Replace(plainText, @"\s+", " ").Trim();
-                            
-                            if (!string.IsNullOrEmpty(plainText))
+                            // For backward compatibility, also add to MenuItems
+                            var fullDescription = HtmlDecode(descriptionNode.InnerText?.Trim() ?? "");
+                            fullDescription = System.Text.RegularExpressions.Regex.Replace(fullDescription, @"\s+", " ").Trim();
+                            dayMenuItems.Add($"{title}: {fullDescription}");
+
+                            // Only extract main dish from "Varm ret med tilbehør" section
+                            if (title.Contains("Varm ret med tilbehør", StringComparison.OrdinalIgnoreCase))
                             {
                                 // Find the first sentence or phrase (up to the first period followed by space, or first 100 chars)
                                 var firstSentenceMatch = System.Text.RegularExpressions.Regex.Match(plainText, @"^([^.]*\.)");
-                                
+
                                 string mainDish, details;
-                                
+
                                 if (firstSentenceMatch.Success && firstSentenceMatch.Groups[1].Value.Length < 150)
                                 {
                                     // Use the first sentence as main dish
@@ -167,97 +168,101 @@ public class MenuScrapingService
                                         details = "";
                                     }
                                 }
-                                
+
                                 // Remove allergen info for cleaner display
-                                mainDish = System.Text.RegularExpressions.Regex.Replace(mainDish, @"\([^)]*\)\s*", "").Trim();
-                                details = System.Text.RegularExpressions.Regex.Replace(details, @"\([^)]*\)\s*", "").Trim();
-                                
-                                if (!string.IsNullOrEmpty(mainDish))
-                                {
-                                    mainDishParts.Add($"{title}: {mainDish}");
-                                }
-                                
-                                if (!string.IsNullOrEmpty(details))
-                                {
-                                    detailsParts.Add($"{title}: {details}");
-                                }
-                                
-                                // For backward compatibility, also add to MenuItems
-                                var fullDescription = System.Net.WebUtility.HtmlDecode(descriptionNode.InnerText?.Trim() ?? "");
-                                fullDescription = System.Text.RegularExpressions.Regex.Replace(fullDescription, @"\s+", " ").Trim();
-                                dayMenuItems.Add($"{title}: {fullDescription}");
+                                mainDish = AllergenRegex().Replace(mainDish, "").Trim();
+                                details = AllergenRegex().Replace(details, "").Trim();
+
+                                mainDishContent = mainDish;
+                                detailsContent = details;
                             }
                         }
                     }
-                    
-                    if (dayMenuItems.Any())
-                    {
-                        menuDays.Add(new MenuDay
-                        {
-                            DayName = dayInfo.DayName,
-                            Date = dayInfo.Date,
-                            MenuItems = dayMenuItems,
-                            MainDish = string.Join(", ", mainDishParts),
-                            Details = string.Join(" | ", detailsParts)
-                        });
-                    }
-                    
-                    dayIndex++;
                 }
+
+                if (dayMenuItems.Any())
+                {
+                    // If we didn't find a main dish in "Varm ret med tilbehør", use the first menu item
+                    if (string.IsNullOrEmpty(mainDishContent) && dayMenuItems.Count > 0)
+                    {
+                        var firstItem = dayMenuItems[0];
+                        var colonIndex = firstItem.IndexOf(':');
+                        if (colonIndex > 0 && colonIndex < firstItem.Length - 1)
+                        {
+                            mainDishContent = firstItem.Substring(colonIndex + 1).Trim();
+                            if (mainDishContent.Length > 100)
+                            {
+                                mainDishContent = mainDishContent.Substring(0, 100).Trim() + "...";
+                            }
+                        }
+                        else
+                        {
+                            mainDishContent = firstItem;
+                        }
+                    }
+
+                    menuDays.Add(new MenuDay
+                    {
+                        DayName = dayInfo.DayName,
+                        Date = dayInfo.Date,
+                        MenuItems = dayMenuItems,
+                        MainDish = mainDishContent,
+                        Details = detailsContent
+                    });
+                }
+
+                dayIndex++;
             }
         }
-        
+
         return menuDays;
     }
-    
+
     private List<(string DayName, DateTime Date)> ExtractDatesFromWeekHeaders(HtmlDocument doc)
     {
         var dateMapping = new List<(string DayName, DateTime Date)>();
-        
+
         // Look for day headers with dates like "mandag <span>28 jul, 2025</span>"
         var dayHeaders = doc.DocumentNode.SelectNodes("//h5[contains(@class, 'week-menu-day__header-heading')]");
-        
+
         if (dayHeaders != null)
         {
             foreach (var header in dayHeaders)
             {
                 var headerText = header.InnerText?.Trim();
                 if (string.IsNullOrEmpty(headerText)) continue;
-                
+
                 // Parse format like "mandag 28 jul, 2025"
                 var parts = headerText.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                if (parts.Length >= 4)
+                if (parts.Length < 4) continue;
+
+                var dayName = CapitalizeFirst(parts[0].Trim());
+                var dayNumber = parts[1].Trim();
+                var monthName = parts[2].Trim().Replace(",", "");
+                var year = parts[3].Trim();
+
+                if (!int.TryParse(dayNumber, out var day) || !int.TryParse(year, out var yearInt)) continue;
+
+                var month = ParseDanishMonth(monthName);
+                if (month <= 0) continue;
+
+                try
                 {
-                    var dayName = CapitalizeFirst(parts[0].Trim());
-                    var dayNumber = parts[1].Trim();
-                    var monthName = parts[2].Trim().Replace(",", "");
-                    var year = parts[3].Trim();
-                    
-                    if (int.TryParse(dayNumber, out var day) && int.TryParse(year, out var yearInt))
-                    {
-                        var month = ParseDanishMonth(monthName);
-                        if (month > 0)
-                        {
-                            try
-                            {
-                                var date = new DateTime(yearInt, month, day);
-                                dateMapping.Add((dayName, date));
-                            }
-                            catch
-                            {
-                                // Skip invalid dates
-                            }
-                        }
-                    }
+                    var date = new DateTime(yearInt, month, day);
+                    dateMapping.Add((dayName, date));
+                }
+                catch
+                {
+                    // Skip invalid dates
                 }
             }
         }
-        
+
         // Only return weekdays (both weeks - up to 10 days)
         return dateMapping.Where(d => IsWeekday(d.DayName)).ToList();
     }
-    
-    private int ParseDanishMonth(string monthName)
+
+    private static int ParseDanishMonth(string monthName)
     {
         return monthName.ToLowerInvariant() switch
         {
@@ -276,25 +281,28 @@ public class MenuScrapingService
             _ => 0
         };
     }
-    
-    private bool IsWeekday(string dayName)
+
+    private static bool IsWeekday(string dayName)
     {
-        var weekdays = new[] { "Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag" };
+        string[] weekdays = ["Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag"];
         return weekdays.Contains(dayName, StringComparer.OrdinalIgnoreCase);
     }
-    
-    private string CapitalizeFirst(string input)
+
+    private static string CapitalizeFirst(string input)
     {
         if (string.IsNullOrEmpty(input)) return input;
-        return char.ToUpper(input[0]) + input.Substring(1).ToLower();
+        return char.ToUpper(input[0]) + input[1..].ToLower();
     }
+
+    [System.Text.RegularExpressions.GeneratedRegex(@"\([^)]*\)\s*")]
+    private static partial System.Text.RegularExpressions.Regex AllergenRegex();
 }
 
 public class MenuDay
 {
     public string DayName { get; set; } = string.Empty;
     public DateTime Date { get; set; }
-    public List<string> MenuItems { get; set; } = new();
+    public List<string> MenuItems { get; set; } = [];
     public string MainDish { get; set; } = string.Empty;
     public string Details { get; set; } = string.Empty;
 }

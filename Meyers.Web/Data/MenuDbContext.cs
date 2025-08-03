@@ -3,14 +3,10 @@ using Meyers.Web.Models;
 
 namespace Meyers.Web.Data;
 
-public class MenuDbContext : DbContext
+public class MenuDbContext(DbContextOptions<MenuDbContext> options) : DbContext(options)
 {
-    public MenuDbContext(DbContextOptions<MenuDbContext> options) : base(options)
-    {
-    }
-    
     public DbSet<MenuEntry> MenuEntries { get; set; }
-    
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<MenuEntry>(entity =>

@@ -4,33 +4,26 @@ using Meyers.Web.Models;
 
 namespace Meyers.Web.Repositories;
 
-public class MenuRepository : IMenuRepository
+public class MenuRepository(MenuDbContext context) : IMenuRepository
 {
-    private readonly MenuDbContext _context;
-    
-    public MenuRepository(MenuDbContext context)
-    {
-        _context = context;
-    }
-    
     public async Task<List<MenuEntry>> GetMenusForDateRangeAsync(DateTime startDate, DateTime endDate)
     {
-        return await _context.MenuEntries
+        return await context.MenuEntries
             .Where(m => m.Date >= startDate && m.Date <= endDate)
             .OrderBy(m => m.Date)
             .ToListAsync();
     }
-    
+
     public async Task<MenuEntry?> GetMenuForDateAsync(DateTime date)
     {
-        return await _context.MenuEntries
+        return await context.MenuEntries
             .FirstOrDefaultAsync(m => m.Date.Date == date.Date);
     }
-    
+
     public async Task SaveMenuAsync(MenuEntry menuEntry)
     {
         var existing = await GetMenuForDateAsync(menuEntry.Date);
-        
+
         if (existing != null)
         {
             existing.DayName = menuEntry.DayName;
@@ -38,22 +31,22 @@ public class MenuRepository : IMenuRepository
             existing.MainDish = menuEntry.MainDish;
             existing.Details = menuEntry.Details;
             existing.UpdatedAt = DateTime.UtcNow;
-            _context.MenuEntries.Update(existing);
+            context.MenuEntries.Update(existing);
         }
         else
         {
-            await _context.MenuEntries.AddAsync(menuEntry);
+            await context.MenuEntries.AddAsync(menuEntry);
         }
-        
-        await _context.SaveChangesAsync();
+
+        await context.SaveChangesAsync();
     }
-    
+
     public async Task SaveMenusAsync(List<MenuEntry> menuEntries)
     {
         foreach (var menuEntry in menuEntries)
         {
             var existing = await GetMenuForDateAsync(menuEntry.Date);
-            
+
             if (existing != null)
             {
                 existing.DayName = menuEntry.DayName;
@@ -61,20 +54,20 @@ public class MenuRepository : IMenuRepository
                 existing.MainDish = menuEntry.MainDish;
                 existing.Details = menuEntry.Details;
                 existing.UpdatedAt = DateTime.UtcNow;
-                _context.MenuEntries.Update(existing);
+                context.MenuEntries.Update(existing);
             }
             else
             {
-                await _context.MenuEntries.AddAsync(menuEntry);
+                await context.MenuEntries.AddAsync(menuEntry);
             }
         }
-        
-        await _context.SaveChangesAsync();
+
+        await context.SaveChangesAsync();
     }
-    
+
     public async Task<DateTime?> GetLastUpdateTimeAsync()
     {
-        return await _context.MenuEntries
+        return await context.MenuEntries
             .OrderByDescending(m => m.UpdatedAt)
             .Select(m => m.UpdatedAt)
             .FirstOrDefaultAsync();
