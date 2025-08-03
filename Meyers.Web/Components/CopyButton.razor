@@ -1,0 +1,27 @@
+@* Reusable copy-to-clipboard button component *@
+
+<button onclick="@GetOnClickScript()" class="@CssClass" title="Copy to clipboard">
+    @ChildContent
+</button>
+
+@code {
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public string? InputId { get; set; }
+    [Parameter] public string CssClass { get; set; } = "px-5 py-3 font-medium text-white bg-teal-700 hover:bg-teal-600 transition-colors";
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private string GetOnClickScript()
+    {
+        if (!string.IsNullOrEmpty(InputId))
+        {
+            return $"copyToClipboard(document.getElementById('{InputId}').value)";
+        }
+        
+        if (!string.IsNullOrEmpty(Value))
+        {
+            return $"copyToClipboard('{Value}')";
+        }
+        
+        return "copyToClipboard('')";
+    }
+}
