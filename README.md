@@ -2,23 +2,25 @@
 
 [![Build and Deploy](https://github.com/larssg/meyers-menu-calendar/actions/workflows/build-and-deploy.yml/badge.svg)](https://github.com/larssg/meyers-menu-calendar/actions/workflows/build-and-deploy.yml)
 
-A .NET 9 minimal API that scrapes the Meyers lunch menu and generates an iCal feed for easy calendar integration.
+A .NET 9 application that scrapes the Meyers lunch menu and provides both an iCal feed and a beautiful web interface for easy calendar integration.
 
 ## Features
 
-- 🍽️ Scrapes daily lunch menus from meyers.dk
-- 📅 Generates iCal/ICS format for calendar subscriptions
-- 🚀 Automatic caching with SQLite for performance
-- 🔄 Background service refreshes menu data every 6 hours
-- 🧹 Clean calendar titles showing just the main dish
-- 📆 Includes historical data (last month) plus future menus
-- 📱 Works with Google Calendar, Outlook, Apple Calendar, etc.
+- 🍽️ **Web Interface**: Beautiful homepage showing today's and tomorrow's menu with calendar feed URLs
+- 📅 **iCal Feed**: Generates iCal/ICS format for calendar subscriptions
+- 🚀 **Fast Performance**: Blazor Server-Side Rendering (SSR) with automatic caching
+- 🔄 **Auto-Refresh**: Background service updates menu data every 6 hours
+- 🧹 **Clean Titles**: Calendar events show just the main dish name
+- 📆 **Historical Data**: Preserves past menus and includes future data
+- 📱 **Universal**: Works with Google Calendar, Outlook, Apple Calendar, etc.
+- 🎨 **Modern Design**: Responsive UI with Tailwind CSS v4 and glassmorphism effects
 
 ## Quick Start
 
 ### Prerequisites
 
 - .NET 9.0 SDK
+- Node.js 20+ (for Tailwind CSS compilation)
 - SQLite (included with .NET)
 
 ### Running Locally
@@ -28,22 +30,28 @@ A .NET 9 minimal API that scrapes the Meyers lunch menu and generates an iCal fe
 git clone https://github.com/yourusername/meyers-menu-calendar.git
 cd meyers-menu-calendar
 
+# Install npm dependencies for Tailwind CSS
+cd Meyers.Web
+npm install
+cd ..
+
 # Run the application
 dotnet run --project Meyers.Web
 
-# The API will be available at http://localhost:5116
+# The application will be available at http://localhost:5116
 ```
 
 ### Endpoints
 
-- `GET /` - Returns API description
+- `GET /` - Beautiful web interface with menu preview and calendar URLs
 - `GET /calendar` - Returns the iCal feed with menu data
 - `GET /calendar.ics` - Same as /calendar (for compatibility with calendar apps expecting .ics extension)
 
 ### Subscribe to Calendar
 
-1. Copy the calendar URL: `http://localhost:5116/calendar` or `http://localhost:5116/calendar.ics`
-2. Add to your calendar app:
+1. Visit the homepage at `http://localhost:5116` 
+2. Copy either calendar URL from the web interface
+3. Add to your calendar app:
    - **Google Calendar**: Settings → Add calendar → From URL
    - **Outlook**: Add calendar → Subscribe from web
    - **Apple Calendar**: File → New Calendar Subscription
@@ -52,15 +60,26 @@ dotnet run --project Meyers.Web
 
 ```
 Meyers.Web/
+├── Components/
+│   ├── MainLayout.razor          # Main layout with modern design
+│   ├── Home.razor                # Homepage with menu preview
+│   └── Routes.razor              # Blazor SSR routing
 ├── Services/
 │   ├── MenuScrapingService.cs    # Scrapes meyers.dk
 │   ├── CalendarService.cs        # Generates iCal format
 │   └── MenuCacheBackgroundService.cs # Background refresh
+├── Handlers/
+│   └── CalendarEndpointHandler.cs # Clean calendar API logic
 ├── Data/
 │   └── MenuDbContext.cs          # Entity Framework setup
 ├── Models/
 │   └── MenuEntry.cs              # Database model
-└── Program.cs                    # Minimal API setup
+├── Styles/
+│   └── app.css                   # Tailwind CSS v4 configuration
+├── wwwroot/css/
+│   └── app.css                   # Compiled CSS (auto-generated)
+├── package.json                  # Node.js dependencies for Tailwind
+└── Program.cs                    # Blazor SSR + API setup
 ```
 
 ## Configuration
@@ -82,20 +101,24 @@ The application uses these default settings:
 ### Running Tests
 
 ```bash
-# Run all tests
+# Run all tests (includes Tailwind CSS compilation)
 dotnet test
 
 # Run only unit tests (recommended for development)
 dotnet test --filter "FullyQualifiedName!~CalendarApiTests"
 
-# Run only integration tests
+# Run only integration tests (tests web interface + API)
 dotnet test --filter "FullyQualifiedName~CalendarApiTests"
 ```
 
 ### Building for Production
 
 ```bash
+# Building automatically compiles Tailwind CSS
 dotnet publish -c Release -o ./publish
+
+# Or build CSS separately if needed
+npm run build --prefix Meyers.Web
 ```
 
 ### CI/CD
@@ -142,7 +165,7 @@ The application uses Entity Framework migrations to manage database schema chang
 ### Using Docker (Recommended)
 
 ```bash
-# Build the Docker image
+# Build the Docker image (includes Node.js for Tailwind CSS compilation)
 docker build -t meyers-menu-calendar .
 
 # Run the container with persistent database storage
@@ -151,6 +174,12 @@ docker run -p 8080:8080 -v meyers-data:/app/data meyers-menu-calendar
 # Or run without persistence (for testing)
 docker run -p 8080:8080 meyers-menu-calendar
 ```
+
+The Docker build automatically:
+- Installs Node.js 20.x for Tailwind CSS compilation
+- Runs `npm install` to get Tailwind dependencies
+- Compiles CSS during the .NET build process
+- Includes the compiled CSS in the final image
 
 ### Using Dokploy
 
