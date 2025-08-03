@@ -36,10 +36,11 @@ dotnet run --project Meyers.Web
 
 - `GET /` - Returns API description
 - `GET /calendar` - Returns the iCal feed with menu data
+- `GET /calendar.ics` - Same as /calendar (for compatibility with calendar apps expecting .ics extension)
 
 ### Subscribe to Calendar
 
-1. Copy the calendar URL: `http://localhost:5116/calendar`
+1. Copy the calendar URL: `http://localhost:5116/calendar` or `http://localhost:5116/calendar.ics`
 2. Add to your calendar app:
    - **Google Calendar**: Settings → Add calendar → From URL
    - **Outlook**: Add calendar → Subscribe from web

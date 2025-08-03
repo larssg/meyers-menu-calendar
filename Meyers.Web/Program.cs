@@ -35,7 +35,8 @@ using (var scope = app.Services.CreateScope())
 
 app.MapGet("/", () => "Meyers Menu Calendar API");
 
-app.MapGet("/calendar", async (MenuScrapingService menuService, CalendarService calendarService, IMenuRepository menuRepository) =>
+// Define the calendar generation logic as a shared delegate
+var calendarHandler = async (MenuScrapingService menuService, CalendarService calendarService, IMenuRepository menuRepository) =>
 {
     try
     {
@@ -75,7 +76,11 @@ app.MapGet("/calendar", async (MenuScrapingService menuService, CalendarService 
     {
         return Results.Problem($"Error generating calendar: {ex.Message}");
     }
-});
+};
+
+// Map both endpoints to the same handler
+app.MapGet("/calendar", calendarHandler);
+app.MapGet("/calendar.ics", calendarHandler);
 
 app.Run();
 
