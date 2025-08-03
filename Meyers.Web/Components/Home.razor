@@ -182,145 +182,41 @@
 </div>
 
 <script>
-    function copyToClipboard(text) {
-        navigator.clipboard.writeText(text).then(function () {
-            const id = "copy-toast";
-            const existing = document.getElementById(id);
-            if (existing) existing.remove();
-            const toast = document.createElement("div");
-            toast.id = id;
-            toast.textContent = "Copied to clipboard";
-            toast.className =
-                "fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 " +
-                "rounded-lg bg-teal-700 text-white text-sm shadow";
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 1800);
-        });
+    // Constants
+    const TOAST_DURATION = 1800;
+    const AUTO_REFRESH_INTERVAL = 3600000; // 1 hour
+    const BASE_URL = window.location.origin;
+    
+    const MENU_NAME_IDS = ['selectedMenuTypeName', 'heroMenuTypeName', 'previewMenuTypeName'];
+    const TAB_ACTIVE_CLASS = 'bg-teal-600 text-white';
+    const TAB_INACTIVE_CLASS = 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/60 border-l border-slate-200 dark:border-slate-700';
+    
+    // Templates
+    const templates = {
+        loading: '<p class="text-slate-500 dark:text-slate-400 text-sm">Loading...</p>',
+        error: '<p class="text-slate-500 dark:text-slate-400 text-sm">Failed to load menu</p>',
+        noMenu: '<p class="text-slate-500 dark:text-slate-400 text-sm">No menu available for {period}</p>',
+        menuItem: (title, details) => {
+            let html = '<div><p class="font-medium text-slate-900 dark:text-slate-100 text-base">' + 
+                      escapeHtml(title) + '</p>';
+            if (details) {
+                html += '<p class="text-slate-600 dark:text-slate-300 mt-2 text-sm">' + 
+                       escapeHtml(details) + '</p>';
+            }
+            return html + '</div>';
+        }
+    };
+
+    // Helper functions
+    function $(id) {
+        return document.getElementById(id);
     }
 
-    async function updateMenuType(menuTypeId) {
-        const selector = document.getElementById('menuTypeSelector');
-        const selectedOption = selector ? selector.options[selector.selectedIndex] : null;
-        const slug = selectedOption ? selectedOption.getAttribute('data-slug') : null;
-        const name = selectedOption ? selectedOption.getAttribute('data-name') : null;
-
-        const baseUrl = window.location.origin;
-
-        // If slug/name not from select (tabs path), derive from active tab's attributes
-        let effectiveSlug = slug;
-        let effectiveName = name;
-        if (!effectiveSlug || !effectiveName) {
-            const activeTab = document.getElementById(`tab-${menuTypeId}`);
-            if (activeTab) {
-                effectiveName = activeTab.textContent.trim();
-                // Slug is used only to build URL; fallback to data attr if present
-                effectiveSlug = activeTab.getAttribute('data-slug') || null;
-            }
-        }
-
-        // If we still don't have a slug, fetch it from server API as fallback
-        // but try to infer from calendarUrl if already present
-        if (!effectiveSlug) {
-            try {
-                // Attempt to parse current URL’s slug and swap by id is non-trivial here;
-                // instead we optimistically call an endpoint if you have one.
-                // For now, gracefully skip and let the API preview update still work.
-            } catch { /* noop */ }
-        }
-
-        // Update the calendar URL
-        const urlSlug = effectiveSlug || (selectedOption ? selectedOption.getAttribute('data-slug') : null);
-        if (urlSlug) {
-            const calendarUrl = `${baseUrl}/calendar/${urlSlug}.ics`;
-            const input = document.getElementById('calendarUrl');
-            if (input) input.value = calendarUrl;
-        }
-
-        // Update all menu type name displays
-        const displayName = effectiveName ||
-            (selectedOption ? selectedOption.getAttribute('data-name') : null);
-        if (displayName) {
-            const ids = ['selectedMenuTypeName', 'heroMenuTypeName', 'previewMenuTypeName'];
-            ids.forEach((id) => {
-                const el = document.getElementById(id);
-                if (el) el.textContent = displayName;
-            });
-        }
-
-        // Hide the refresh note since we're loading dynamically
-        const refreshNote = document.getElementById('refreshNote');
-        if (refreshNote) {
-            refreshNote.classList.add('hidden');
-        }
-
-        // Show loading state
-        const todayContent = document.getElementById('todayMenuContent');
-        const tomorrowContent = document.getElementById('tomorrowMenuContent');
-
-        const loadingHtml = '<p class="text-slate-500 dark:text-slate-400 text-sm">Loading...</p>';
-        if (todayContent) todayContent.innerHTML = loadingHtml;
-        if (tomorrowContent) tomorrowContent.innerHTML = loadingHtml;
-
-        // Fetch new menu preview
-        try {
-            const response = await fetch(`/api/menu-preview/${menuTypeId}`);
-            if (response.ok) {
-                const data = await response.json();
-
-                // Update today's menu
-                if (todayContent) {
-                    if (data.today) {
-                        let todayHtml =
-                            '<div><p class="font-medium text-slate-900 dark:text-slate-100 text-base">' +
-                            escapeHtml(data.today.title) +
-                            '</p>';
-                        if (data.today.details) {
-                            todayHtml +=
-                                '<p class="text-slate-600 dark:text-slate-300 mt-2 text-sm">' +
-                                escapeHtml(data.today.details) +
-                                '</p>';
-                        }
-                        todayHtml += '</div>';
-                        todayContent.innerHTML = todayHtml;
-                    } else {
-                        todayContent.innerHTML =
-                            '<p class="text-slate-500 dark:text-slate-400 text-sm">No menu available for today</p>';
-                    }
-                }
-
-                // Update tomorrow's menu
-                if (tomorrowContent) {
-                    if (data.tomorrow) {
-                        let tomorrowHtml =
-                            '<div><p class="font-medium text-slate-900 dark:text-slate-100 text-base">' +
-                            escapeHtml(data.tomorrow.title) +
-                            '</p>';
-                        if (data.tomorrow.details) {
-                            tomorrowHtml +=
-                                '<p class="text-slate-600 dark:text-slate-300 mt-2 text-sm">' +
-                                escapeHtml(data.tomorrow.details) +
-                                '</p>';
-                        }
-                        tomorrowHtml += '</div>';
-                        tomorrowContent.innerHTML = tomorrowHtml;
-                    } else {
-                        tomorrowContent.innerHTML =
-                            '<p class="text-slate-500 dark:text-slate-400 text-sm">No menu available for tomorrow</p>';
-                    }
-                }
-            } else {
-                const errorHtml =
-                    '<p class="text-slate-500 dark:text-slate-400 text-sm">Failed to load menu</p>';
-                if (todayContent) todayContent.innerHTML = errorHtml;
-                if (tomorrowContent) tomorrowContent.innerHTML = errorHtml;
-            }
-        } catch (error) {
-            console.error('Failed to fetch menu preview:', error);
-            const errorHtml =
-                '<p class="text-slate-500 dark:text-slate-400 text-sm">Failed to load menu</p>';
-            if (todayContent) todayContent.innerHTML = errorHtml;
-            if (tomorrowContent) tomorrowContent.innerHTML = errorHtml;
-        }
+    function updateElements(ids, value) {
+        ids.forEach(id => {
+            const el = $(id);
+            if (el) el.textContent = value;
+        });
     }
 
     function escapeHtml(text) {
@@ -331,16 +227,135 @@
             '"': '&quot;',
             "'": '&#039;'
         };
-        return text.replace(/[&<>"']/g, (m) => map[m]);
+        return text.replace(/[&<>"']/g, m => map[m]);
     }
 
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            const existing = $('copy-toast');
+            if (existing) existing.remove();
+            
+            const toast = document.createElement('div');
+            toast.id = 'copy-toast';
+            toast.textContent = 'Copied to clipboard';
+            toast.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 ' +
+                            'rounded-lg bg-teal-700 text-white text-sm shadow';
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), TOAST_DURATION);
+        });
+    }
+
+    // Menu data management
+    function getMenuInfo(menuTypeId) {
+        // Try to get from selector first
+        const selector = $('menuTypeSelector');
+        if (selector) {
+            const option = selector.options[selector.selectedIndex];
+            if (option) {
+                return {
+                    slug: option.getAttribute('data-slug'),
+                    name: option.getAttribute('data-name')
+                };
+            }
+        }
+        
+        // Fallback to tab if available
+        const tab = $(`tab-${menuTypeId}`);
+        if (tab) {
+            return {
+                slug: tab.getAttribute('data-slug'),
+                name: tab.textContent.trim()
+            };
+        }
+        
+        return { slug: null, name: null };
+    }
+
+    function updateUI(menuTypeId, slug, name) {
+        // Update calendar URL
+        if (slug) {
+            const calendarUrl = `${BASE_URL}/calendar/${slug}.ics`;
+            const input = $('calendarUrl');
+            if (input) input.value = calendarUrl;
+        }
+        
+        // Update menu names
+        if (name) {
+            updateElements(MENU_NAME_IDS, name);
+        }
+    }
+
+    function updateMenuContent(containerId, data, period) {
+        const container = $(containerId);
+        if (!container) return;
+        
+        if (data) {
+            container.innerHTML = templates.menuItem(data.title, data.details);
+        } else {
+            container.innerHTML = templates.noMenu.replace('{period}', period);
+        }
+    }
+
+    async function loadMenuPreview(menuTypeId) {
+        const todayContent = $('todayMenuContent');
+        const tomorrowContent = $('tomorrowMenuContent');
+        
+        // Show loading state
+        if (todayContent) todayContent.innerHTML = templates.loading;
+        if (tomorrowContent) tomorrowContent.innerHTML = templates.loading;
+        
+        try {
+            const response = await fetch(`/api/menu-preview/${menuTypeId}`);
+            if (response.ok) {
+                const data = await response.json();
+                updateMenuContent('todayMenuContent', data.today, 'today');
+                updateMenuContent('tomorrowMenuContent', data.tomorrow, 'tomorrow');
+            } else {
+                throw new Error('Failed to fetch menu preview');
+            }
+        } catch (error) {
+            console.error('Failed to fetch menu preview:', error);
+            if (todayContent) todayContent.innerHTML = templates.error;
+            if (tomorrowContent) tomorrowContent.innerHTML = templates.error;
+        }
+    }
+
+    async function updateMenuType(menuTypeId) {
+        const { slug, name } = getMenuInfo(menuTypeId);
+        updateUI(menuTypeId, slug, name);
+        await loadMenuPreview(menuTypeId);
+    }
+
+    function selectMenuTab(menuTypeId, slug, name) {
+        // Update tab styling
+        const tablist = document.querySelector('[role="tablist"]');
+        if (tablist) {
+            tablist.querySelectorAll('[role="tab"]').forEach(tab => {
+                const isActive = tab.id === `tab-${menuTypeId}`;
+                tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                tab.className = `px-4 py-2 text-sm font-medium transition-colors ${
+                    isActive ? TAB_ACTIVE_CLASS : TAB_INACTIVE_CLASS
+                }`;
+                
+                if (isActive && slug && !tab.getAttribute('data-slug')) {
+                    tab.setAttribute('data-slug', slug);
+                }
+            });
+        }
+        
+        // Update UI and load preview
+        updateUI(menuTypeId, slug, name);
+        updateMenuType(menuTypeId);
+    }
+
+    // Auto-refresh functionality
     let refreshInterval;
 
     function startAutoRefresh() {
         refreshInterval = setInterval(() => {
-            console.log("Auto-refreshing menu data...");
+            console.log('Auto-refreshing menu data...');
             window.location.reload();
-        }, 3600000);
+        }, AUTO_REFRESH_INTERVAL);
     }
 
     function stopAutoRefresh() {
@@ -350,52 +365,13 @@
         }
     }
 
-    document.addEventListener("DOMContentLoaded", startAutoRefresh);
-    document.addEventListener("visibilitychange", () => {
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', startAutoRefresh);
+    document.addEventListener('visibilitychange', () => {
         if (document.hidden) stopAutoRefresh();
         else startAutoRefresh();
     });
-    window.addEventListener("beforeunload", stopAutoRefresh);
-
-    // Tabs helper: activate a menu type tab and reuse existing update flow
-    function selectMenuTab(menuTypeId, slug, name) {
-        // Update active tab styling
-        const tablist = document.querySelector('[role="tablist"]');
-        if (tablist) {
-            const tabs = tablist.querySelectorAll('[role="tab"]');
-            tabs.forEach((t) => {
-                const isActive = t.id === `tab-${menuTypeId}`;
-                t.setAttribute('aria-selected', isActive ? 'true' : 'false');
-                t.className =
-                    'px-4 py-2 text-sm font-medium transition-colors ' +
-                    (isActive
-                        ? 'bg-teal-600 text-white'
-                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/60 border-l border-slate-200 dark:border-slate-700');
-                // store slug for potential later use
-                if (!t.getAttribute('data-slug') && slug && isActive) {
-                    t.setAttribute('data-slug', slug);
-                }
-            });
-        }
-
-        // Update displayed names immediately
-        const ids = ['selectedMenuTypeName', 'heroMenuTypeName', 'previewMenuTypeName'];
-        ids.forEach((id) => {
-            const el = document.getElementById(id);
-            if (el && name) el.textContent = name;
-        });
-
-        // Update URL input immediately
-        const baseUrl = window.location.origin;
-        if (slug) {
-            const calendarUrl = `${baseUrl}/calendar/${slug}.ics`;
-            const input = document.getElementById('calendarUrl');
-            if (input) input.value = calendarUrl;
-        }
-
-        // Trigger data refresh via existing function
-        updateMenuType(menuTypeId);
-    }
+    window.addEventListener('beforeunload', stopAutoRefresh);
 </script>
 
 @code {
