@@ -148,6 +148,40 @@
             console.log('Copied to clipboard: ' + text);
         });
     }
+
+    // Auto-refresh menu data every hour
+    let refreshInterval;
+    
+    function startAutoRefresh() {
+        // Refresh every hour (3600000 ms)
+        refreshInterval = setInterval(() => {
+            console.log('Auto-refreshing menu data...');
+            window.location.reload();
+        }, 3600000);
+    }
+    
+    function stopAutoRefresh() {
+        if (refreshInterval) {
+            clearInterval(refreshInterval);
+            refreshInterval = null;
+        }
+    }
+    
+    // Start auto-refresh when page loads
+    document.addEventListener('DOMContentLoaded', startAutoRefresh);
+    
+    // Stop auto-refresh when page is hidden (tab switched or browser minimized)
+    // Resume when page becomes visible again
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            stopAutoRefresh();
+        } else {
+            startAutoRefresh();
+        }
+    });
+    
+    // Stop auto-refresh before page unloads
+    window.addEventListener('beforeunload', stopAutoRefresh);
 </script>
 
 @code {
