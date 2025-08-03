@@ -9,6 +9,7 @@ A .NET 9 minimal API that scrapes the Meyers lunch menu and generates an iCal fe
 - 🚀 Automatic caching with SQLite for performance
 - 🔄 Background service refreshes menu data every 6 hours
 - 🧹 Clean calendar titles showing just the main dish
+- 📆 Includes historical data (last month) plus future menus
 - 📱 Works with Google Calendar, Outlook, Apple Calendar, etc.
 
 ## Quick Start
