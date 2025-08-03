@@ -96,6 +96,40 @@ app.MapGet("/api/menu-types", async (IMenuRepository menuRepository) =>
 app.MapGet("/api/menu-preview/{menuTypeId:int}", async (int menuTypeId, MenuPreviewHandler handler) =>
     await handler.GetMenuPreviewAsync(menuTypeId));
 
+// Hidden endpoint for manual menu refresh (for development/troubleshooting)
+app.MapGet("/admin/refresh-menus", async (HttpContext context, MenuScrapingService scrapingService) =>
+{
+    // Check for required secret parameter
+    var secret = context.Request.Query["secret"].FirstOrDefault();
+    var expectedSecret = Environment.GetEnvironmentVariable("REFRESH_SECRET");
+    
+    if (string.IsNullOrEmpty(expectedSecret))
+    {
+        return Results.Problem("REFRESH_SECRET environment variable not configured", statusCode: 503);
+    }
+    
+    if (secret != expectedSecret)
+    {
+        return Results.Problem("Invalid or missing secret parameter", statusCode: 403);
+    }
+    
+    try
+    {
+        var result = await scrapingService.ScrapeMenuAsync();
+        var count = result.Count;
+        return Results.Ok(new { 
+            success = true, 
+            message = $"Successfully refreshed {count} menu entries",
+            timestamp = DateTime.UtcNow,
+            menuCount = count
+        });
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem($"Failed to refresh menus: {ex.Message}");
+    }
+});
+
 app.Run();
 
 public partial class Program { }

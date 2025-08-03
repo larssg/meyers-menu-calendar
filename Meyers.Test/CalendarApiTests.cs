@@ -155,4 +155,78 @@ public class CalendarApiTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(System.Text.Json.JsonValueKind.Null, todayProperty.ValueKind);
         Assert.Equal(System.Text.Json.JsonValueKind.Null, tomorrowProperty.ValueKind);
     }
+
+    [Fact]
+    public async Task Get_AdminRefreshMenus_Returns_Success()
+    {
+        var response = await _client.GetAsync("/admin/refresh-menus?secret=test-secret-123");
+        
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("application/json; charset=utf-8", response.Content.Headers.ContentType?.ToString());
+        
+        var content = await response.Content.ReadAsStringAsync();
+        var result = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(content);
+        
+        // Verify the response structure
+        Assert.True(result.TryGetProperty("success", out var successProperty));
+        Assert.True(successProperty.GetBoolean());
+        
+        Assert.True(result.TryGetProperty("message", out var messageProperty));
+        Assert.Contains("Successfully refreshed", messageProperty.GetString());
+        
+        Assert.True(result.TryGetProperty("timestamp", out var timestampProperty));
+        Assert.True(DateTime.TryParse(timestampProperty.GetString(), out _));
+        
+        Assert.True(result.TryGetProperty("menuCount", out var menuCountProperty));
+        var menuCount = menuCountProperty.GetInt32();
+        Assert.True(menuCount > 0, $"Expected menu count > 0, but got {menuCount}");
+        
+        // Should have 80 entries (8 menu types × 10 weekdays)
+        Assert.Equal(80, menuCount);
+    }
+
+    [Fact]
+    public async Task Get_AdminRefreshMenus_Multiple_Calls_Work()
+    {
+        // First call
+        var response1 = await _client.GetAsync("/admin/refresh-menus?secret=test-secret-123");
+        Assert.Equal(HttpStatusCode.OK, response1.StatusCode);
+        
+        var content1 = await response1.Content.ReadAsStringAsync();
+        var result1 = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(content1);
+        var count1 = result1.GetProperty("menuCount").GetInt32();
+        
+        // Second call should work without issues
+        var response2 = await _client.GetAsync("/admin/refresh-menus?secret=test-secret-123");
+        Assert.Equal(HttpStatusCode.OK, response2.StatusCode);
+        
+        var content2 = await response2.Content.ReadAsStringAsync();
+        var result2 = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(content2);
+        var count2 = result2.GetProperty("menuCount").GetInt32();
+        
+        // Both calls should return the same count (data gets updated/replaced)
+        Assert.Equal(count1, count2);
+    }
+
+    [Fact]
+    public async Task Get_AdminRefreshMenus_WithInvalidSecret_Returns_Forbidden()
+    {
+        var response = await _client.GetAsync("/admin/refresh-menus?secret=wrong-secret");
+        
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        
+        var content = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Invalid or missing secret parameter", content);
+    }
+
+    [Fact]
+    public async Task Get_AdminRefreshMenus_WithoutSecret_Returns_Forbidden()
+    {
+        var response = await _client.GetAsync("/admin/refresh-menus");
+        
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        
+        var content = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Invalid or missing secret parameter", content);
+    }
 }

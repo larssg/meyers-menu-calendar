@@ -78,6 +78,8 @@ dotnet ef database update --project Meyers.Web
 - `GET /` - Beautiful Blazor SSR homepage with menu preview and calendar feed URLs
 - `GET /calendar/{menuType}.ics` - Returns iCal calendar feed for specific menu type (e.g., `/calendar/det-velkendte.ics`, `/calendar/den-groenne.ics`)
 - `GET /api/menu-types` - Returns available menu types with slugs
+- `GET /api/menu-preview/{menuTypeId}` - Returns today's and tomorrow's menu preview for specific menu type
+- `GET /admin/refresh-menus?secret={REFRESH_SECRET}` - Hidden endpoint for manual menu refresh (returns JSON with success status and menu count, requires REFRESH_SECRET environment variable)
 
 ## Data Persistence
 
@@ -130,6 +132,7 @@ Tests verify complete weekly menu extraction, web interface rendering, and corre
 - **Component Structure**: Keep layout, routing, and page components separate for maintainability
 - **CSS Framework**: Use Tailwind CSS v4 with @theme directive for consistent design system
 - **Build Integration**: Ensure Tailwind CSS compilation is integrated into MSBuild process
+- **Testing**: When adding new endpoints or features, comprehensive tests must be added and all existing tests must be updated to reflect the changes. Tests should cover both success and error scenarios.
 
 ## Build System
 
