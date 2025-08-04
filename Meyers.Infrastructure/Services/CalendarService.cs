@@ -160,9 +160,18 @@ public class CalendarService : ICalendarService
             var firstSentence = mainSection.Split('.')[0];
             if (firstSentence.Length > 20 && firstSentence.Length < mainSection.Length)
             {
-                mainSection = firstSentence.Trim() + "...";
+                // Only add "..." if we're actually cutting off content after the first sentence
+                var remainingAfterSentence = mainSection.Substring(firstSentence.Length).Trim();
+                if (remainingAfterSentence.Length > 1) // More than just the period
+                {
+                    mainSection = firstSentence.Trim() + "...";
+                }
+                else
+                {
+                    mainSection = firstSentence.Trim();
+                }
             }
-            else if (mainSection.Length > maxTitleLength)
+            else
             {
                 // Find a good breaking point (space) around 60-80 characters
                 var breakPoint = mainSection.LastIndexOf(' ', Math.Min(maxTitleLength, mainSection.Length - 1));
