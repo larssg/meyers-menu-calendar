@@ -308,8 +308,8 @@
                 kvp => kvp.Key,
                 kvp => new
                 {
-                    today = kvp.Value.today != null ? new { title = CalendarService.CleanupTitle(kvp.Value.today.MainDish), details = kvp.Value.today.Details } : null,
-                    tomorrow = kvp.Value.tomorrow != null ? new { title = CalendarService.CleanupTitle(kvp.Value.tomorrow.MainDish), details = kvp.Value.tomorrow.Details } : null
+                    today = kvp.Value.today != null ? new { title = CalendarService.CleanupTitle(kvp.Value.today.MainDish) } : null,
+                    tomorrow = kvp.Value.tomorrow != null ? new { title = CalendarService.CleanupTitle(kvp.Value.tomorrow.MainDish) } : null
                 }
             )
         });

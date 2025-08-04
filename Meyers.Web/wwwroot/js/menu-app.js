@@ -11,14 +11,9 @@ const TAB_INACTIVE_CLASS = 'bg-white dark:bg-slate-800 text-slate-700 dark:text-
 const templates = {
     error: '<p class="text-slate-500 dark:text-slate-400 text-sm">Failed to load menu</p>',
     noMenu: '<p class="text-slate-500 dark:text-slate-400 text-sm">No menu available for {period}</p>',
-    menuItem: (title, details) => {
-        let html = '<div><p class="font-medium text-slate-900 dark:text-slate-100 text-base">' +
-            escapeHtml(title) + '</p>';
-        if (details) {
-            html += '<p class="text-slate-600 dark:text-slate-300 mt-2 text-sm">' +
-                escapeHtml(details) + '</p>';
-        }
-        return html + '</div>';
+    menuItem: (title) => {
+        return '<div><p class="font-medium text-slate-900 dark:text-slate-100 text-base">' +
+            escapeHtml(title) + '</p></div>';
     }
 };
 
@@ -107,7 +102,7 @@ function updateMenuContent(containerId, data, period) {
     if (!container) return;
 
     if (data) {
-        container.innerHTML = templates.menuItem(data.title, data.details);
+        container.innerHTML = templates.menuItem(data.title);
     } else {
         container.innerHTML = templates.noMenu.replace('{period}', period);
     }
