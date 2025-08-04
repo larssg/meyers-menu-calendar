@@ -16,12 +16,13 @@
         {
             return $"copyToClipboard(document.getElementById('{InputId}').value)";
         }
-        
+
         if (!string.IsNullOrEmpty(Value))
         {
             return $"copyToClipboard('{Value}')";
         }
-        
+
         return "copyToClipboard('')";
     }
+
 }

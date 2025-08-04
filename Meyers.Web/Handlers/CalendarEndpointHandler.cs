@@ -33,7 +33,8 @@ public class CalendarEndpointHandler(
 
             // Convert cached entries to MenuDay objects
             var historicalMenuDays = allCachedEntries
-                .Where(entry => currentMenuDays.All(current => current.Date.Date != entry.Date.Date || current.MenuType != menuType.Name))
+                .Where(entry => currentMenuDays.All(current =>
+                    current.Date.Date != entry.Date.Date || current.MenuType != menuType.Name))
                 .Select(entry => new MenuDay
                 {
                     DayName = entry.DayName,

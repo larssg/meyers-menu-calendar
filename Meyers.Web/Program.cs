@@ -9,10 +9,7 @@ using Meyers.Web.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure Kestrel to remove Server header
-builder.WebHost.ConfigureKestrel(options =>
-{
-    options.AddServerHeader = false;
-});
+builder.WebHost.ConfigureKestrel(options => { options.AddServerHeader = false; });
 
 // Configuration
 builder.Services.Configure<MenuCacheOptions>(
@@ -20,8 +17,8 @@ builder.Services.Configure<MenuCacheOptions>(
 
 // Database configuration
 var databasePath = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? Environment.GetEnvironmentVariable("DATABASE_PATH")
-    ?? "Data Source=menus.db";
+                   ?? Environment.GetEnvironmentVariable("DATABASE_PATH")
+                   ?? "Data Source=menus.db";
 
 builder.Services.AddDbContext<MenuDbContext>(options =>
     options.UseSqlite(databasePath));
@@ -64,17 +61,18 @@ app.Use(async (context, next) =>
 {
     var userAgent = context.Request.Headers["User-Agent"].ToString().ToLowerInvariant();
     var isSocialMediaCrawler = userAgent.Contains("facebookexternalhit") ||
-                              userAgent.Contains("twitterbot") ||
-                              userAgent.Contains("linkedinbot") ||
-                              userAgent.Contains("whatsapp") ||
-                              userAgent.Contains("telegrambot") ||
-                              userAgent.Contains("skypeuripreview") ||
-                              userAgent.Contains("slackbot") ||
-                              userAgent.Contains("discordbot");
+                               userAgent.Contains("twitterbot") ||
+                               userAgent.Contains("linkedinbot") ||
+                               userAgent.Contains("whatsapp") ||
+                               userAgent.Contains("telegrambot") ||
+                               userAgent.Contains("skypeuripreview") ||
+                               userAgent.Contains("slackbot") ||
+                               userAgent.Contains("discordbot");
 
     if (!isSocialMediaCrawler)
     {
-        context.Response.Headers["X-Robots-Tag"] = "noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate, nocache";
+        context.Response.Headers["X-Robots-Tag"] =
+            "noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate, nocache";
     }
 
     await next();
@@ -110,4 +108,6 @@ app.MapGet("/admin/refresh-menus", async (HttpContext context, RefreshMenusHandl
 
 app.Run();
 
-public partial class Program { }
+public partial class Program
+{
+}

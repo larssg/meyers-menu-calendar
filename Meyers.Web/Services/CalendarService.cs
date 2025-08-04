@@ -9,7 +9,9 @@ public class CalendarService
 {
     public string GenerateCalendar(List<MenuDay> menuDays, string? menuTypeName = null)
     {
-        var calendarName = string.IsNullOrEmpty(menuTypeName) ? "Meyers Menu Calendar" : $"Meyers Menu Calendar - {menuTypeName}";
+        var calendarName = string.IsNullOrEmpty(menuTypeName)
+            ? "Meyers Menu Calendar"
+            : $"Meyers Menu Calendar - {menuTypeName}";
         var calendar = new Calendar
         {
             ProductId = calendarName,
@@ -28,8 +30,10 @@ public class CalendarService
                 Uid = "test-event",
                 Summary = "No menu found - Test Event",
                 Description = "Unable to scrape menu from Meyers website",
-                Start = new CalDateTime(DateTime.SpecifyKind(DateTime.Today.AddHours(12), DateTimeKind.Unspecified), "Europe/Copenhagen"),
-                End = new CalDateTime(DateTime.SpecifyKind(DateTime.Today.AddHours(13), DateTimeKind.Unspecified), "Europe/Copenhagen")
+                Start = new CalDateTime(DateTime.SpecifyKind(DateTime.Today.AddHours(12), DateTimeKind.Unspecified),
+                    "Europe/Copenhagen"),
+                End = new CalDateTime(DateTime.SpecifyKind(DateTime.Today.AddHours(13), DateTimeKind.Unspecified),
+                    "Europe/Copenhagen")
             };
             calendar.Events.Add(testEvent);
         }
@@ -49,7 +53,9 @@ public class CalendarService
                 if (!string.IsNullOrEmpty(menuDay.MainDish))
                 {
                     title = CleanupTitle(menuDay.MainDish);
-                    description = !string.IsNullOrEmpty(menuDay.Details) ? FormatDescription(menuDay.Details) : FormatDescription(string.Join(", ", menuDay.MenuItems));
+                    description = !string.IsNullOrEmpty(menuDay.Details)
+                        ? FormatDescription(menuDay.Details)
+                        : FormatDescription(string.Join(", ", menuDay.MenuItems));
                 }
                 else
                 {
@@ -59,8 +65,8 @@ public class CalendarService
                 }
 
                 // Include menu type in UID to avoid conflicts when multiple menu types exist
-                var uid = string.IsNullOrEmpty(menuDay.MenuType) 
-                    ? $"meyers-menu-{date:yyyy-MM-dd}" 
+                var uid = string.IsNullOrEmpty(menuDay.MenuType)
+                    ? $"meyers-menu-{date:yyyy-MM-dd}"
                     : $"meyers-menu-{date:yyyy-MM-dd}-{menuDay.MenuType.Replace(" ", "-").Replace("/", "-").ToLowerInvariant()}";
 
                 var calendarEvent = new CalendarEvent
@@ -89,7 +95,8 @@ public class CalendarService
         var cleanTitle = System.Net.WebUtility.HtmlDecode(title);
 
         // Split into sections and get the main dish section
-        var sections = cleanTitle.Split([", Delikatesser:", ", Dagens salater:", ", Brød:"], StringSplitOptions.RemoveEmptyEntries);
+        var sections = cleanTitle.Split([", Delikatesser:", ", Dagens salater:", ", Brød:"],
+            StringSplitOptions.RemoveEmptyEntries);
         var mainSection = sections[0]; // Take only the first section (main dish)
 
         // Remove common boilerplate prefixes (case-insensitive)
@@ -97,7 +104,7 @@ public class CalendarService
         var prefixesToRemove = new[]
         {
             "Varm ret med tilbehør:",
-            "Varm ret med tilbeh&#248;r:",  // HTML encoded version
+            "Varm ret med tilbeh&#248;r:", // HTML encoded version
             "Alm./Halal:",
             "Alm.:",
             "Halal:"
@@ -164,9 +171,9 @@ public class CalendarService
         // Add line breaks before section headers for better readability
         // Use actual newlines - the iCal library will handle proper encoding
         formatted = formatted.Replace(", Delikatesser:", "\n\nDelikatesser:")
-                           .Replace(", Dagens salater:", "\n\nDagens salater:")
-                           .Replace(", Brød:", "\n\nBrød:")
-                           .Replace(" | ", "\n");
+            .Replace(", Dagens salater:", "\n\nDagens salater:")
+            .Replace(", Brød:", "\n\nBrød:")
+            .Replace(" | ", "\n");
 
         // Break up long lines by adding line breaks after sentences
         formatted = System.Text.RegularExpressions.Regex.Replace(formatted, @"(\. )([A-ZÆØÅ])", "$1\n$2");

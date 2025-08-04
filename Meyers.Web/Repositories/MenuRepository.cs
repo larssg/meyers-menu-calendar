@@ -122,6 +122,7 @@ public class MenuRepository(MenuDbContext context) : IMenuRepository
                 context.MenuTypes.Update(existing);
                 await context.SaveChangesAsync();
             }
+
             return existing;
         }
 

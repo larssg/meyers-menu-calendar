@@ -7,19 +7,15 @@ namespace Meyers.Web.Models;
 public class MenuType
 {
     public int Id { get; set; }
-    
-    [Required]
-    [MaxLength(100)]
-    public string Name { get; set; } = string.Empty;
-    
-    [Required]
-    [MaxLength(100)]
-    public string Slug { get; set; } = string.Empty;
-    
+
+    [Required] [MaxLength(100)] public string Name { get; set; } = string.Empty;
+
+    [Required] [MaxLength(100)] public string Slug { get; set; } = string.Empty;
+
     public bool IsActive { get; set; } = true;
-    
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    
+
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     // Navigation property
@@ -37,17 +33,17 @@ public class MenuType
         // Convert to lowercase and handle Danish characters
         var slug = name.ToLowerInvariant()
             .Replace("ø", "oe")
-            .Replace("å", "aa") 
+            .Replace("å", "aa")
             .Replace("æ", "ae")
             .Replace("é", "e")
             .Replace("ü", "u");
 
         // Replace spaces and special characters with hyphens
         slug = Regex.Replace(slug, @"[^a-z0-9\-]", "-");
-        
+
         // Remove multiple consecutive hyphens
         slug = Regex.Replace(slug, @"-+", "-");
-        
+
         // Trim hyphens from start and end
         slug = slug.Trim('-');
 

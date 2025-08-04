@@ -14,7 +14,8 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
     {
         // Check if we need to refresh the cache
         var lastUpdate = await menuRepository.GetLastUpdateTimeAsync();
-        var shouldRefresh = forceRefresh || lastUpdate == null || DateTime.UtcNow - lastUpdate.Value > CacheRefreshInterval;
+        var shouldRefresh = forceRefresh || lastUpdate == null ||
+                            DateTime.UtcNow - lastUpdate.Value > CacheRefreshInterval;
 
         if (!shouldRefresh)
         {
@@ -65,7 +66,7 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
         foreach (var day in menuDays)
         {
             var menuType = await menuRepository.GetOrCreateMenuTypeAsync(day.MenuType);
-            
+
             menuEntries.Add(new MenuEntry
             {
                 Date = day.Date,
@@ -111,7 +112,9 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
             // We need to search for both the decoded and original encoded versions
             // since the HTML might have the encoded version in attributes
             var encodedMenuType = System.Net.WebUtility.HtmlEncode(menuType);
-            var tabNodes = doc.DocumentNode.SelectNodes($"//div[@data-tab-content='{menuType}' or @data-tab-content='{encodedMenuType}']");
+            var tabNodes =
+                doc.DocumentNode.SelectNodes(
+                    $"//div[@data-tab-content='{menuType}' or @data-tab-content='{encodedMenuType}']");
             if (tabNodes == null) continue;
 
             var dayIndex = 0;
@@ -133,8 +136,10 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
 
                     foreach (var recipe in menuRecipes)
                     {
-                        var title = recipe.SelectSingleNode(".//h4[contains(@class, 'menu-recipe-display__title')]")?.InnerText?.Trim();
-                        var descriptionNode = recipe.SelectSingleNode(".//p[contains(@class, 'menu-recipe-display__description')]");
+                        var title = recipe.SelectSingleNode(".//h4[contains(@class, 'menu-recipe-display__title')]")
+                            ?.InnerText?.Trim();
+                        var descriptionNode =
+                            recipe.SelectSingleNode(".//p[contains(@class, 'menu-recipe-display__description')]");
 
                         if (!string.IsNullOrEmpty(title))
                         {
@@ -146,7 +151,8 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
                             {
                                 // For backward compatibility, also add to MenuItems
                                 var fullDescription = HtmlDecode(descriptionNode?.InnerText?.Trim() ?? "");
-                                fullDescription = System.Text.RegularExpressions.Regex.Replace(fullDescription, @"\s+", " ").Trim();
+                                fullDescription = System.Text.RegularExpressions.Regex
+                                    .Replace(fullDescription, @"\s+", " ").Trim();
                                 dayMenuItems.Add($"{title}: {fullDescription}");
 
                                 // Only extract main dish from "Varm ret med tilbehør" section
@@ -241,8 +247,10 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
             {
                 content = content.Substring(0, 100).Trim() + "...";
             }
+
             return content;
         }
+
         return firstItem;
     }
 

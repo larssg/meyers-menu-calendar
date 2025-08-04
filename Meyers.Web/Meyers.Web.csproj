@@ -1,38 +1,38 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="HtmlAgilityPack" Version="1.12.2" />
-    <PackageReference Include="Ical.Net" Version="5.1.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.7" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.7" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.7">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="HtmlAgilityPack" Version="1.12.2"/>
+        <PackageReference Include="Ical.Net" Version="5.1.0"/>
+        <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.7"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.7"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.7">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
 
-  <!-- Tailwind CSS Build Integration -->
-  <Target Name="CheckNodeModules" BeforeTargets="BuildTailwindCss">
-    <Message Text="Checking if node_modules exists..." Importance="high" />
-    <Exec Command="npm install" WorkingDirectory="$(MSBuildProjectDirectory)" Condition="!Exists('$(MSBuildProjectDirectory)/node_modules')" />
-  </Target>
+    <!-- Tailwind CSS Build Integration -->
+    <Target Name="CheckNodeModules" BeforeTargets="BuildTailwindCss">
+        <Message Text="Checking if node_modules exists..." Importance="high"/>
+        <Exec Command="npm install" WorkingDirectory="$(MSBuildProjectDirectory)" Condition="!Exists('$(MSBuildProjectDirectory)/node_modules')"/>
+    </Target>
 
-  <Target Name="BuildTailwindCss" BeforeTargets="ResolveStaticWebAssetsInputs">
-    <Message Text="Building Tailwind CSS..." Importance="high" />
-    <Exec Command="npm run build" WorkingDirectory="$(MSBuildProjectDirectory)" />
-  </Target>
+    <Target Name="BuildTailwindCss" BeforeTargets="ResolveStaticWebAssetsInputs">
+        <Message Text="Building Tailwind CSS..." Importance="high"/>
+        <Exec Command="npm run build" WorkingDirectory="$(MSBuildProjectDirectory)"/>
+    </Target>
 
-  <!-- Clean generated CSS on clean -->
-  <Target Name="CleanTailwindCss" BeforeTargets="Clean">
-    <Message Text="Cleaning generated Tailwind CSS..." Importance="high" />
-    <Delete Files="$(MSBuildProjectDirectory)/wwwroot/css/app.css" />
-  </Target>
+    <!-- Clean generated CSS on clean -->
+    <Target Name="CleanTailwindCss" BeforeTargets="Clean">
+        <Message Text="Cleaning generated Tailwind CSS..." Importance="high"/>
+        <Delete Files="$(MSBuildProjectDirectory)/wwwroot/css/app.css"/>
+    </Target>
 
 
 </Project>

@@ -36,9 +36,9 @@ public class MenuDbContext(DbContextOptions<MenuDbContext> options) : DbContext(
 
             // Foreign key relationship
             entity.HasOne(e => e.MenuType)
-                  .WithMany(mt => mt.MenuEntries)
-                  .HasForeignKey(e => e.MenuTypeId)
-                  .OnDelete(DeleteBehavior.Cascade);
+                .WithMany(mt => mt.MenuEntries)
+                .HasForeignKey(e => e.MenuTypeId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
