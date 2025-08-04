@@ -1,3 +1,4 @@
+using System.Reflection;
 using Meyers.Web.Handlers;
 
 namespace Meyers.Test;
@@ -13,7 +14,7 @@ public class CustomConfigTests
     public void DecodeCustomConfig_ValidFormats_ReturnsCorrectDictionary(string config, int expectedCount)
     {
         var result = CallDecodeCustomConfig(config);
-        
+
         Assert.NotNull(result);
         Assert.Equal(expectedCount, result.Count);
     }
@@ -27,7 +28,7 @@ public class CustomConfigTests
     public void DecodeCustomConfig_SingleDigitIds_MapsCorrectly(string config, DayOfWeek day, int expectedId)
     {
         var result = CallDecodeCustomConfig(config);
-        
+
         Assert.NotNull(result);
         Assert.True(result.ContainsKey(day));
         Assert.Equal(expectedId, result[day]);
@@ -42,7 +43,7 @@ public class CustomConfigTests
     public void DecodeCustomConfig_MultiDigitIds_MapsCorrectly(string config, DayOfWeek day, int expectedId)
     {
         var result = CallDecodeCustomConfig(config);
-        
+
         Assert.NotNull(result);
         Assert.True(result.ContainsKey(day));
         Assert.Equal(expectedId, result[day]);
@@ -57,7 +58,7 @@ public class CustomConfigTests
     public void DecodeCustomConfig_MixedDigitIds_MapsCorrectly(string config, DayOfWeek day, int expectedId)
     {
         var result = CallDecodeCustomConfig(config);
-        
+
         Assert.NotNull(result);
         Assert.True(result.ContainsKey(day));
         Assert.Equal(expectedId, result[day]);
@@ -69,7 +70,7 @@ public class CustomConfigTests
     public void DecodeCustomConfig_LargeIds_HandlesCorrectly(string config, DayOfWeek day, int expectedId)
     {
         var result = CallDecodeCustomConfig(config);
-        
+
         Assert.NotNull(result);
         Assert.True(result.ContainsKey(day));
         Assert.Equal(expectedId, result[day]);
@@ -85,7 +86,7 @@ public class CustomConfigTests
     public void DecodeCustomConfig_InvalidFormats_ReturnsNull(string config)
     {
         var result = CallDecodeCustomConfig(config);
-        
+
         Assert.Null(result);
     }
 
@@ -102,7 +103,7 @@ public class CustomConfigTests
         };
 
         var result = CalendarEndpointHandler.EncodeCustomConfig(config);
-        
+
         Assert.Equal("M1T2W3R4F5", result);
     }
 
@@ -119,7 +120,7 @@ public class CustomConfigTests
         };
 
         var result = CalendarEndpointHandler.EncodeCustomConfig(config);
-        
+
         Assert.Equal("M10T20W30R40F50", result);
     }
 
@@ -136,7 +137,7 @@ public class CustomConfigTests
         };
 
         var result = CalendarEndpointHandler.EncodeCustomConfig(config);
-        
+
         Assert.Equal("M1T15W3R128F9", result);
     }
 
@@ -187,9 +188,9 @@ public class CustomConfigTests
     // Helper method to access the private DecodeCustomConfig method
     private static Dictionary<DayOfWeek, int>? CallDecodeCustomConfig(string config)
     {
-        var method = typeof(CalendarEndpointHandler).GetMethod("DecodeCustomConfig", 
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-        
+        var method = typeof(CalendarEndpointHandler).GetMethod("DecodeCustomConfig",
+            BindingFlags.NonPublic | BindingFlags.Static);
+
         return method?.Invoke(null, [config]) as Dictionary<DayOfWeek, int>;
     }
 }

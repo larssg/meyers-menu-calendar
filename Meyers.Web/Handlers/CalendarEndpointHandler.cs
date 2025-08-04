@@ -1,16 +1,20 @@
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using Meyers.Core.Interfaces;
 using Meyers.Core.Models;
+using Meyers.Infrastructure.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace Meyers.Web.Handlers;
 
 public partial class CalendarEndpointHandler(
     IMenuScrapingService menuScrapingService,
     ICalendarService calendarService,
-    IMenuRepository menuRepository)
+    IMenuRepository menuRepository,
+    IOptions<MenuCacheOptions> cacheOptions)
 {
-    public async Task<IResult> GetCalendarAsync(string menuTypeSlug)
+    public async Task<IResult> GetCalendarAsync(string menuTypeSlug, HttpContext httpContext)
     {
         try
         {
@@ -56,8 +60,9 @@ public partial class CalendarEndpointHandler(
                 .ToList();
 
             var icalContent = calendarService.GenerateCalendar(allMenuDays, menuTypeName);
+            var lastModified = await menuRepository.GetLastUpdateTimeAsync() ?? DateTime.UtcNow;
 
-            return Results.Text(icalContent, "text/calendar; charset=utf-8");
+            return CreateCachedCalendarResponse(icalContent, lastModified, httpContext);
         }
         catch (Exception ex)
         {
@@ -65,7 +70,7 @@ public partial class CalendarEndpointHandler(
         }
     }
 
-    public async Task<IResult> GetCustomCalendarAsync(string config)
+    public async Task<IResult> GetCustomCalendarAsync(string config, HttpContext httpContext)
     {
         try
         {
@@ -123,8 +128,9 @@ public partial class CalendarEndpointHandler(
             customMenuDays = customMenuDays.OrderBy(m => m.Date).ToList();
 
             var icalContent = calendarService.GenerateCalendar(customMenuDays, "Custom Menu Selection");
+            var lastModified = await menuRepository.GetLastUpdateTimeAsync() ?? DateTime.UtcNow;
 
-            return Results.Text(icalContent, "text/calendar; charset=utf-8");
+            return CreateCachedCalendarResponse(icalContent, lastModified, httpContext);
         }
         catch (Exception ex)
         {
@@ -201,5 +207,53 @@ public partial class CalendarEndpointHandler(
             }
 
         return sb.ToString();
+    }
+
+    private IResult CreateCachedCalendarResponse(string icalContent, DateTime lastModified, HttpContext httpContext)
+    {
+        // Generate ETag from content hash for conditional requests
+        var contentBytes = Encoding.UTF8.GetBytes(icalContent);
+        var hashBytes = SHA256.HashData(contentBytes);
+        var etag = $"\"{Convert.ToHexString(hashBytes)[..16]}\"";
+
+        // Calculate dynamic cache duration based on refresh cycle
+        var cacheDuration = CalculateCacheDuration(lastModified);
+
+        // Add caching headers to the response
+        httpContext.Response.Headers.CacheControl = $"public, max-age={cacheDuration}";
+        httpContext.Response.Headers.ETag = etag;
+        httpContext.Response.Headers["Last-Modified"] = lastModified.ToString("R"); // RFC 1123 format
+        httpContext.Response.Headers.Vary = "Accept-Encoding"; // Vary on encoding for better caching
+
+        return Results.Text(icalContent, "text/calendar; charset=utf-8");
+    }
+
+    private int CalculateCacheDuration(DateTime lastModified)
+    {
+        var options = cacheOptions.Value;
+        var now = DateTime.UtcNow;
+
+        // Handle edge case: if lastModified is in the future, use minimum cache
+        if (lastModified > now) return (int)TimeSpan.FromMinutes(5).TotalSeconds;
+
+        // Calculate when the next refresh will happen (90% of 6-hour interval = 5.4 hours)
+        var proactiveThreshold = TimeSpan.FromTicks((long)(options.RefreshInterval.Ticks * 0.9));
+        var nextRefreshTime = lastModified.Add(proactiveThreshold);
+
+        // Add a buffer time after the refresh to allow for processing
+        var bufferTime = TimeSpan.FromMinutes(10);
+        var cacheExpiryTime = nextRefreshTime.Add(bufferTime);
+
+        // Calculate seconds until cache should expire
+        var timeUntilExpiry = cacheExpiryTime - now;
+
+        // Ensure minimum cache time of 5 minutes and maximum of 6 hours
+        var minCacheSeconds = (int)TimeSpan.FromMinutes(5).TotalSeconds;
+        var maxCacheSeconds = (int)options.RefreshInterval.TotalSeconds;
+
+        var cacheSeconds = Math.Max(minCacheSeconds, (int)timeUntilExpiry.TotalSeconds);
+        cacheSeconds = Math.Min(maxCacheSeconds, cacheSeconds);
+
+        return cacheSeconds;
     }
 }

@@ -2,7 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**IMPORTANT**: Keep this file and README.md up-to-date as the project evolves. Update both files when adding features, changing architecture, or modifying key components.
+**IMPORTANT**: Keep this file and README.md up-to-date as the project evolves. Update both files when adding features,
+changing architecture, or modifying key components.
 
 ## Project Overview
 
@@ -14,12 +15,14 @@ Features multi-menu support, responsive design, and automatic caching.
 **Clean Architecture Structure:**
 
 ### Meyers.Core (Domain Layer)
+
 - `Models/MenuEntry.cs`: Menu data model with date, items, main dish, details
 - `Models/MenuType.cs`: Menu type model with name, slug, active status
 - `Models/MenuDay.cs`: DTO for menu data transfer
 - `Interfaces/`: Repository and service contracts (IMenuRepository, IMenuScrapingService, ICalendarService)
 
 ### Meyers.Infrastructure (Data/External Layer)
+
 - `Data/MenuDbContext.cs`: Entity Framework context with model configuration
 - `Migrations/`: Database schema migrations
 - `Repositories/MenuRepository.cs`: Data access with optimized queries
@@ -29,14 +32,17 @@ Features multi-menu support, responsive design, and automatic caching.
 - `Configuration/MenuCacheOptions.cs`: Background service configuration
 
 ### Meyers.Web (Presentation Layer)
+
 - `Components/Home.razor`: Multi-menu homepage with custom calendar builder UI
 - `Handlers/`: API endpoints for calendar feeds and menu previews
 - `wwwroot/js/menu-app.js`: Client-side functionality (toggleMenuMode, copyToClipboard, updateWeeklyPreview)
 - `Styles/app.css`: Tailwind CSS v4 configuration
 
 ### Meyers.Test
+
 - **54 comprehensive tests** with TestWebApplicationFactory, MockHttpMessageHandler, and real HTML fixtures
-- Tests all 8 menu types, web interface, API endpoints, mobile responsiveness, CalendarService title cleanup, and MapStaticAssets fingerprinting
+- Tests all 8 menu types, web interface, API endpoints, mobile responsiveness, CalendarService title cleanup, and
+  MapStaticAssets fingerprinting
 
 ## Key Dependencies
 
@@ -69,7 +75,8 @@ dotnet build
 
 - `GET /` - Homepage with multi-menu support and custom calendar builder
 - `GET /calendar/{menu-type-slug}.ics` - iCal feed for specific menu type (with 5-minute alarms)
-- `GET /calendar/custom/{config}.ics` - Custom mixed calendar (config format: M1T1W1R2F1 = Mon/Tue/Wed/Fri menu type 1, Thu menu type 2)
+- `GET /calendar/custom/{config}.ics` - Custom mixed calendar (config format: M1T1W1R2F1 = Mon/Tue/Wed/Fri menu type 1,
+  Thu menu type 2)
 - `GET /api/menu-types` - Available menu types JSON
 - `GET /api/menu-preview/{menuTypeId}` - Today/tomorrow menu preview JSON
 - `GET /admin/refresh-menus?secret=X` - Manual refresh endpoint (returns JSON with menu count)
@@ -88,6 +95,7 @@ types. Supports all 8 menu types with clean title extraction and HTML entity dec
 ## Custom Calendar Feature
 
 Users can create mixed calendars selecting different menu types per weekday:
+
 - **Simple Mode**: One menu type for all days
 - **Custom Mode**: Different menu type per weekday (Mon/Tue/Wed/Thu/Fri dropdowns)
 - **Config Encoding**: `M1T1W1R2F1` = Monday(1), Tuesday(1), Wednesday(1), Thursday(2), Friday(1)

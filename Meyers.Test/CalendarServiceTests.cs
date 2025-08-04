@@ -14,7 +14,7 @@ public class CalendarServiceTests
     public void CleanupTitle_ShortTitles_DoesNotAddEllipsis(string input, string expected)
     {
         var result = _calendarService.CleanupTitle(input);
-        
+
         Assert.Equal(expected, result);
         Assert.DoesNotContain("...", result);
     }
@@ -23,10 +23,11 @@ public class CalendarServiceTests
     public void CleanupTitle_LongTitleWithFirstSentenceAndAdditionalContent_AddsEllipsis()
     {
         // A long title that exceeds 80 characters and has a good first sentence
-        var input = "Grillet kyllingebryst med ratatouille. Serveres med kartofler og grøntsager og andre ting som gør teksten lang nok til at udløse algoritmen.";
-        
+        var input =
+            "Grillet kyllingebryst med ratatouille. Serveres med kartofler og grøntsager og andre ting som gør teksten lang nok til at udløse algoritmen.";
+
         var result = _calendarService.CleanupTitle(input);
-        
+
         Assert.Equal("Grillet kyllingebryst med ratatouille...", result);
     }
 
@@ -34,10 +35,11 @@ public class CalendarServiceTests
     public void CleanupTitle_LongTitleWithoutGoodFirstSentence_TruncatesAtWordBoundary()
     {
         // A long title that exceeds 80 characters but doesn't have a good first sentence
-        var input = "Dette er en meget lang titel der går langt over de ottenta tegn som er maksimum længde for en titel og indeholder ikke punktum";
-        
+        var input =
+            "Dette er en meget lang titel der går langt over de ottenta tegn som er maksimum længde for en titel og indeholder ikke punktum";
+
         var result = _calendarService.CleanupTitle(input);
-        
+
         Assert.EndsWith("...", result);
         Assert.True(result.Length <= 83); // 80 + "..."
         Assert.False(result.EndsWith(" ..."), "Should not have space before ellipsis");
@@ -48,14 +50,15 @@ public class CalendarServiceTests
     {
         // Long title where the first sentence is short (under 20 chars)
         // Testing actual behavior: the algorithm seems to use word boundary truncation when first sentence is too short
-        var input = "Kort. Dette er en meget lang anden sætning der går langt over de ottenta tegn som er maksimum længde for en titel og derfor skal afkortes ved ord grænse";
-        
+        var input =
+            "Kort. Dette er en meget lang anden sætning der går langt over de ottenta tegn som er maksimum længde for en titel og derfor skal afkortes ved ord grænse";
+
         var result = _calendarService.CleanupTitle(input);
-        
+
         // Based on actual testing, when first sentence is short, it uses word boundary truncation
         Assert.EndsWith("...", result);
         Assert.True(result.Length <= 83); // 80 + "..."
-        
+
         // The algorithm actually does word boundary truncation starting from the full text
         // not just the short first sentence, so the result includes content beyond "Kort."
         Assert.True(result.Contains("Kort. Dette er"), "Should include content beyond the short first sentence");
@@ -70,7 +73,7 @@ public class CalendarServiceTests
     public void CleanupTitle_RemovesPrefixes_WhenContentFollows(string input, string expected)
     {
         var result = _calendarService.CleanupTitle(input);
-        
+
         Assert.Equal(expected, result);
         Assert.DoesNotContain("Varm ret med tilbehør:", result);
         Assert.DoesNotContain("Alm./Halal:", result);
@@ -85,7 +88,7 @@ public class CalendarServiceTests
     public void CleanupTitle_KeepsPrefixes_WhenNoContentFollows(string input, string expected)
     {
         var result = _calendarService.CleanupTitle(input);
-        
+
         Assert.Equal(expected, result);
     }
 
@@ -96,7 +99,7 @@ public class CalendarServiceTests
     public void CleanupTitle_ExtractsMainDish_FromSections(string input, string expected)
     {
         var result = _calendarService.CleanupTitle(input);
-        
+
         Assert.Equal(expected, result);
         Assert.DoesNotContain("Delikatesser:", result);
         Assert.DoesNotContain("Dagens salater:", result);
@@ -113,7 +116,7 @@ public class CalendarServiceTests
     public void CleanupTitle_DecodesHtmlEntities(string input, string expected)
     {
         var result = _calendarService.CleanupTitle(input);
-        
+
         Assert.Equal(expected, result);
     }
 
@@ -125,7 +128,7 @@ public class CalendarServiceTests
     public void CleanupTitle_RemovesLeadingPunctuation(string input, string expected)
     {
         var result = _calendarService.CleanupTitle(input);
-        
+
         Assert.Equal(expected, result);
     }
 
@@ -133,7 +136,7 @@ public class CalendarServiceTests
     public void CleanupTitle_HandlesNull()
     {
         var result = _calendarService.CleanupTitle(null);
-        
+
         Assert.Null(result);
     }
 
@@ -143,7 +146,7 @@ public class CalendarServiceTests
     public void CleanupTitle_HandlesEmpty(string input, string expected)
     {
         var result = _calendarService.CleanupTitle(input);
-        
+
         Assert.Equal(expected, result);
     }
 
@@ -152,22 +155,24 @@ public class CalendarServiceTests
     {
         // This tests the fix: if first sentence has no meaningful content after it, don't add "..."
         var input = "Dette er en meget lang første sætning der i sig selv er over ottenta tegn men slutter her.";
-        
+
         var result = _calendarService.CleanupTitle(input);
-        
+
         // Since this is over 80 chars and ends with just a period, it should not add "..."
         Assert.DoesNotContain("...", result);
-        Assert.Equal("Dette er en meget lang første sætning der i sig selv er over ottenta tegn men slutter her", result);
+        Assert.Equal("Dette er en meget lang første sætning der i sig selv er over ottenta tegn men slutter her",
+            result);
     }
 
     [Fact]
     public void CleanupTitle_AddsEllipsisWhenActuallyTruncatingContent()
     {
         // This should add "..." because there's substantial content after the first sentence
-        var input = "Dette er en kort første sætning. Men så kommer der meget mere indhold herefter som gør at vi faktisk afkorter noget meningsfuldt indhold der er vigtigt.";
-        
+        var input =
+            "Dette er en kort første sætning. Men så kommer der meget mere indhold herefter som gør at vi faktisk afkorter noget meningsfuldt indhold der er vigtigt.";
+
         var result = _calendarService.CleanupTitle(input);
-        
+
         Assert.Equal("Dette er en kort første sætning...", result);
     }
 }

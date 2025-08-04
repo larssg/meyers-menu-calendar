@@ -44,6 +44,9 @@ builder.Services.AddAntiforgery();
 // Background service registration
 builder.Services.AddHostedService<MenuCacheBackgroundService>();
 
+// Add response caching
+builder.Services.AddResponseCaching();
+
 var app = builder.Build();
 
 // Apply database migrations
@@ -80,6 +83,9 @@ app.Use(async (context, next) =>
 // Configure routing
 app.UseRouting();
 
+// Use response caching middleware
+app.UseResponseCaching();
+
 // Add anti-forgery middleware for Blazor SSR
 app.UseAntiforgery();
 
@@ -87,11 +93,13 @@ app.UseAntiforgery();
 app.MapRazorComponents<App>();
 
 // Map calendar endpoints
-app.MapGet("/calendar/{menuTypeSlug}.ics", async (string menuTypeSlug, CalendarEndpointHandler handler) =>
-    await handler.GetCalendarAsync(menuTypeSlug));
+app.MapGet("/calendar/{menuTypeSlug}.ics",
+    async (string menuTypeSlug, CalendarEndpointHandler handler, HttpContext httpContext) =>
+        await handler.GetCalendarAsync(menuTypeSlug, httpContext));
 
-app.MapGet("/calendar/custom/{config}.ics", async (string config, CalendarEndpointHandler handler) =>
-    await handler.GetCustomCalendarAsync(config));
+app.MapGet("/calendar/custom/{config}.ics",
+    async (string config, CalendarEndpointHandler handler, HttpContext httpContext) =>
+        await handler.GetCustomCalendarAsync(config, httpContext));
 
 // API endpoint for available menus
 app.MapGet("/api/menu-types", async (IMenuRepository menuRepository) =>

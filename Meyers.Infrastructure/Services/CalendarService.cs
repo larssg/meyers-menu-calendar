@@ -163,13 +163,9 @@ public class CalendarService : ICalendarService
                 // Only add "..." if we're actually cutting off content after the first sentence
                 var remainingAfterSentence = mainSection.Substring(firstSentence.Length).Trim();
                 if (remainingAfterSentence.Length > 1) // More than just the period
-                {
                     mainSection = firstSentence.Trim() + "...";
-                }
                 else
-                {
                     mainSection = firstSentence.Trim();
-                }
             }
             else
             {

@@ -2,7 +2,9 @@
 
 [![Build and Deploy](https://github.com/larssg/meyers-menu-calendar/actions/workflows/build-and-deploy.yml/badge.svg)](https://github.com/larssg/meyers-menu-calendar/actions/workflows/build-and-deploy.yml)
 
-A .NET 9 Blazor SSR application that scrapes Meyers restaurant menus and provides iCal feeds for 8 different menu types. Features clean architecture, multi-menu support, custom calendar builder, and automatic caching with 5-minute alarm notifications.
+A .NET 9 Blazor SSR application that scrapes Meyers restaurant menus and provides iCal feeds for 8 different menu types.
+Features clean architecture, multi-menu support, custom calendar builder, and automatic caching with 5-minute alarm
+notifications.
 
 ## Features
 
@@ -49,14 +51,14 @@ dotnet run --project Meyers.Web
 
 - **Meyers.Core/**: Domain models (MenuEntry, MenuType, MenuDay) and interfaces
 - **Meyers.Infrastructure/**: Data access, services, and external dependencies
-  - `Data/`: Entity Framework context and migrations
-  - `Repositories/`: Data access layer with optimized queries
-  - `Services/`: Menu scraping, calendar generation, background processing
-  - `Configuration/`: Options and settings
+    - `Data/`: Entity Framework context and migrations
+    - `Repositories/`: Data access layer with optimized queries
+    - `Services/`: Menu scraping, calendar generation, background processing
+    - `Configuration/`: Options and settings
 - **Meyers.Web/**: Presentation layer
-  - `Components/`: Blazor pages and UI components
-  - `Handlers/`: API endpoints for calendar feeds and previews
-  - `wwwroot/`: Static assets (CSS, JavaScript)
+    - `Components/`: Blazor pages and UI components
+    - `Handlers/`: API endpoints for calendar feeds and previews
+    - `wwwroot/`: Static assets (CSS, JavaScript)
 - **Meyers.Test/**: Comprehensive test suite with 54 tests
 
 ## Development
