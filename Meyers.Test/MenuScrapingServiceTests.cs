@@ -1,8 +1,8 @@
 using System.Net;
 using System.Text;
-using Meyers.Web.Data;
-using Meyers.Web.Repositories;
-using Meyers.Web.Services;
+using Meyers.Infrastructure.Data;
+using Meyers.Infrastructure.Repositories;
+using Meyers.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace Meyers.Test;

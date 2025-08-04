@@ -1,8 +1,11 @@
 using Meyers.Core.Interfaces;
-using Meyers.Web.Configuration;
+using Meyers.Infrastructure.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Meyers.Web.Services;
+namespace Meyers.Infrastructure.Services;
 
 public class MenuCacheBackgroundService(
     IServiceProvider serviceProvider,
@@ -46,7 +49,7 @@ public class MenuCacheBackgroundService(
     {
         using var scope = serviceProvider.CreateScope();
         var menuRepository = scope.ServiceProvider.GetRequiredService<IMenuRepository>();
-        var menuScrapingService = scope.ServiceProvider.GetRequiredService<MenuScrapingService>();
+        var menuScrapingService = scope.ServiceProvider.GetRequiredService<IMenuScrapingService>();
 
         var lastUpdate = await menuRepository.GetLastUpdateTimeAsync();
 

@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Meyers.Web.Migrations
+namespace Meyers.Infrastructure.Migrations
 {
     /// <inheritdoc />
     public partial class AddMenuTypeSupport : Migration

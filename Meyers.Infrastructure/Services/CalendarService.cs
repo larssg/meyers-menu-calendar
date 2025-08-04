@@ -7,7 +7,7 @@ using Ical.Net.Serialization;
 using Meyers.Core.Interfaces;
 using Meyers.Core.Models;
 
-namespace Meyers.Web.Services;
+namespace Meyers.Infrastructure.Services;
 
 public class CalendarService : ICalendarService
 {
@@ -39,6 +39,16 @@ public class CalendarService : ICalendarService
                 End = new CalDateTime(DateTime.SpecifyKind(DateTime.Today.AddHours(13), DateTimeKind.Unspecified),
                     "Europe/Copenhagen")
             };
+
+            // Add 5-minute alarm
+            var alarm = new Alarm
+            {
+                Action = AlarmAction.Display,
+                Description = testEvent.Summary,
+                Trigger = new Trigger(Duration.FromMinutes(-5))
+            };
+            testEvent.Alarms.Add(alarm);
+
             calendar.Events.Add(testEvent);
         }
         else
@@ -81,6 +91,15 @@ public class CalendarService : ICalendarService
                     Start = startTime,
                     End = endTime
                 };
+
+                // Add 5-minute alarm
+                var alarm = new Alarm
+                {
+                    Action = AlarmAction.Display,
+                    Description = title,
+                    Trigger = new Trigger(Duration.FromMinutes(-5))
+                };
+                calendarEvent.Alarms.Add(alarm);
 
                 calendar.Events.Add(calendarEvent);
             }

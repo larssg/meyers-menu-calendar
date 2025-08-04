@@ -1,10 +1,10 @@
 using Meyers.Core.Interfaces;
+using Meyers.Infrastructure.Configuration;
+using Meyers.Infrastructure.Data;
+using Meyers.Infrastructure.Repositories;
+using Meyers.Infrastructure.Services;
 using Meyers.Web;
-using Meyers.Web.Configuration;
-using Meyers.Web.Data;
 using Meyers.Web.Handlers;
-using Meyers.Web.Repositories;
-using Meyers.Web.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);

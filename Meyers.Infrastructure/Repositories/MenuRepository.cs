@@ -1,9 +1,9 @@
 using Meyers.Core.Interfaces;
 using Meyers.Core.Models;
-using Meyers.Web.Data;
+using Meyers.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace Meyers.Web.Repositories;
+namespace Meyers.Infrastructure.Repositories;
 
 public class MenuRepository(MenuDbContext context) : IMenuRepository
 {

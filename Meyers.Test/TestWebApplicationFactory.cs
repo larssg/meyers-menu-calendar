@@ -1,6 +1,6 @@
 using Meyers.Core.Interfaces;
-using Meyers.Web.Data;
-using Meyers.Web.Services;
+using Meyers.Infrastructure.Data;
+using Meyers.Infrastructure.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;

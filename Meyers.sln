@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Meyers.Test", "Meyers.Test\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Meyers.Core", "Meyers.Core\Meyers.Core.csproj", "{D43149C9-3F1D-435E-ADEC-9CF48D071344}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Meyers.Infrastructure", "Meyers.Infrastructure\Meyers.Infrastructure.csproj", "{A6C3F4F3-3CB5-40A9-B3CF-53B4DC1A746D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,18 @@ Global
 		{D43149C9-3F1D-435E-ADEC-9CF48D071344}.Release|x64.Build.0 = Release|Any CPU
 		{D43149C9-3F1D-435E-ADEC-9CF48D071344}.Release|x86.ActiveCfg = Release|Any CPU
 		{D43149C9-3F1D-435E-ADEC-9CF48D071344}.Release|x86.Build.0 = Release|Any CPU
+		{A6C3F4F3-3CB5-40A9-B3CF-53B4DC1A746D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A6C3F4F3-3CB5-40A9-B3CF-53B4DC1A746D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A6C3F4F3-3CB5-40A9-B3CF-53B4DC1A746D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A6C3F4F3-3CB5-40A9-B3CF-53B4DC1A746D}.Debug|x64.Build.0 = Debug|Any CPU
+		{A6C3F4F3-3CB5-40A9-B3CF-53B4DC1A746D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A6C3F4F3-3CB5-40A9-B3CF-53B4DC1A746D}.Debug|x86.Build.0 = Debug|Any CPU
+		{A6C3F4F3-3CB5-40A9-B3CF-53B4DC1A746D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A6C3F4F3-3CB5-40A9-B3CF-53B4DC1A746D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A6C3F4F3-3CB5-40A9-B3CF-53B4DC1A746D}.Release|x64.ActiveCfg = Release|Any CPU
+		{A6C3F4F3-3CB5-40A9-B3CF-53B4DC1A746D}.Release|x64.Build.0 = Release|Any CPU
+		{A6C3F4F3-3CB5-40A9-B3CF-53B4DC1A746D}.Release|x86.ActiveCfg = Release|Any CPU
+		{A6C3F4F3-3CB5-40A9-B3CF-53B4DC1A746D}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace Meyers.Web.Migrations
+namespace Meyers.Infrastructure.Migrations
 {
     /// <inheritdoc />
     public partial class AddUniqueDateConstraint : Migration

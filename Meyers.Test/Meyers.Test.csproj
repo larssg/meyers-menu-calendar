@@ -22,6 +22,7 @@
     <ItemGroup>
         <ProjectReference Include="..\Meyers.Web\Meyers.Web.csproj" />
         <ProjectReference Include="..\Meyers.Core\Meyers.Core.csproj" />
+        <ProjectReference Include="..\Meyers.Infrastructure\Meyers.Infrastructure.csproj" />
     </ItemGroup>
 
     <ItemGroup>

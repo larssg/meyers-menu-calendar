@@ -1,7 +1,7 @@
 using Meyers.Core.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace Meyers.Web.Data;
+namespace Meyers.Infrastructure.Data;
 
 public class MenuDbContext(DbContextOptions<MenuDbContext> options) : DbContext(options)
 {

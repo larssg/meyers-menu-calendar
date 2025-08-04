@@ -1,4 +1,4 @@
-namespace Meyers.Web.Configuration;
+namespace Meyers.Infrastructure.Configuration;
 
 public class MenuCacheOptions
 {

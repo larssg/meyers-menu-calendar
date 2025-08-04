@@ -4,7 +4,7 @@ using Meyers.Core.Interfaces;
 using Meyers.Core.Models;
 using static System.Net.WebUtility;
 
-namespace Meyers.Web.Services;
+namespace Meyers.Infrastructure.Services;
 
 public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository menuRepository) : IMenuScrapingService
 {
