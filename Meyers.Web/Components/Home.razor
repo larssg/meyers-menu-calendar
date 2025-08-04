@@ -187,6 +187,7 @@
     private DateTime? lastUpdated;
     private List<MenuType> menuTypes = new();
     private int selectedMenuTypeId = 1; // Default to "Det velkendte"
+    private Dictionary<int, (MenuEntry? today, MenuEntry? tomorrow)> allMenuPreviews = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -227,7 +228,17 @@
             var today = copenhagenNow.Date;
             var tomorrow = today.AddDays(1);
 
-            await LoadMenusForSelectedType(today, tomorrow);
+            // Load all menu previews at once
+            allMenuPreviews = await MenuRepository.GetAllMenuPreviewsAsync(today, tomorrow);
+            
+            // Set the currently selected menu
+            if (allMenuPreviews.ContainsKey(selectedMenuTypeId))
+            {
+                var (todayEntry, tomorrowEntry) = allMenuPreviews[selectedMenuTypeId];
+                todayMenu = todayEntry;
+                tomorrowMenu = tomorrowEntry;
+            }
+            
             lastUpdated = await MenuRepository.GetLastUpdateTimeAsync();
         }
         catch
@@ -235,13 +246,8 @@
             todayMenu = null;
             tomorrowMenu = null;
             lastUpdated = null;
+            allMenuPreviews = new();
         }
-    }
-
-    private async Task LoadMenusForSelectedType(DateTime today, DateTime tomorrow)
-    {
-        todayMenu = await MenuRepository.GetMenuForDateAsync(today, selectedMenuTypeId);
-        tomorrowMenu = await MenuRepository.GetMenuForDateAsync(tomorrow, selectedMenuTypeId);
     }
 
     private string FormatLastUpdated()
@@ -290,4 +296,24 @@
         return selectedMenuType?.Name ?? "Det velkendte";
     }
 
+}
+
+@{
+    if (allMenuPreviews.Any())
+    {
+        var menuData = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            menuPreviews = allMenuPreviews.ToDictionary(
+                kvp => kvp.Key,
+                kvp => new
+                {
+                    today = kvp.Value.today != null ? new { title = CalendarService.CleanupTitle(kvp.Value.today.MainDish) } : null,
+                    tomorrow = kvp.Value.tomorrow != null ? new { title = CalendarService.CleanupTitle(kvp.Value.tomorrow.MainDish) } : null
+                }
+            )
+        });
+        <script>
+            window.menuPreviewData = @((MarkupString)menuData);
+        </script>
+    }
 }

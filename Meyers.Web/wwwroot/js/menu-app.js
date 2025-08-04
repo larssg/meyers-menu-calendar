@@ -115,16 +115,16 @@ function updateMenuContent(containerId, data, period) {
 
 async function loadMenuPreview(menuTypeId) {
     try {
-        const response = await fetch(`/api/menu-preview/${menuTypeId}`);
-        if (response.ok) {
-            const data = await response.json();
+        // Use embedded data if available
+        if (window.menuPreviewData && window.menuPreviewData.menuPreviews && window.menuPreviewData.menuPreviews[menuTypeId]) {
+            const data = window.menuPreviewData.menuPreviews[menuTypeId];
             updateMenuContent('todayMenuContent', data.today, 'today');
             updateMenuContent('tomorrowMenuContent', data.tomorrow, 'tomorrow');
         } else {
-            throw new Error('Failed to fetch menu preview');
+            throw new Error('Menu preview data not available');
         }
     } catch (error) {
-        console.error('Failed to fetch menu preview:', error);
+        console.error('Failed to load menu preview:', error);
         const todayContent = $('todayMenuContent');
         const tomorrowContent = $('tomorrowMenuContent');
         if (todayContent) todayContent.innerHTML = templates.error;

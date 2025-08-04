@@ -139,4 +139,36 @@ public class MenuRepository(MenuDbContext context) : IMenuRepository
         await context.SaveChangesAsync();
         return menuType;
     }
+
+    public async Task<Dictionary<int, (MenuEntry? today, MenuEntry? tomorrow)>> GetAllMenuPreviewsAsync(DateTime today, DateTime tomorrow)
+    {
+        // Fetch all menus for today and tomorrow in a single query
+        var menus = await context.MenuEntries
+            .Include(m => m.MenuType)
+            .Where(m => m.MenuType.IsActive && (m.Date.Date == today.Date || m.Date.Date == tomorrow.Date))
+            .ToListAsync();
+
+        // Group by menu type and organize into today/tomorrow pairs
+        var result = new Dictionary<int, (MenuEntry? today, MenuEntry? tomorrow)>();
+        
+        var menusByType = menus.GroupBy(m => m.MenuTypeId);
+        foreach (var group in menusByType)
+        {
+            var todayMenu = group.FirstOrDefault(m => m.Date.Date == today.Date);
+            var tomorrowMenu = group.FirstOrDefault(m => m.Date.Date == tomorrow.Date);
+            result[group.Key] = (todayMenu, tomorrowMenu);
+        }
+
+        // Include menu types that have no entries for today/tomorrow
+        var activeMenuTypes = await GetMenuTypesAsync();
+        foreach (var menuType in activeMenuTypes)
+        {
+            if (!result.ContainsKey(menuType.Id))
+            {
+                result[menuType.Id] = (null, null);
+            }
+        }
+
+        return result;
+    }
 }

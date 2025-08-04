@@ -89,70 +89,30 @@ public class CalendarApiTests : IClassFixture<TestWebApplicationFactory>
     }
 
     [Fact]
-    public async Task Get_MenuPreview_Returns_TodayAndTomorrowMenus()
+    public async Task Get_HomePage_Includes_EmbeddedMenuData()
     {
         // First, ensure we have menu data by calling the calendar endpoint
         await _client.GetAsync("/calendar/det-velkendte.ics");
 
-        // Get menu types to find the ID for "Det velkendte"
-        var menuTypesResponse = await _client.GetAsync("/api/menu-types");
-        Assert.Equal(HttpStatusCode.OK, menuTypesResponse.StatusCode);
-
-        var menuTypesJson = await menuTypesResponse.Content.ReadAsStringAsync();
-        var menuTypes = JsonSerializer.Deserialize<JsonElement[]>(menuTypesJson);
-
-        Assert.NotNull(menuTypes);
-        var detVelkendteMenuType = menuTypes.FirstOrDefault(mt =>
-            mt.GetProperty("slug").GetString() == "det-velkendte");
-
-        Assert.False(detVelkendteMenuType.Equals(default(JsonElement)));
-        var menuTypeId = detVelkendteMenuType.GetProperty("id").GetInt32();
-
-        // Test the menu preview endpoint
-        var response = await _client.GetAsync($"/api/menu-preview/{menuTypeId}");
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal("application/json; charset=utf-8", response.Content.Headers.ContentType?.ToString());
-
-        var content = await response.Content.ReadAsStringAsync();
-        var preview = JsonSerializer.Deserialize<JsonElement>(content);
-
-        // Verify the response structure
-        Assert.True(preview.TryGetProperty("today", out var todayProperty));
-        Assert.True(preview.TryGetProperty("tomorrow", out var tomorrowProperty));
-
-        // If today's menu exists, it should have title and details properties
-        if (todayProperty.ValueKind != JsonValueKind.Null)
-        {
-            Assert.True(todayProperty.TryGetProperty("title", out var todayTitle));
-            Assert.NotEqual("", todayTitle.GetString());
-        }
-
-        // If tomorrow's menu exists, it should have title and details properties
-        if (tomorrowProperty.ValueKind != JsonValueKind.Null)
-        {
-            Assert.True(tomorrowProperty.TryGetProperty("title", out var tomorrowTitle));
-            Assert.NotEqual("", tomorrowTitle.GetString());
-        }
-    }
-
-    [Fact]
-    public async Task Get_MenuPreview_WithInvalidMenuTypeId_Returns_Problem()
-    {
-        var response = await _client.GetAsync("/api/menu-preview/999999");
-
-        // Should return OK but with null values for today/tomorrow
+        // Get the home page
+        var response = await _client.GetAsync("/");
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var content = await response.Content.ReadAsStringAsync();
-        var preview = JsonSerializer.Deserialize<JsonElement>(content);
-
-        Assert.True(preview.TryGetProperty("today", out var todayProperty));
-        Assert.True(preview.TryGetProperty("tomorrow", out var tomorrowProperty));
-
-        // Both should be null for invalid menu type
-        Assert.Equal(JsonValueKind.Null, todayProperty.ValueKind);
-        Assert.Equal(JsonValueKind.Null, tomorrowProperty.ValueKind);
+        
+        // Check that the menu preview data is embedded in the page
+        Assert.Contains("window.menuPreviewData", content);
+        Assert.Contains("menuPreviews", content);
+        
+        // The data should include menu type IDs as keys
+        Assert.Matches(@"""1"":\s*\{", content); // Menu type ID 1
+        
+        // The data should have today/tomorrow structure
+        Assert.Contains("\"today\"", content);
+        Assert.Contains("\"tomorrow\"", content);
+        
+        // Should include title property for menus
+        Assert.Contains("\"title\"", content);
     }
 
     [Fact]

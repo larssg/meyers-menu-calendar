@@ -32,7 +32,6 @@ builder.Services.AddScoped<CalendarService>();
 
 // Handler registration
 builder.Services.AddScoped<CalendarEndpointHandler>();
-builder.Services.AddScoped<MenuPreviewHandler>();
 builder.Services.AddScoped<RefreshMenusHandler>();
 
 // Blazor SSR services
@@ -97,10 +96,6 @@ app.MapGet("/api/menu-types", async (IMenuRepository menuRepository) =>
     var menuTypes = await menuRepository.GetMenuTypesAsync();
     return Results.Ok(menuTypes.Select(mt => new { mt.Id, mt.Name, mt.Slug }).ToList());
 });
-
-// API endpoint for menu preview
-app.MapGet("/api/menu-preview/{menuTypeId:int}", async (int menuTypeId, MenuPreviewHandler handler) =>
-    await handler.GetMenuPreviewAsync(menuTypeId));
 
 // Hidden endpoint for manual menu refresh (for development/troubleshooting)
 app.MapGet("/admin/refresh-menus", async (HttpContext context, RefreshMenusHandler handler) =>
