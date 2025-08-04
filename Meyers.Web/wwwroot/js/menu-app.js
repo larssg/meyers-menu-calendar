@@ -93,6 +93,13 @@ function updateCalendarUrl() {
         }
     }
 
+    // Add alarm parameter if checkbox is checked
+    const alarmCheckbox = $('alarmCheckbox');
+    if (calendarUrl && alarmCheckbox && alarmCheckbox.checked) {
+        const separator = calendarUrl.includes('?') ? '&' : '?';
+        calendarUrl += `${separator}alarm=true`;
+    }
+
     const input = $('calendarUrl');
     if (input) {
         input.value = calendarUrl;

@@ -11,7 +11,7 @@ namespace Meyers.Infrastructure.Services;
 
 public class CalendarService : ICalendarService
 {
-    public string GenerateCalendar(List<MenuDay> menuDays, string? menuTypeName = null)
+    public string GenerateCalendar(List<MenuDay> menuDays, string? menuTypeName = null, bool includeAlarms = false)
     {
         var calendarName = string.IsNullOrEmpty(menuTypeName)
             ? "Meyers Menu Calendar"
@@ -40,14 +40,17 @@ public class CalendarService : ICalendarService
                     "Europe/Copenhagen")
             };
 
-            // Add 5-minute alarm
-            var alarm = new Alarm
+            // Add 5-minute alarm if requested
+            if (includeAlarms)
             {
-                Action = AlarmAction.Display,
-                Description = testEvent.Summary,
-                Trigger = new Trigger(Duration.FromMinutes(-5))
-            };
-            testEvent.Alarms.Add(alarm);
+                var alarm = new Alarm
+                {
+                    Action = AlarmAction.Display,
+                    Description = testEvent.Summary,
+                    Trigger = new Trigger(Duration.FromMinutes(-5))
+                };
+                testEvent.Alarms.Add(alarm);
+            }
 
             calendar.Events.Add(testEvent);
         }
@@ -92,14 +95,17 @@ public class CalendarService : ICalendarService
                     End = endTime
                 };
 
-                // Add 5-minute alarm
-                var alarm = new Alarm
+                // Add 5-minute alarm if requested
+                if (includeAlarms)
                 {
-                    Action = AlarmAction.Display,
-                    Description = title,
-                    Trigger = new Trigger(Duration.FromMinutes(-5))
-                };
-                calendarEvent.Alarms.Add(alarm);
+                    var alarm = new Alarm
+                    {
+                        Action = AlarmAction.Display,
+                        Description = title,
+                        Trigger = new Trigger(Duration.FromMinutes(-5))
+                    };
+                    calendarEvent.Alarms.Add(alarm);
+                }
 
                 calendar.Events.Add(calendarEvent);
             }
