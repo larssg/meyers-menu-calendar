@@ -28,7 +28,7 @@
     <section class="mb-12">
         <div class="card p-4 sm:p-8 max-w-4xl mx-auto">
             <!-- Radio Button Selection -->
-            <div class="mb-8">
+            <div class="mb-6">
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8">
                     <label class="flex items-center cursor-pointer">
                         <input type="radio" name="menuMode" value="simple" class="mr-3 w-4 h-4 text-teal-600 
@@ -57,17 +57,18 @@
                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3 text-center">
                         Select menu for all weekdays
                     </label>
-                    <select id="simpleMenuSelect" class="w-full px-4 py-3 border border-slate-300/60 dark:border-slate-600/60 rounded-lg 
-                                   bg-white/80 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 text-center
-                                   focus:ring-2 focus:ring-teal-500 focus:border-teal-500 dark:focus:ring-teal-400"
-                            onchange="updateCalendarUrl()">
+                    <CustomSelect id="simpleMenuSelect"
+                                  Class="w-full"
+                                  Size="CustomSelect.SelectSize.Large"
+                                  Centered="true"
+                                  onchange="updateCalendarUrl()">
                         @foreach (var menuType in menuTypes)
                         {
                             var isSelected = menuType.Slug == "det-velkendte";
                             <option value="@menuType.Id" data-slug="@menuType.Slug"
                                     selected="@isSelected">@menuType.Name</option>
                         }
-                    </select>
+                    </CustomSelect>
                 </div>
             </div>
 
@@ -89,10 +90,10 @@
                                 <span class="font-medium text-slate-900 dark:text-slate-100 text-sm sm:text-base">
                                     @day.Item2
                                 </span>
-                                <select class="custom-day-select w-full sm:max-w-xs px-3 py-2 border border-slate-300/60 dark:border-slate-600/60 rounded-lg 
-                                               bg-white/80 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 
-                                               focus:ring-2 focus:ring-teal-500 focus:border-teal-500 dark:focus:ring-teal-400"
-                                        data-day="@((int)day.Item1)" onchange="updateCalendarUrl()">
+                                <CustomSelect Class="custom-day-select w-full sm:max-w-xs"
+                                              Size="CustomSelect.SelectSize.Medium"
+                                              data-day="@((int)day.Item1)"
+                                              onchange="updateCalendarUrl()">
                                     @foreach (var menuType in menuTypes)
                                     {
                                         var isSelected = (day.Item1 == DayOfWeek.Monday && menuType.Slug == "det-velkendte") ||
@@ -103,7 +104,7 @@
                                         <option value="@menuType.Id" data-slug="@menuType.Slug"
                                                 selected="@isSelected">@menuType.Name</option>
                                     }
-                                </select>
+                                </CustomSelect>
                             </div>
                         }
                     </div>
