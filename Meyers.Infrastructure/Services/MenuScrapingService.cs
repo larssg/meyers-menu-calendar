@@ -37,8 +37,9 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
     private async Task<List<MenuDay>> GetCachedMenusAsync()
     {
         // Get all cached entries from the past week to future two weeks to ensure we don't miss any data
-        var startDate = DateTime.Today.AddDays(-7);
-        var endDate = DateTime.Today.AddDays(14);
+        // Use .Date to ensure we're working with date-only comparisons
+        var startDate = DateTime.Today.AddDays(-7).Date;
+        var endDate = DateTime.Today.AddDays(14).Date;
         var cachedEntries = await menuRepository.GetMenusForDateRangeAsync(startDate, endDate);
 
         return cachedEntries.Select(entry => new MenuDay
