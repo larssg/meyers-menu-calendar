@@ -1,10 +1,11 @@
 using System.Text;
+using System.Text.RegularExpressions;
 using Meyers.Core.Interfaces;
 using Meyers.Core.Models;
 
 namespace Meyers.Web.Handlers;
 
-public class CalendarEndpointHandler(
+public partial class CalendarEndpointHandler(
     IMenuScrapingService menuScrapingService,
     ICalendarService calendarService,
     IMenuRepository menuRepository)
@@ -131,17 +132,28 @@ public class CalendarEndpointHandler(
         }
     }
 
+    [GeneratedRegex(@"([MTWRF])(\d+)", RegexOptions.Compiled)]
+    private static partial Regex DayMenuConfigRegex();
+
     private static Dictionary<DayOfWeek, int>? DecodeCustomConfig(string config)
     {
         try
         {
-            // Simple encoding: M1T1W1R2F1 (M=Monday, T=Tuesday, W=Wednesday, R=Thursday, F=Friday, numbers=menu type IDs)
+            // Enhanced encoding: supports multi-digit menu type IDs
+            // Format: M1T10W3R25F1 (M=Monday, T=Tuesday, W=Wednesday, R=Thursday, F=Friday, numbers=menu type IDs)
             var result = new Dictionary<DayOfWeek, int>();
+            var matches = DayMenuConfigRegex().Matches(config);
 
-            for (var i = 0; i < config.Length - 1; i += 2)
+            if (matches.Count == 0) return null;
+
+            // Ensure the entire config string is consumed by the matches (no invalid characters)
+            var totalMatchLength = matches.Sum(m => m.Length);
+            if (totalMatchLength != config.Length) return null;
+
+            foreach (Match match in matches)
             {
-                var dayChar = config[i];
-                if (!int.TryParse(config[i + 1].ToString(), out var menuTypeId))
+                var dayChar = match.Groups[1].Value[0];
+                if (!int.TryParse(match.Groups[2].Value, out var menuTypeId))
                     return null;
 
                 var dayOfWeek = dayChar switch
