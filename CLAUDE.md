@@ -20,6 +20,7 @@ Features multi-menu support, responsive design, and automatic caching.
 - `Models/MenuType.cs`: Menu type model with name, slug, active status
 - `Models/MenuDay.cs`: DTO for menu data transfer
 - `Interfaces/`: Repository and service contracts (IMenuRepository, IMenuScrapingService, ICalendarService)
+- `Utilities/TimeFormatHelper.cs`: Time formatting utilities for "time ago" display with zero-padding
 
 ### Meyers.Infrastructure (Data/External Layer)
 
@@ -40,9 +41,9 @@ Features multi-menu support, responsive design, and automatic caching.
 
 ### Meyers.Test
 
-- **54 comprehensive tests** with TestWebApplicationFactory, MockHttpMessageHandler, and real HTML fixtures
-- Tests all 8 menu types, web interface, API endpoints, mobile responsiveness, CalendarService title cleanup, and
-  MapStaticAssets fingerprinting
+- Comprehensive tests with TestWebApplicationFactory, MockHttpMessageHandler, and real HTML fixtures
+- Tests all 8 menu types, web interface, API endpoints, mobile responsiveness, CalendarService title cleanup, 
+  MapStaticAssets fingerprinting, and TimeFormatHelper functionality
 
 ## Key Dependencies
 

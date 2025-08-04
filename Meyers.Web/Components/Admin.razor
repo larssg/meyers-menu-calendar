@@ -1,5 +1,6 @@
 @page "/admin"
 @using Meyers.Core.Interfaces
+@using Meyers.Core.Utilities
 @using System.Threading
 @rendermode @(new InteractiveServerRenderMode())
 @layout AdminLayout
@@ -366,37 +367,7 @@
         }
 
         var localTime = lastUpdate.Value.ToLocalTime();
-        var timeAgo = DateTime.Now - localTime;
-
-        if (timeAgo.TotalSeconds < 60)
-        {
-            lastUpdateDisplay = $"{(int)timeAgo.TotalSeconds} seconds ago";
-        }
-        else if (timeAgo.TotalMinutes < 60)
-        {
-            var minutes = (int)timeAgo.TotalMinutes;
-            var seconds = (int)(timeAgo.TotalSeconds % 60);
-            lastUpdateDisplay = $"{minutes}m {seconds}s ago";
-        }
-        else if (timeAgo.TotalHours < 24)
-        {
-            var hours = (int)timeAgo.TotalHours;
-            var minutes = (int)(timeAgo.TotalMinutes % 60);
-            var seconds = (int)(timeAgo.TotalSeconds % 60);
-            lastUpdateDisplay = $"{hours}h {minutes}m {seconds}s ago";
-        }
-        else if (timeAgo.TotalDays < 7)
-        {
-            var days = (int)timeAgo.TotalDays;
-            var hours = (int)(timeAgo.TotalHours % 24);
-            var minutes = (int)(timeAgo.TotalMinutes % 60);
-            var seconds = (int)(timeAgo.TotalSeconds % 60);
-            lastUpdateDisplay = $"{days}d {hours}h {minutes}m {seconds}s ago";
-        }
-        else
-        {
-            lastUpdateDisplay = localTime.ToString("MMM d, yyyy 'at' h:mm:ss tt");
-        }
+        lastUpdateDisplay = TimeFormatHelper.FormatTimeAgo(localTime);
     }
 
     private string GetHealthStatus(MenuTypeHealth health)
