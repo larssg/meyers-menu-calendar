@@ -131,8 +131,12 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
 
                     foreach (var recipe in menuRecipes)
                     {
-                        var title = recipe.SelectSingleNode(".//h4[contains(@class, 'menu-recipe-display__title')]")
-                            ?.InnerText?.Trim();
+                        var titleNode =
+                            recipe.SelectSingleNode(".//h4[contains(@class, 'menu-recipe-display__title')]");
+                        var title = titleNode?.InnerText?.Trim();
+
+                        // Normalize whitespace in title (remove newlines and multiple spaces)
+                        if (!string.IsNullOrEmpty(title)) title = Regex.Replace(title, @"\s+", " ").Trim();
                         var descriptionNode =
                             recipe.SelectSingleNode(".//p[contains(@class, 'menu-recipe-display__description')]");
 
