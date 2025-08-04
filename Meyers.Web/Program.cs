@@ -1,10 +1,10 @@
-using Microsoft.EntityFrameworkCore;
 using Meyers.Web;
 using Meyers.Web.Configuration;
 using Meyers.Web.Data;
 using Meyers.Web.Handlers;
 using Meyers.Web.Repositories;
 using Meyers.Web.Services;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -69,10 +69,8 @@ app.Use(async (context, next) =>
                                userAgent.Contains("discordbot");
 
     if (!isSocialMediaCrawler)
-    {
         context.Response.Headers["X-Robots-Tag"] =
             "noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate, nocache";
-    }
 
     await next();
 });

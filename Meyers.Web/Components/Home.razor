@@ -1,7 +1,8 @@
 @page "/"
-@using Meyers.Web.Services
-@using Meyers.Web.Repositories
+@using System.Text.Json
 @using Meyers.Web.Models
+@using Meyers.Web.Repositories
+@using Meyers.Web.Services
 @inject IHttpContextAccessor HttpContextAccessor
 @inject IMenuRepository MenuRepository
 @inject CalendarService CalendarService
@@ -231,7 +232,7 @@
 
             // Load all menu previews at once
             allMenuPreviews = await MenuRepository.GetAllMenuPreviewsAsync(today, tomorrow);
-            
+
             // Set the currently selected menu
             if (allMenuPreviews.ContainsKey(selectedMenuTypeId))
             {
@@ -239,7 +240,7 @@
                 todayMenu = todayEntry;
                 tomorrowMenu = tomorrowEntry;
             }
-            
+
             lastUpdated = await MenuRepository.GetLastUpdateTimeAsync();
         }
         catch
@@ -247,7 +248,7 @@
             todayMenu = null;
             tomorrowMenu = null;
             lastUpdated = null;
-            allMenuPreviews = new();
+            allMenuPreviews = new Dictionary<int, (MenuEntry? today, MenuEntry? tomorrow)>();
         }
     }
 
@@ -261,12 +262,11 @@
 
         if (timeAgo.TotalMinutes < 1)
             return "Menu updated just now";
-        else if (timeAgo.TotalHours < 1)
+        if (timeAgo.TotalHours < 1)
             return $"Menu updated {(int)timeAgo.TotalMinutes} minutes ago";
-        else if (timeAgo.TotalDays < 1)
+        if (timeAgo.TotalDays < 1)
             return $"Menu updated {(int)timeAgo.TotalHours} hours ago";
-        else
-            return $"Menu updated {localTime:MMM d, yyyy 'at' h:mm tt}";
+        return $"Menu updated {localTime:MMM d, yyyy 'at' h:mm tt}";
     }
 
     private string GetCalendarIcsUrl()
@@ -302,7 +302,7 @@
 @{
     if (allMenuPreviews.Any())
     {
-        var menuData = System.Text.Json.JsonSerializer.Serialize(new
+        var menuData = JsonSerializer.Serialize(new
         {
             menuPreviews = allMenuPreviews.ToDictionary(
                 kvp => kvp.Key,

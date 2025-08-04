@@ -50,7 +50,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IDispos
             var testHtmlPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TestData", "meyers-menu-page.html");
             var mockHandler = new MockHttpMessageHandler(testHtmlPath);
             var mockHttpClient = new HttpClient(mockHandler);
-            services.AddSingleton<HttpClient>(mockHttpClient);
+            services.AddSingleton(mockHttpClient);
             services.AddScoped<MenuScrapingService>(provider =>
             {
                 var repository = provider.GetRequiredService<IMenuRepository>();

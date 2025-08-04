@@ -1,6 +1,6 @@
-using Microsoft.EntityFrameworkCore;
 using Meyers.Web.Data;
 using Meyers.Web.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Meyers.Web.Repositories;
 
@@ -140,7 +140,8 @@ public class MenuRepository(MenuDbContext context) : IMenuRepository
         return menuType;
     }
 
-    public async Task<Dictionary<int, (MenuEntry? today, MenuEntry? tomorrow)>> GetAllMenuPreviewsAsync(DateTime today, DateTime tomorrow)
+    public async Task<Dictionary<int, (MenuEntry? today, MenuEntry? tomorrow)>> GetAllMenuPreviewsAsync(DateTime today,
+        DateTime tomorrow)
     {
         // Fetch all menus for today and tomorrow in a single query
         var menus = await context.MenuEntries
@@ -150,7 +151,7 @@ public class MenuRepository(MenuDbContext context) : IMenuRepository
 
         // Group by menu type and organize into today/tomorrow pairs
         var result = new Dictionary<int, (MenuEntry? today, MenuEntry? tomorrow)>();
-        
+
         var menusByType = menus.GroupBy(m => m.MenuTypeId);
         foreach (var group in menusByType)
         {
@@ -162,12 +163,8 @@ public class MenuRepository(MenuDbContext context) : IMenuRepository
         // Include menu types that have no entries for today/tomorrow
         var activeMenuTypes = await GetMenuTypesAsync();
         foreach (var menuType in activeMenuTypes)
-        {
             if (!result.ContainsKey(menuType.Id))
-            {
                 result[menuType.Id] = (null, null);
-            }
-        }
 
         return result;
     }

@@ -28,7 +28,7 @@ dotnet run --project Meyers.Web
 
 - `GET /` - Web interface with all menu types
 - `GET /calendar/{menu-type}.ics` - iCal feed for specific menu
-- `GET /api/menu-types` - Available menu types  
+- `GET /api/menu-types` - Available menu types
 - `GET /api/menu-preview/{id}` - Today/tomorrow preview
 
 ## Usage
@@ -43,7 +43,7 @@ dotnet run --project Meyers.Web
 - **Components/**: Blazor pages and UI components
 - **Services/**: Menu scraping, calendar generation, background refresh
 - **Handlers/**: API endpoints for calendar feeds and previews
-- **Models/**: MenuEntry and MenuType database models  
+- **Models/**: MenuEntry and MenuType database models
 - **wwwroot/**: Static assets (CSS, JavaScript)
 
 ## Development
@@ -57,16 +57,17 @@ dotnet ef migrations add Name --project Meyers.Web
 dotnet ef database update --project Meyers.Web
 ```
 
-
 ## Deployment
 
 ### Docker
+
 ```bash
 docker build -t meyers-menu-calendar .
 docker run -p 8080:8080 -v meyers-data:/app/data meyers-menu-calendar
 ```
 
 ### Dokploy
+
 1. Connect GitHub repository, set port to 8080
 2. Mount volume: `/app/data` for database persistence
 3. Deploy

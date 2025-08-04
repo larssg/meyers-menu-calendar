@@ -1,6 +1,6 @@
-using Microsoft.Extensions.Options;
 using Meyers.Web.Configuration;
 using Meyers.Web.Repositories;
+using Microsoft.Extensions.Options;
 
 namespace Meyers.Web.Services;
 
@@ -22,7 +22,6 @@ public class MenuCacheBackgroundService(
         await Task.Delay(_options.StartupDelay, stoppingToken);
 
         while (!stoppingToken.IsCancellationRequested)
-        {
             try
             {
                 await RefreshCacheIfNeeded(stoppingToken);
@@ -39,7 +38,6 @@ public class MenuCacheBackgroundService(
                 // Continue running even if an error occurs
                 await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken); // Wait 5 minutes before retrying
             }
-        }
 
         logger.LogInformation("Menu Cache Background Service stopped");
     }
@@ -67,7 +65,7 @@ public class MenuCacheBackgroundService(
             try
             {
                 // Force refresh by calling the scraping service directly
-                var menuDays = await menuScrapingService.ScrapeMenuAsync(forceRefresh: true);
+                var menuDays = await menuScrapingService.ScrapeMenuAsync(true);
 
                 logger.LogInformation("Successfully refreshed menu cache with {Count} menu days", menuDays.Count);
             }

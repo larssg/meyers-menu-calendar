@@ -1,3 +1,5 @@
+using System.Net;
+using System.Text.RegularExpressions;
 using Ical.Net;
 using Ical.Net.CalendarComponents;
 using Ical.Net.DataTypes;
@@ -92,7 +94,7 @@ public class CalendarService
             return title;
 
         // Decode HTML entities first
-        var cleanTitle = System.Net.WebUtility.HtmlDecode(title);
+        var cleanTitle = WebUtility.HtmlDecode(title);
 
         // Split into sections and get the main dish section
         var sections = cleanTitle.Split([", Delikatesser:", ", Dagens salater:", ", Brød:"],
@@ -128,9 +130,7 @@ public class CalendarService
 
         // Remove leading comma or other punctuation that might be left over
         while (mainSection.StartsWith(",") || mainSection.StartsWith(":"))
-        {
             mainSection = mainSection.Substring(1).Trim();
-        }
 
         // If the result is too long, take only the first sentence or reasonable portion
         const int maxTitleLength = 80;
@@ -146,14 +146,10 @@ public class CalendarService
                 // Find a good breaking point (space) around 60-80 characters
                 var breakPoint = mainSection.LastIndexOf(' ', Math.Min(maxTitleLength, mainSection.Length - 1));
                 if (breakPoint > 40)
-                {
                     mainSection = mainSection.Substring(0, breakPoint).Trim() + "...";
-                }
                 else
-                {
                     // Fallback: hard truncate at maxTitleLength
                     mainSection = mainSection.Substring(0, maxTitleLength).Trim() + "...";
-                }
             }
         }
 
@@ -166,7 +162,7 @@ public class CalendarService
             return description;
 
         // Decode HTML entities first
-        var formatted = System.Net.WebUtility.HtmlDecode(description);
+        var formatted = WebUtility.HtmlDecode(description);
 
         // Add line breaks before section headers for better readability
         // Use actual newlines - the iCal library will handle proper encoding
@@ -176,10 +172,10 @@ public class CalendarService
             .Replace(" | ", "\n");
 
         // Break up long lines by adding line breaks after sentences
-        formatted = System.Text.RegularExpressions.Regex.Replace(formatted, @"(\. )([A-ZÆØÅ])", "$1\n$2");
+        formatted = Regex.Replace(formatted, @"(\. )([A-ZÆØÅ])", "$1\n$2");
 
         // Clean up any multiple spaces and normalize whitespace
-        formatted = System.Text.RegularExpressions.Regex.Replace(formatted, @"[ ]+", " ");
+        formatted = Regex.Replace(formatted, @"[ ]+", " ");
 
         // Clean up any extra line breaks at the start
         formatted = formatted.TrimStart('\n', ' ');

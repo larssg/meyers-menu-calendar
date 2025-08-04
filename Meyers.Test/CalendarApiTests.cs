@@ -99,18 +99,18 @@ public class CalendarApiTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var content = await response.Content.ReadAsStringAsync();
-        
+
         // Check that the menu preview data is embedded in the page
         Assert.Contains("window.menuPreviewData", content);
         Assert.Contains("menuPreviews", content);
-        
+
         // The data should include menu type IDs as keys
         Assert.Matches(@"""1"":\s*\{", content); // Menu type ID 1
-        
+
         // The data should have today/tomorrow structure
         Assert.Contains("\"today\"", content);
         Assert.Contains("\"tomorrow\"", content);
-        
+
         // Should include title property for menus
         Assert.Contains("\"title\"", content);
     }

@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using Meyers.Web.Models;
 using Meyers.Web.Repositories;
@@ -21,20 +22,14 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
         {
             // Return cached data
             var cachedMenus = await GetCachedMenusAsync();
-            if (cachedMenus.Count != 0)
-            {
-                return cachedMenus;
-            }
+            if (cachedMenus.Count != 0) return cachedMenus;
         }
 
         // Scrape fresh data from the website
         var freshMenus = await ScrapeFromWebsiteAsync();
 
         // Save to cache
-        if (freshMenus.Count != 0)
-        {
-            await SaveMenusToCache(freshMenus);
-        }
+        if (freshMenus.Count != 0) await SaveMenusToCache(freshMenus);
 
         return freshMenus;
     }
@@ -111,7 +106,7 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
         {
             // We need to search for both the decoded and original encoded versions
             // since the HTML might have the encoded version in attributes
-            var encodedMenuType = System.Net.WebUtility.HtmlEncode(menuType);
+            var encodedMenuType = HtmlEncode(menuType);
             var tabNodes =
                 doc.DocumentNode.SelectNodes(
                     $"//div[@data-tab-content='{menuType}' or @data-tab-content='{encodedMenuType}']");
@@ -131,8 +126,8 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
                 if (menuRecipes != null)
                 {
                     var dayMenuItems = new List<string>();
-                    string mainDishContent = "";
-                    string detailsContent = "";
+                    var mainDishContent = "";
+                    var detailsContent = "";
 
                     foreach (var recipe in menuRecipes)
                     {
@@ -145,13 +140,13 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
                         {
                             // Get the plain text content and clean it up
                             var plainText = HtmlDecode(descriptionNode?.InnerText?.Trim() ?? "");
-                            plainText = System.Text.RegularExpressions.Regex.Replace(plainText, @"\s+", " ").Trim();
+                            plainText = Regex.Replace(plainText, @"\s+", " ").Trim();
 
                             if (!string.IsNullOrEmpty(plainText))
                             {
                                 // For backward compatibility, also add to MenuItems
                                 var fullDescription = HtmlDecode(descriptionNode?.InnerText?.Trim() ?? "");
-                                fullDescription = System.Text.RegularExpressions.Regex
+                                fullDescription = Regex
                                     .Replace(fullDescription, @"\s+", " ").Trim();
                                 dayMenuItems.Add($"{title}: {fullDescription}");
 
@@ -170,9 +165,7 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
                     {
                         // If we didn't find a main dish in "Varm ret med tilbehør", use the first menu item
                         if (string.IsNullOrEmpty(mainDishContent) && dayMenuItems.Count > 0)
-                        {
                             mainDishContent = ExtractMainDishFromFirstItem(dayMenuItems[0]);
-                        }
 
                         menuDays.Add(new MenuDay
                         {
@@ -196,7 +189,7 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
     private (string mainDish, string details) ExtractMainDishAndDetails(string plainText)
     {
         // Find the first sentence or phrase (up to the first period followed by space, or first 100 chars)
-        var firstSentenceMatch = System.Text.RegularExpressions.Regex.Match(plainText, @"^([^.]*\.)");
+        var firstSentenceMatch = Regex.Match(plainText, @"^([^.]*\.)");
 
         string mainDish, details;
 
@@ -243,10 +236,7 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
         if (colonIndex > 0 && colonIndex < firstItem.Length - 1)
         {
             var content = firstItem.Substring(colonIndex + 1).Trim();
-            if (content.Length > 100)
-            {
-                content = content.Substring(0, 100).Trim() + "...";
-            }
+            if (content.Length > 100) content = content.Substring(0, 100).Trim() + "...";
 
             return content;
         }
@@ -262,7 +252,6 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
         var dayHeaders = doc.DocumentNode.SelectNodes("//h5[contains(@class, 'week-menu-day__header-heading')]");
 
         if (dayHeaders != null)
-        {
             foreach (var header in dayHeaders)
             {
                 var headerText = header.InnerText?.Trim();
@@ -292,7 +281,6 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
                     // Skip invalid dates
                 }
             }
-        }
 
         // Only return weekdays (both weeks - up to 10 days)
         return dateMapping.Where(d => IsWeekday(d.DayName)).ToList();
@@ -330,8 +318,8 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
         return char.ToUpper(input[0]) + input[1..].ToLower();
     }
 
-    [System.Text.RegularExpressions.GeneratedRegex(@"\([^)]*\)\s*")]
-    private static partial System.Text.RegularExpressions.Regex AllergenRegex();
+    [GeneratedRegex(@"\([^)]*\)\s*")]
+    private static partial Regex AllergenRegex();
 }
 
 public class MenuDay

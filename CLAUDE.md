@@ -4,11 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A .NET 9 Blazor SSR application that scrapes Meyers restaurant menus and provides iCal feeds for 8 different menu types. Features multi-menu support, responsive design, and automatic caching.
+A .NET 9 Blazor SSR application that scrapes Meyers restaurant menus and provides iCal feeds for 8 different menu types.
+Features multi-menu support, responsive design, and automatic caching.
 
 ## Architecture
 
 **Key Components:**
+
 - `Components/Home.razor`: Multi-menu homepage with responsive tabs
 - `Services/MenuScrapingService.cs`: Scrapes all 8 menu types from meyers.dk
 - `Services/CalendarService.cs`: Generates iCal feeds with menu-type-specific UIDs
@@ -52,19 +54,24 @@ dotnet ef database update --project Meyers.Web
 
 ## Data Persistence
 
-SQLite database with MenuEntry and MenuType models. Repository pattern with optimized queries. Background service refreshes every 6 hours. Unique constraints per date/menu type.
+SQLite database with MenuEntry and MenuType models. Repository pattern with optimized queries. Background service
+refreshes every 6 hours. Unique constraints per date/menu type.
 
 ## Web Scraping Implementation
 
-Scrapes meyers.dk tab structure. Auto-discovers menu types from `data-tab-content` attributes. Extracts dates from `week-menu-day__header-heading` and menu items from `menu-recipe-display`. Handles HTML entities. Auto-creates menu types.
+Scrapes meyers.dk tab structure. Auto-discovers menu types from `data-tab-content` attributes. Extracts dates from
+`week-menu-day__header-heading` and menu items from `menu-recipe-display`. Handles HTML entities. Auto-creates menu
+types.
 
 ## Background Processing
 
-MenuCacheBackgroundService proactively refreshes menu data at 90% of cache lifetime (5.4 hours) to prevent request handlers from triggering expensive scraping operations.
+MenuCacheBackgroundService proactively refreshes menu data at 90% of cache lifetime (5.4 hours) to prevent request
+handlers from triggering expensive scraping operations.
 
 ## Testing
 
-Comprehensive test suite with TestWebApplicationFactory, MockHttpMessageHandler, and real HTML fixtures. Tests all 8 menu types, web interface, API endpoints, mobile responsiveness, and MapStaticAssets fingerprinting.
+Comprehensive test suite with TestWebApplicationFactory, MockHttpMessageHandler, and real HTML fixtures. Tests all 8
+menu types, web interface, API endpoints, mobile responsiveness, and MapStaticAssets fingerprinting.
 
 ## Important Notes
 
@@ -76,4 +83,5 @@ Comprehensive test suite with TestWebApplicationFactory, MockHttpMessageHandler,
 
 ## Build System
 
-Tailwind CSS auto-compilation via MSBuild. .NET 9 MapStaticAssets for fingerprinting. CSS compiled before static asset processing. Docker includes Node.js 20.x.
+Tailwind CSS auto-compilation via MSBuild. .NET 9 MapStaticAssets for fingerprinting. CSS compiled before static asset
+processing. Docker includes Node.js 20.x.

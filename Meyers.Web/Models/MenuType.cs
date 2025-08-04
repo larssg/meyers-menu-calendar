@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Meyers.Web.Models;
@@ -22,8 +21,8 @@ public class MenuType
     public ICollection<MenuEntry> MenuEntries { get; set; } = new List<MenuEntry>();
 
     /// <summary>
-    /// Generates a URL-friendly slug from the menu type name.
-    /// Handles Danish characters: ø→oe, å→aa, æ→ae
+    ///     Generates a URL-friendly slug from the menu type name.
+    ///     Handles Danish characters: ø→oe, å→aa, æ→ae
     /// </summary>
     public static string GenerateSlug(string name)
     {
@@ -51,7 +50,7 @@ public class MenuType
     }
 
     /// <summary>
-    /// Sets the slug based on the name when creating or updating
+    ///     Sets the slug based on the name when creating or updating
     /// </summary>
     public void UpdateSlug()
     {
