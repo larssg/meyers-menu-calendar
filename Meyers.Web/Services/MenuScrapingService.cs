@@ -201,7 +201,7 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
         {
             // Use the first sentence as main dish
             mainDish = firstSentenceMatch.Groups[1].Value.Trim();
-            details = plainText.Substring(firstSentenceMatch.Length).Trim();
+            details = plainText[firstSentenceMatch.Length..].Trim();
         }
         else
         {
@@ -211,13 +211,13 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
                 var cutPoint = plainText.LastIndexOf(' ', 100);
                 if (cutPoint > 50)
                 {
-                    mainDish = plainText.Substring(0, cutPoint).Trim() + "...";
-                    details = plainText.Substring(cutPoint).Trim();
+                    mainDish = plainText[..cutPoint].Trim() + "...";
+                    details = plainText[cutPoint..].Trim();
                 }
                 else
                 {
-                    mainDish = plainText.Substring(0, 100) + "...";
-                    details = plainText.Substring(100).Trim();
+                    mainDish = string.Concat(plainText.AsSpan(0, 100), "...");
+                    details = plainText[100..].Trim();
                 }
             }
             else
@@ -234,18 +234,15 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
         return (mainDish, details);
     }
 
-    private string ExtractMainDishFromFirstItem(string firstItem)
+    private static string ExtractMainDishFromFirstItem(string firstItem)
     {
         var colonIndex = firstItem.IndexOf(':');
-        if (colonIndex > 0 && colonIndex < firstItem.Length - 1)
-        {
-            var content = firstItem.Substring(colonIndex + 1).Trim();
-            if (content.Length > 100) content = content.Substring(0, 100).Trim() + "...";
+        if (colonIndex <= 0 || colonIndex >= firstItem.Length - 1) return firstItem;
 
-            return content;
-        }
+        var content = firstItem.Substring(colonIndex + 1).Trim();
+        if (content.Length > 100) content = content.Substring(0, 100).Trim() + "...";
 
-        return firstItem;
+        return content;
     }
 
     private List<(string DayName, DateTime Date)> ExtractDatesFromWeekHeaders(HtmlDocument doc)
