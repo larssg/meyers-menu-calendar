@@ -1,4 +1,4 @@
-using Meyers.Web.Models;
+using Meyers.Core.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Meyers.Web.Data;

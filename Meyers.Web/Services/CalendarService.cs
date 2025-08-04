@@ -4,10 +4,12 @@ using Ical.Net;
 using Ical.Net.CalendarComponents;
 using Ical.Net.DataTypes;
 using Ical.Net.Serialization;
+using Meyers.Core.Interfaces;
+using Meyers.Core.Models;
 
 namespace Meyers.Web.Services;
 
-public class CalendarService
+public class CalendarService : ICalendarService
 {
     public string GenerateCalendar(List<MenuDay> menuDays, string? menuTypeName = null)
     {
@@ -88,7 +90,7 @@ public class CalendarService
         return serializer.SerializeToString(calendar) ?? string.Empty;
     }
 
-    public static string CleanupTitle(string title)
+    public string CleanupTitle(string title)
     {
         if (string.IsNullOrEmpty(title))
             return title;

@@ -1,8 +1,8 @@
-using Meyers.Web.Services;
+using Meyers.Core.Interfaces;
 
 namespace Meyers.Web.Handlers;
 
-public class RefreshMenusHandler(MenuScrapingService scrapingService)
+public class RefreshMenusHandler(IMenuScrapingService scrapingService)
 {
     public async Task<IResult> RefreshMenusAsync(HttpContext context)
     {

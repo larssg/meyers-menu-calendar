@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Meyers.Web.Models;
+namespace Meyers.Core.Models;
 
 public class MenuEntry
 {

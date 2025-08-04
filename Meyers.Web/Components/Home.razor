@@ -1,11 +1,10 @@
 @page "/"
 @using System.Text.Json
-@using Meyers.Web.Models
-@using Meyers.Web.Repositories
-@using Meyers.Web.Services
+@using Meyers.Core.Interfaces
+@using Meyers.Core.Models
 @inject IHttpContextAccessor HttpContextAccessor
 @inject IMenuRepository MenuRepository
-@inject CalendarService CalendarService
+@inject ICalendarService CalendarService
 
 <PageTitle>Meyers Menu Calendar</PageTitle>
 

@@ -1,3 +1,4 @@
+using Meyers.Core.Interfaces;
 using Meyers.Web;
 using Meyers.Web.Configuration;
 using Meyers.Web.Data;
@@ -28,7 +29,8 @@ builder.Services.AddScoped<IMenuRepository, MenuRepository>();
 
 // Service registration
 builder.Services.AddHttpClient<MenuScrapingService>();
-builder.Services.AddScoped<CalendarService>();
+builder.Services.AddScoped<IMenuScrapingService, MenuScrapingService>();
+builder.Services.AddScoped<ICalendarService, CalendarService>();
 
 // Handler registration
 builder.Services.AddScoped<CalendarEndpointHandler>();

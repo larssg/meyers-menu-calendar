@@ -1,12 +1,12 @@
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
-using Meyers.Web.Models;
-using Meyers.Web.Repositories;
+using Meyers.Core.Interfaces;
+using Meyers.Core.Models;
 using static System.Net.WebUtility;
 
 namespace Meyers.Web.Services;
 
-public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository menuRepository)
+public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository menuRepository) : IMenuScrapingService
 {
     private const string Url = "https://meyers.dk/erhverv/frokostordning/ugens-menuer/";
     private static readonly TimeSpan CacheRefreshInterval = TimeSpan.FromHours(6);
@@ -321,14 +321,4 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
 
     [GeneratedRegex(@"\([^)]*\)\s*")]
     private static partial Regex AllergenRegex();
-}
-
-public class MenuDay
-{
-    public string DayName { get; set; } = string.Empty;
-    public DateTime Date { get; set; }
-    public List<string> MenuItems { get; set; } = [];
-    public string MainDish { get; set; } = string.Empty;
-    public string Details { get; set; } = string.Empty;
-    public string MenuType { get; set; } = string.Empty;
 }

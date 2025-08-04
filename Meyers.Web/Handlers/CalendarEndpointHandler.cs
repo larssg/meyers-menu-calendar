@@ -1,12 +1,12 @@
 using System.Text;
-using Meyers.Web.Repositories;
-using Meyers.Web.Services;
+using Meyers.Core.Interfaces;
+using Meyers.Core.Models;
 
 namespace Meyers.Web.Handlers;
 
 public class CalendarEndpointHandler(
-    MenuScrapingService menuScrapingService,
-    CalendarService calendarService,
+    IMenuScrapingService menuScrapingService,
+    ICalendarService calendarService,
     IMenuRepository menuRepository)
 {
     public async Task<IResult> GetCalendarAsync(string menuTypeSlug)

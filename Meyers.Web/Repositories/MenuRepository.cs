@@ -1,5 +1,6 @@
+using Meyers.Core.Interfaces;
+using Meyers.Core.Models;
 using Meyers.Web.Data;
-using Meyers.Web.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Meyers.Web.Repositories;

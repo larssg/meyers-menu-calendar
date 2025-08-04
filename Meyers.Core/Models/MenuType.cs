@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 
-namespace Meyers.Web.Models;
+namespace Meyers.Core.Models;
 
 public class MenuType
 {

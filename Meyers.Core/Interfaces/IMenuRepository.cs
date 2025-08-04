@@ -1,6 +1,6 @@
-using Meyers.Web.Models;
+using Meyers.Core.Models;
 
-namespace Meyers.Web.Repositories;
+namespace Meyers.Core.Interfaces;
 
 public interface IMenuRepository
 {
