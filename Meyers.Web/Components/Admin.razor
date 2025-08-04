@@ -1,0 +1,345 @@
+@page "/admin"
+@using Meyers.Core.Interfaces
+@rendermode @(new InteractiveServerRenderMode())
+@inject IMenuRepository MenuRepository
+@inject IMenuScrapingService MenuScrapingService
+@inject ITimeZoneService TimeZoneService
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Admin Dashboard - Meyers Menu Calendar</PageTitle>
+
+<div class="max-w-6xl mx-auto p-4">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">Admin Dashboard</h1>
+        <p class="text-slate-600 dark:text-slate-300">Monitor scraping health and system status</p>
+    </div>
+
+    @if (!isAuthorized)
+    {
+        <div class="card p-8 max-w-md mx-auto text-center">
+            <h2 class="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Access Required</h2>
+            <form @onsubmit="CheckAccess" @onsubmit:preventDefault="true">
+                <div class="mb-4">
+                    <input type="password" @bind="secretInput"
+                           placeholder="Enter admin secret"
+                           class="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg 
+                                  bg-white dark:bg-slate-800 text-slate-900 dark:text-white
+                                  focus:ring-2 focus:ring-teal-500 focus:border-teal-500"/>
+                </div>
+                <button type="submit" class="btn-primary w-full">
+                    Access Dashboard
+                </button>
+            </form>
+            @if (authError)
+            {
+                <p class="text-red-600 text-sm mt-2">Invalid secret</p>
+            }
+        </div>
+    }
+    else
+    {
+        <!-- System Status -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="card p-6">
+                <div class="flex items-center mb-2">
+                    <span class="text-2xl mr-3">📊</span>
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Total Menu Entries</h3>
+                </div>
+                <p class="text-3xl font-bold text-teal-600">@totalEntries</p>
+            </div>
+
+            <div class="card p-6">
+                <div class="flex items-center mb-2">
+                    <span class="text-2xl mr-3">🕒</span>
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Last Update</h3>
+                </div>
+                <p class="text-sm text-slate-600 dark:text-slate-300">@FormatLastUpdate()</p>
+            </div>
+
+            <div class="card p-6">
+                <div class="flex items-center mb-2">
+                    <span class="text-2xl mr-3">📋</span>
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Active Menu Types</h3>
+                </div>
+                <p class="text-3xl font-bold text-teal-600">@activeMenuTypes</p>
+            </div>
+        </div>
+
+        <!-- Menu Type Health -->
+        <div class="card p-6 mb-8">
+            <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-4 flex items-center">
+                <span class="text-2xl mr-3">🏥</span>
+                Menu Type Health
+            </h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="border-b border-slate-200 dark:border-slate-700">
+                    <tr>
+                        <th class="text-left py-3 px-2 font-medium text-slate-700 dark:text-slate-300">Menu Type</th>
+                        <th class="text-left py-3 px-2 font-medium text-slate-700 dark:text-slate-300">Today</th>
+                        <th class="text-left py-3 px-2 font-medium text-slate-700 dark:text-slate-300">Tomorrow</th>
+                        <th class="text-left py-3 px-2 font-medium text-slate-700 dark:text-slate-300">This Week</th>
+                        <th class="text-left py-3 px-2 font-medium text-slate-700 dark:text-slate-300">Next Week</th>
+                        <th class="text-left py-3 px-2 font-medium text-slate-700 dark:text-slate-300">Status</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var health in menuHealth)
+                    {
+                        <tr class="border-b border-slate-100 dark:border-slate-800">
+                            <td class="py-3 px-2 font-medium text-slate-900 dark:text-white">@health.MenuTypeName</td>
+                            <td class="py-3 px-2">
+                                    <span
+                                        class="pill @(health.HasToday ? "bg-green-100 text-green-800 ring-green-300/60" : "bg-red-100 text-red-800 ring-red-300/60")">
+                                        @(health.HasToday ? "✓" : "✗")
+                                    </span>
+                            </td>
+                            <td class="py-3 px-2">
+                                    <span
+                                        class="pill @(health.HasTomorrow ? "bg-green-100 text-green-800 ring-green-300/60" : "bg-yellow-100 text-yellow-800 ring-yellow-300/60")">
+                                        @(health.HasTomorrow ? "✓" : "✗")
+                                    </span>
+                            </td>
+                            <td class="py-3 px-2 text-slate-600 dark:text-slate-300">@health.EntriesThisWeek/5</td>
+                            <td class="py-3 px-2 text-slate-600 dark:text-slate-300">@health.EntriesNextWeek/5</td>
+                            <td class="py-3 px-2">
+                                    <span class="pill @GetHealthStatusClass(health)">
+                                        @GetHealthStatus(health)
+                                    </span>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card p-6">
+            <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-4 flex items-center">
+                <span class="text-2xl mr-3">⚡</span>
+                Actions
+            </h3>
+            <div class="flex flex-wrap gap-4">
+                <button @onclick="RefreshMenus" disabled="@isRefreshing"
+                        class="btn-primary @(isRefreshing ? "opacity-50 cursor-not-allowed" : "")">
+                    @(isRefreshing ? "Refreshing..." : "🔄 Refresh Menus")
+                </button>
+                <button @onclick="TestScraping" disabled="@isTesting"
+                        class="btn-ghost @(isTesting ? "opacity-50 cursor-not-allowed" : "")">
+                    @(isTesting ? "Testing..." : "🧪 Test Scraping")
+                </button>
+            </div>
+
+            @if (!string.IsNullOrEmpty(actionResult))
+            {
+                <div
+                    class="mt-4 p-4 rounded-lg @(actionResult.Contains("Error") ? "bg-red-50 text-red-800 border border-red-200" : "bg-green-50 text-green-800 border border-green-200")">
+                    <pre class="whitespace-pre-wrap text-sm">@actionResult</pre>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private bool isAuthorized;
+    private string secretInput = "";
+    private bool authError;
+
+    private int totalEntries;
+    private int activeMenuTypes;
+    private DateTime? lastUpdate;
+    private readonly List<MenuTypeHealth> menuHealth = new();
+
+    private bool isRefreshing;
+    private bool isTesting;
+    private string actionResult = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Check if already authorized via query parameter
+        var request = HttpContextAccessor.HttpContext?.Request;
+        if (request?.Query.ContainsKey("secret") == true)
+        {
+            var querySecret = request.Query["secret"].ToString();
+            if (IsValidSecret(querySecret))
+            {
+                isAuthorized = true;
+                await LoadDashboardData();
+            }
+        }
+    }
+
+    private async Task CheckAccess()
+    {
+        if (IsValidSecret(secretInput))
+        {
+            isAuthorized = true;
+            authError = false;
+            await LoadDashboardData();
+        }
+        else
+        {
+            authError = true;
+        }
+    }
+
+
+    private bool IsValidSecret(string secret)
+    {
+        var expectedSecret = Environment.GetEnvironmentVariable("REFRESH_SECRET") ?? "admin123";
+        return secret == expectedSecret;
+    }
+
+    private async Task LoadDashboardData()
+    {
+        try
+        {
+            var today = TimeZoneService.GetCopenhagenDate();
+            var tomorrow = today.AddDays(1);
+            
+            // Calculate week boundaries
+            var thisWeekStart = today.AddDays(-(int)today.DayOfWeek + 1); // Monday of this week
+            var thisWeekEnd = thisWeekStart.AddDays(4); // Friday of this week
+            var nextWeekStart = thisWeekStart.AddDays(7); // Monday of next week
+            var nextWeekEnd = nextWeekStart.AddDays(4); // Friday of next week
+            
+            // Get data for a broader range
+            var startDate = thisWeekStart.AddDays(-7); // Include last week for context
+            var endDate = nextWeekEnd;
+
+            // Get basic stats
+            var allEntries = await MenuRepository.GetMenusForDateRangeAsync(startDate, endDate);
+            totalEntries = allEntries.Count;
+
+            var menuTypes = await MenuRepository.GetMenuTypesAsync();
+            activeMenuTypes = menuTypes.Count;
+
+            lastUpdate = await MenuRepository.GetLastUpdateTimeAsync();
+
+            // Calculate health for each menu type
+            menuHealth.Clear();
+            foreach (var menuType in menuTypes)
+            {
+                var entries = allEntries.Where(e => e.MenuTypeId == menuType.Id).ToList();
+                var health = new MenuTypeHealth
+                {
+                    MenuTypeName = menuType.Name,
+                    HasToday = entries.Any(e => e.Date.Date == today),
+                    HasTomorrow = entries.Any(e => e.Date.Date == tomorrow),
+                    EntriesThisWeek = entries.Count(e => e.Date.Date >= thisWeekStart && e.Date.Date <= thisWeekEnd),
+                    EntriesNextWeek = entries.Count(e => e.Date.Date >= nextWeekStart && e.Date.Date <= nextWeekEnd)
+                };
+                menuHealth.Add(health);
+            }
+        }
+        catch (Exception ex)
+        {
+            actionResult = $"Error loading dashboard data: {ex.Message}";
+        }
+    }
+
+    private async Task RefreshMenus()
+    {
+        isRefreshing = true;
+        actionResult = "";
+        StateHasChanged();
+
+        try
+        {
+            var menuDays = await MenuScrapingService.ScrapeMenuAsync();
+            await LoadDashboardData(); // Refresh the data
+
+            actionResult = $"✅ Successfully refreshed menus!\n\nScraped {menuDays.Count} menu entries across {menuDays.GroupBy(m => m.MenuType).Count()} menu types.";
+        }
+        catch (Exception ex)
+        {
+            actionResult = $"❌ Error refreshing menus: {ex.Message}";
+        }
+        finally
+        {
+            isRefreshing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task TestScraping()
+    {
+        isTesting = true;
+        actionResult = "";
+        StateHasChanged();
+
+        try
+        {
+            var menuDays = await MenuScrapingService.ScrapeMenuAsync();
+            var groupedByType = menuDays.GroupBy(m => m.MenuType).ToList();
+
+            var result = "🧪 Test Scraping Results:\n\n";
+            result += $"Total entries scraped: {menuDays.Count}\n";
+            result += $"Menu types found: {groupedByType.Count}\n\n";
+
+            foreach (var group in groupedByType)
+            {
+                result += $"📋 {group.Key}: {group.Count()} entries\n";
+                var dates = group.Select(m => m.Date.ToString("yyyy-MM-dd")).Distinct().OrderBy(d => d);
+                result += $"   Dates: {string.Join(", ", dates)}\n\n";
+            }
+
+            actionResult = result;
+        }
+        catch (Exception ex)
+        {
+            actionResult = $"❌ Error testing scraping: {ex.Message}";
+        }
+        finally
+        {
+            isTesting = false;
+            StateHasChanged();
+        }
+    }
+
+    private string FormatLastUpdate()
+    {
+        if (lastUpdate == null) return "Never";
+
+        var localTime = lastUpdate.Value.ToLocalTime();
+        var timeAgo = DateTime.Now - localTime;
+
+        if (timeAgo.TotalMinutes < 1) return "Just now";
+        if (timeAgo.TotalHours < 1) return $"{(int)timeAgo.TotalMinutes} minutes ago";
+        if (timeAgo.TotalDays < 1) return $"{(int)timeAgo.TotalHours} hours ago";
+        return localTime.ToString("MMM d, yyyy 'at' h:mm tt");
+    }
+
+    private string GetHealthStatus(MenuTypeHealth health)
+    {
+        if (!health.HasToday) return "Critical";
+        if (!health.HasTomorrow) return "Warning";
+        if (health.EntriesThisWeek < 3) return "Poor";
+        if (health.EntriesNextWeek < 3) return "Concerning";
+        return "Healthy";
+    }
+
+    private string GetHealthStatusClass(MenuTypeHealth health)
+    {
+        return GetHealthStatus(health) switch
+        {
+            "Critical" => "bg-red-100 text-red-800 ring-red-300/60",
+            "Warning" => "bg-yellow-100 text-yellow-800 ring-yellow-300/60",
+            "Poor" => "bg-orange-100 text-orange-800 ring-orange-300/60",
+            "Concerning" => "bg-purple-100 text-purple-800 ring-purple-300/60",
+            _ => "bg-green-100 text-green-800 ring-green-300/60"
+        };
+    }
+
+    private class MenuTypeHealth
+    {
+        public string MenuTypeName { get; set; } = "";
+        public bool HasToday { get; set; }
+        public bool HasTomorrow { get; set; }
+        public int EntriesThisWeek { get; set; }
+        public int EntriesNextWeek { get; set; }
+    }
+
+}

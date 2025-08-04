@@ -41,8 +41,9 @@ builder.Services.AddScoped<ITimeZoneService, TimeZoneService>();
 builder.Services.AddScoped<CalendarEndpointHandler>();
 builder.Services.AddScoped<RefreshMenusHandler>();
 
-// Blazor SSR services
-builder.Services.AddRazorComponents();
+// Blazor SSR services with interactivity
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddAntiforgery();
 
@@ -124,8 +125,9 @@ app.UseResponseCaching();
 // Add anti-forgery middleware for Blazor SSR
 app.UseAntiforgery();
 
-// Map Blazor components
-app.MapRazorComponents<App>();
+// Map Blazor components with interactivity
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode();
 
 // Map calendar endpoints
 app.MapGet("/calendar/{menuTypeSlug}.ics",
