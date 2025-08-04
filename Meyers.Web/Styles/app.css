@@ -95,3 +95,11 @@
 ::selection {
     background: rgba(13, 148, 136, 0.25); /* teal-600 at 25% */
 }
+
+/* Line clamp utility for menu preview text */
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}

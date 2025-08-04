@@ -100,16 +100,13 @@ public class CalendarApiTests : IClassFixture<TestWebApplicationFactory>
 
         var content = await response.Content.ReadAsStringAsync();
 
-        // Check that the menu preview data is embedded in the page
-        Assert.Contains("window.menuPreviewData", content);
-        Assert.Contains("menuPreviews", content);
+        // Check that the menu data is embedded in the page
+        Assert.Contains("window.menuData", content);
+        Assert.Contains("weeklyData", content);
 
-        // The data should include menu type IDs as keys
-        Assert.Matches(@"""1"":\s*\{", content); // Menu type ID 1
-
-        // The data should have today/tomorrow structure
-        Assert.Contains("\"today\"", content);
-        Assert.Contains("\"tomorrow\"", content);
+        // The data should include menu type information
+        Assert.Contains("\"menuTypes\"", content);
+        Assert.Contains("\"startDate\"", content);
 
         // Should include title property for menus
         Assert.Contains("\"title\"", content);
@@ -248,7 +245,52 @@ public class CalendarApiTests : IClassFixture<TestWebApplicationFactory>
 
         // Verify the JavaScript contains our functions
         Assert.Contains("function copyToClipboard", jsContent);
-        Assert.Contains("function selectMenuTab", jsContent);
+        Assert.Contains("function toggleMenuMode", jsContent);
         Assert.Contains("TOAST_DURATION", jsContent);
+    }
+
+    [Fact]
+    public async Task Get_CustomCalendar_Returns_iCal_Content()
+    {
+        // Config: M1T1W1R2F1 (Mon/Tue/Wed/Fri = menu type 1, Thu = menu type 2)
+        var response = await _client.GetAsync("/calendar/custom/M1T1W1R2F1.ics");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("text/calendar; charset=utf-8", response.Content.Headers.ContentType?.ToString());
+
+        var content = await response.Content.ReadAsStringAsync();
+        Assert.Contains("BEGIN:VCALENDAR", content);
+        Assert.Contains("END:VCALENDAR", content);
+        Assert.Contains("Custom Menu Selection", content);
+    }
+
+    [Fact]
+    public async Task Get_CustomCalendar_WithInvalidConfig_Returns_BadRequest()
+    {
+        var response = await _client.GetAsync("/calendar/custom/invalid.ics");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Get_CustomCalendar_FiltersCorrectDays()
+    {
+        // Config: M1F1 (Only Monday and Friday from menu type 1)
+        var response = await _client.GetAsync("/calendar/custom/M1F1.ics");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var content = await response.Content.ReadAsStringAsync();
+        
+        // Should contain events, but only for Monday and Friday
+        var eventCount = Regex.Matches(content, "BEGIN:VEVENT").Count;
+        Assert.True(eventCount > 0, "Should have some events for Monday and Friday");
+        
+        // Should be fewer events than a full week calendar
+        var fullWeekResponse = await _client.GetAsync("/calendar/det-velkendte.ics");
+        var fullWeekContent = await fullWeekResponse.Content.ReadAsStringAsync();
+        var fullWeekEventCount = Regex.Matches(fullWeekContent, "BEGIN:VEVENT").Count;
+        
+        Assert.True(eventCount < fullWeekEventCount, "Custom calendar should have fewer events than full week");
     }
 }
