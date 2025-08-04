@@ -48,6 +48,33 @@ builder.Services.AddHostedService<MenuCacheBackgroundService>();
 // Add response caching
 builder.Services.AddResponseCaching();
 
+// Add response compression (gzip/brotli)
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProvider>();
+    options.Providers.Add<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProvider>();
+    
+    // Compress these MIME types
+    options.MimeTypes = Microsoft.AspNetCore.ResponseCompression.ResponseCompressionDefaults.MimeTypes.Concat(new[]
+    {
+        "text/calendar",
+        "application/javascript",
+        "text/css"
+    });
+});
+
+// Configure compression levels
+builder.Services.Configure<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProviderOptions>(options =>
+{
+    options.Level = System.IO.Compression.CompressionLevel.Optimal;
+});
+
+builder.Services.Configure<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProviderOptions>(options =>
+{
+    options.Level = System.IO.Compression.CompressionLevel.Optimal;
+});
+
 var app = builder.Build();
 
 // Apply database migrations
@@ -83,6 +110,9 @@ app.Use(async (context, next) =>
 
 // Configure routing
 app.UseRouting();
+
+// Use response compression middleware (must be before static files and caching)
+app.UseResponseCompression();
 
 // Use response caching middleware
 app.UseResponseCaching();
