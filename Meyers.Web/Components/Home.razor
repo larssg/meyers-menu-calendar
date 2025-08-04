@@ -34,11 +34,12 @@
                             aria-selected="@(isActive.ToString().ToLower())"
                             aria-controls="menuTypePanel"
                             id="tab-@menuType.Id"
+                            data-slug="@menuType.Slug"
                             class="px-4 py-2 text-sm font-medium transition-colors rounded-lg border border-slate-200 dark:border-slate-700
                                    @(isActive
                                                                           ? "bg-teal-600 text-white border-teal-600"
                                                                           : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/60")"
-                            onclick="selectMenuTab(@menuType.Id, '@menuType.Slug', '@menuType.Name')">
+                            onclick="selectMenuTab(@menuType.Id)">
                             @menuType.Name
                         </button>
                     }
@@ -307,8 +308,8 @@
                 kvp => kvp.Key,
                 kvp => new
                 {
-                    today = kvp.Value.today != null ? new { title = CalendarService.CleanupTitle(kvp.Value.today.MainDish) } : null,
-                    tomorrow = kvp.Value.tomorrow != null ? new { title = CalendarService.CleanupTitle(kvp.Value.tomorrow.MainDish) } : null
+                    today = kvp.Value.today != null ? new { title = CalendarService.CleanupTitle(kvp.Value.today.MainDish), details = kvp.Value.today.Details } : null,
+                    tomorrow = kvp.Value.tomorrow != null ? new { title = CalendarService.CleanupTitle(kvp.Value.tomorrow.MainDish), details = kvp.Value.tomorrow.Details } : null
                 }
             )
         });

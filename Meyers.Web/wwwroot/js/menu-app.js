@@ -138,7 +138,7 @@ async function updateMenuType(menuTypeId) {
     await loadMenuPreview(menuTypeId);
 }
 
-function selectMenuTab(menuTypeId, slug, name) {
+function selectMenuTab(menuTypeId) {
     // Update tab styling
     const tablist = document.querySelector('[role="tablist"]');
     if (tablist) {
@@ -148,15 +148,10 @@ function selectMenuTab(menuTypeId, slug, name) {
             tab.className = `px-4 py-2 text-sm font-medium transition-colors rounded-lg border border-slate-200 dark:border-slate-700 ${
                 isActive ? TAB_ACTIVE_CLASS : TAB_INACTIVE_CLASS
             }`;
-
-            if (isActive && slug && !tab.getAttribute('data-slug')) {
-                tab.setAttribute('data-slug', slug);
-            }
         });
     }
 
     // Update UI and load preview
-    updateUI(menuTypeId, slug, name);
     updateMenuType(menuTypeId);
 }
 
