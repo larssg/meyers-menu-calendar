@@ -1,5 +1,4 @@
 using System.Net;
-using System.Text.RegularExpressions;
 using Ical.Net;
 using Ical.Net.CalendarComponents;
 using Ical.Net.DataTypes;

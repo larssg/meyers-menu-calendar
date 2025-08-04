@@ -60,8 +60,8 @@ public partial class CalendarEndpointHandler(
                 .ToList();
 
             // Check if alarms should be included (default: false)
-            var includeAlarms = httpContext.Request.Query.ContainsKey("alarm") && 
-                               httpContext.Request.Query["alarm"].ToString().ToLower() == "true";
+            var includeAlarms = httpContext.Request.Query.ContainsKey("alarm") &&
+                                httpContext.Request.Query["alarm"].ToString().ToLower() == "true";
 
             var icalContent = calendarService.GenerateCalendar(allMenuDays, menuTypeName, includeAlarms);
             var lastModified = await menuRepository.GetLastUpdateTimeAsync() ?? DateTime.UtcNow;
@@ -132,8 +132,8 @@ public partial class CalendarEndpointHandler(
             customMenuDays = customMenuDays.OrderBy(m => m.Date).ToList();
 
             // Check if alarms should be included (default: false)
-            var includeAlarms = httpContext.Request.Query.ContainsKey("alarm") && 
-                               httpContext.Request.Query["alarm"].ToString().ToLower() == "true";
+            var includeAlarms = httpContext.Request.Query.ContainsKey("alarm") &&
+                                httpContext.Request.Query["alarm"].ToString().ToLower() == "true";
 
             var icalContent = calendarService.GenerateCalendar(customMenuDays, "Custom Menu Selection", includeAlarms);
             var lastModified = await menuRepository.GetLastUpdateTimeAsync() ?? DateTime.UtcNow;

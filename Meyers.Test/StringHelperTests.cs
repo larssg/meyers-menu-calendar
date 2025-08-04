@@ -51,7 +51,7 @@ public class StringHelperTests
     {
         var longContent = "Label: " + new string('a', 150);
         var result = StringHelper.ExtractMainDishFromFirstItem(longContent);
-        
+
         Assert.EndsWith("...", result);
         Assert.True(result.Length <= 104); // 100 chars + "..."
     }
@@ -68,7 +68,7 @@ public class StringHelperTests
     {
         var input = "Soup, Delikatesser: Cheese, Dagens salater: Green salad";
         var result = StringHelper.FormatDescription(input);
-        
+
         Assert.Contains("\n\nDelikatesser:", result);
         Assert.Contains("\n\nDagens salater:", result);
     }
@@ -78,7 +78,7 @@ public class StringHelperTests
     {
         var input = "Soup &amp; bread";
         var result = StringHelper.FormatDescription(input);
-        
+
         Assert.Equal("Soup & bread", result);
     }
 }

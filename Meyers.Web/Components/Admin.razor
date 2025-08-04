@@ -1,13 +1,12 @@
 @page "/admin"
-@using Meyers.Core.Interfaces
-@using Meyers.Core.Utilities
-@using System.Threading
 @rendermode @(new InteractiveServerRenderMode())
 @layout AdminLayout
 @inject IMenuRepository MenuRepository
 @inject IMenuScrapingService MenuScrapingService
 @inject ITimeZoneService TimeZoneService
 @inject IHttpContextAccessor HttpContextAccessor
+@using Meyers.Core.Interfaces
+@using Meyers.Core.Utilities
 @implements IDisposable
 
 <PageTitle>Admin Dashboard - Meyers Menu Calendar</PageTitle>
@@ -30,7 +29,7 @@
     {
         <div class="card p-8 max-w-md mx-auto text-center">
             <h2 class="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Access Required</h2>
-            
+
             <form @onsubmit="CheckAccess" @onsubmit:preventDefault="true">
                 <div class="mb-4">
                     <input type="password" @bind="secretInput"
@@ -171,13 +170,13 @@
     private bool isRefreshing;
     private bool isTesting;
     private string actionResult = "";
-    
+
     private Timer? updateTimer;
 
     protected override async Task OnInitializedAsync()
     {
         Console.WriteLine("Admin component initializing...");
-        
+
         try
         {
             // Check if already authorized via query parameter
@@ -203,9 +202,9 @@
         {
             Console.WriteLine($"Error in OnInitializedAsync: {ex.Message}");
         }
-        
+
         Console.WriteLine($"Initialization complete. isAuthorized: {isAuthorized}");
-        
+
         componentInitialized = true;
         StateHasChanged();
     }
@@ -227,6 +226,7 @@
             Console.WriteLine("Secret is invalid");
             authError = true;
         }
+
         StateHasChanged(); // Force UI update
     }
 
@@ -404,4 +404,5 @@
     {
         updateTimer?.Dispose();
     }
+
 }

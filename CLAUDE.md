@@ -21,10 +21,10 @@ Features multi-menu support, responsive design, and automatic caching.
 - `Models/MenuDay.cs`: DTO for menu data transfer
 - `Interfaces/`: Repository and service contracts (IMenuRepository, IMenuScrapingService, ICalendarService)
 - `Utilities/`: Reusable utility classes
-  - `TimeFormatHelper.cs`: Time formatting for "time ago" display with zero-padding
-  - `StringHelper.cs`: Text manipulation (capitalize, extract main dish, format descriptions)
-  - `DanishDateHelper.cs`: Danish date parsing (months, weekday validation)
-  - `SlugHelper.cs`: URL-friendly slug generation with Danish character support
+    - `TimeFormatHelper.cs`: Time formatting for "time ago" display with zero-padding
+    - `StringHelper.cs`: Text manipulation (capitalize, extract main dish, format descriptions)
+    - `DanishDateHelper.cs`: Danish date parsing (months, weekday validation)
+    - `SlugHelper.cs`: URL-friendly slug generation with Danish character support
 
 ### Meyers.Infrastructure (Data/External Layer)
 
@@ -46,7 +46,7 @@ Features multi-menu support, responsive design, and automatic caching.
 ### Meyers.Test
 
 - Comprehensive tests with TestWebApplicationFactory, MockHttpMessageHandler, and real HTML fixtures
-- Tests all 8 menu types, web interface, API endpoints, mobile responsiveness, CalendarService title cleanup, 
+- Tests all 8 menu types, web interface, API endpoints, mobile responsiveness, CalendarService title cleanup,
   MapStaticAssets fingerprinting, and all utility helper classes
 
 ## Key Dependencies

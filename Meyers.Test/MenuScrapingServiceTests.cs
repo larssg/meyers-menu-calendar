@@ -203,7 +203,7 @@ public class MenuScrapingServiceTests
     {
         // This test verifies that when data is cached and fresh, it doesn't scrape again
         // We'll test this by checking that the HTTP client is not called on the second request
-        
+
         // Arrange
         using var context = CreateInMemoryContext();
         var callCount = 0;
@@ -222,10 +222,7 @@ public class MenuScrapingServiceTests
 
         // Update timestamps to ensure cache is considered fresh
         var entries = await context.MenuEntries.ToListAsync();
-        foreach (var entry in entries)
-        {
-            entry.UpdatedAt = DateTime.UtcNow;
-        }
+        foreach (var entry in entries) entry.UpdatedAt = DateTime.UtcNow;
         await context.SaveChangesAsync();
 
         // Act - Second call should use cache (not call HTTP)
@@ -240,7 +237,7 @@ public class MenuScrapingServiceTests
     public async Task ScrapeMenuAsync_WithExpiredCache_RefreshesData()
     {
         // This test verifies that when cache is expired, it scrapes fresh data
-        
+
         // Arrange
         using var context = CreateInMemoryContext();
         var callCount = 0;
@@ -259,10 +256,7 @@ public class MenuScrapingServiceTests
 
         // Make cache appear expired by setting UpdatedAt to 7 hours ago
         var entries = await context.MenuEntries.ToListAsync();
-        foreach (var entry in entries)
-        {
-            entry.UpdatedAt = DateTime.UtcNow.AddHours(-7);
-        }
+        foreach (var entry in entries) entry.UpdatedAt = DateTime.UtcNow.AddHours(-7);
         await context.SaveChangesAsync();
 
         // Act - Second call should scrape again because cache is expired
@@ -276,18 +270,19 @@ public class MenuScrapingServiceTests
 public class MockHttpMessageHandler : HttpMessageHandler
 {
     private readonly string _filePath;
-    public Action? OnSendAsync { get; set; }
 
     public MockHttpMessageHandler(string filePath)
     {
         _filePath = filePath;
     }
 
+    public Action? OnSendAsync { get; set; }
+
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
         CancellationToken cancellationToken)
     {
         OnSendAsync?.Invoke();
-        
+
         if (File.Exists(_filePath))
         {
             var content = await File.ReadAllTextAsync(_filePath, cancellationToken);

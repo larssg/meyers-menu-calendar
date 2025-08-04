@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using Meyers.Core.Interfaces;
 using Meyers.Infrastructure.Configuration;
 using Meyers.Infrastructure.Data;
@@ -5,6 +6,7 @@ using Meyers.Infrastructure.Repositories;
 using Meyers.Infrastructure.Services;
 using Meyers.Web;
 using Meyers.Web.Handlers;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -57,11 +59,11 @@ builder.Services.AddResponseCaching();
 builder.Services.AddResponseCompression(options =>
 {
     options.EnableForHttps = true;
-    options.Providers.Add<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProvider>();
-    options.Providers.Add<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProvider>();
-    
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+
     // Compress these MIME types
-    options.MimeTypes = Microsoft.AspNetCore.ResponseCompression.ResponseCompressionDefaults.MimeTypes.Concat(new[]
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
     {
         "text/calendar",
         "application/javascript",
@@ -70,15 +72,9 @@ builder.Services.AddResponseCompression(options =>
 });
 
 // Configure compression levels
-builder.Services.Configure<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProviderOptions>(options =>
-{
-    options.Level = System.IO.Compression.CompressionLevel.Optimal;
-});
+builder.Services.Configure<BrotliCompressionProviderOptions>(options => { options.Level = CompressionLevel.Optimal; });
 
-builder.Services.Configure<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProviderOptions>(options =>
-{
-    options.Level = System.IO.Compression.CompressionLevel.Optimal;
-});
+builder.Services.Configure<GzipCompressionProviderOptions>(options => { options.Level = CompressionLevel.Optimal; });
 
 var app = builder.Build();
 
