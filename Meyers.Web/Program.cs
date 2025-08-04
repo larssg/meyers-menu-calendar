@@ -22,7 +22,11 @@ var databasePath = builder.Configuration.GetConnectionString("DefaultConnection"
                    ?? "Data Source=menus.db";
 
 builder.Services.AddDbContext<MenuDbContext>(options =>
-    options.UseSqlite(databasePath));
+{
+    options.UseSqlite(databasePath);
+    // Default to NoTracking for better performance - write operations will explicitly use tracking
+    options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+});
 
 // Repository registration
 builder.Services.AddScoped<IMenuRepository, MenuRepository>();

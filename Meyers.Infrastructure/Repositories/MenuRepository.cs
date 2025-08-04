@@ -42,7 +42,10 @@ public class MenuRepository(MenuDbContext context) : IMenuRepository
 
     public async Task SaveMenuAsync(MenuEntry menuEntry)
     {
-        var existing = await GetMenuForDateAsync(menuEntry.Date, menuEntry.MenuTypeId);
+        var existing = await context.MenuEntries
+            .AsTracking()
+            .Include(m => m.MenuType)
+            .FirstOrDefaultAsync(m => m.Date.Date == menuEntry.Date.Date && m.MenuTypeId == menuEntry.MenuTypeId);
 
         if (existing != null)
         {
@@ -65,7 +68,10 @@ public class MenuRepository(MenuDbContext context) : IMenuRepository
     {
         foreach (var menuEntry in menuEntries)
         {
-            var existing = await GetMenuForDateAsync(menuEntry.Date, menuEntry.MenuTypeId);
+            var existing = await context.MenuEntries
+                .AsTracking()
+                .Include(m => m.MenuType)
+                .FirstOrDefaultAsync(m => m.Date.Date == menuEntry.Date.Date && m.MenuTypeId == menuEntry.MenuTypeId);
 
             if (existing != null)
             {
@@ -112,6 +118,7 @@ public class MenuRepository(MenuDbContext context) : IMenuRepository
     {
         var slug = MenuType.GenerateSlug(name);
         var existing = await context.MenuTypes
+            .AsTracking()
             .FirstOrDefaultAsync(mt => mt.Slug == slug);
 
         if (existing != null)
