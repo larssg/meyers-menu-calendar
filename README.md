@@ -35,7 +35,6 @@ dotnet run --project Meyers.Web
 - `GET /calendar/{menu-type-slug}.ics` - iCal feed for specific menu type
 - `GET /calendar/custom/{config}.ics` - Custom mixed calendar (e.g., M1T1W1R2F1)
 - `GET /api/menu-types` - Available menu types
-- `GET /api/menu-preview/{menuTypeId}` - Today/tomorrow menu preview
 - `GET /admin/refresh-menus?secret=X` - Manual refresh endpoint
 
 ## Usage
