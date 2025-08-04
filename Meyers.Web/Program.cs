@@ -57,6 +57,7 @@ using (var scope = app.Services.CreateScope())
 
 // Configure static files
 app.MapStaticAssets();
+app.UseStaticFiles();
 
 // Add headers to prevent indexing (except for social media preview crawlers)
 app.Use(async (context, next) =>
