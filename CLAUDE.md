@@ -78,7 +78,6 @@ dotnet build
 - `GET /calendar/custom/{config}.ics` - Custom mixed calendar (config format: M1T1W1R2F1 = Mon/Tue/Wed/Fri menu type 1,
   Thu menu type 2)
 - `GET /api/menu-types` - Available menu types JSON
-- `GET /api/menu-preview/{menuTypeId}` - Today/tomorrow menu preview JSON
 - `GET /admin/refresh-menus?secret=X` - Manual refresh endpoint (returns JSON with menu count)
 
 ## Data Persistence
