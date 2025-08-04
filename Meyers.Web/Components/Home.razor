@@ -26,16 +26,16 @@
 
     <!-- Menu Selection Interface -->
     <section class="mb-12">
-        <div class="card p-8 max-w-4xl mx-auto">
+        <div class="card p-4 sm:p-8 max-w-4xl mx-auto">
             <!-- Radio Button Selection -->
             <div class="mb-8">
-                <div class="flex items-center justify-center gap-8">
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8">
                     <label class="flex items-center cursor-pointer">
                         <input type="radio" name="menuMode" value="simple" class="mr-3 w-4 h-4 text-teal-600 
                                bg-gray-100 border-gray-300 focus:ring-teal-500 dark:focus:ring-teal-600 
                                dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                                checked onchange="toggleMenuMode()">
-                        <span class="text-lg font-medium text-slate-900 dark:text-slate-100">
+                        <span class="text-base sm:text-lg font-medium text-slate-900 dark:text-slate-100">
                             Simple - One menu for all days
                         </span>
                     </label>
@@ -44,7 +44,7 @@
                                bg-gray-100 border-gray-300 focus:ring-teal-500 dark:focus:ring-teal-600 
                                dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                                onchange="toggleMenuMode()">
-                        <span class="text-lg font-medium text-slate-900 dark:text-slate-100">
+                        <span class="text-base sm:text-lg font-medium text-slate-900 dark:text-slate-100">
                             Custom - Different menus per day
                         </span>
                     </label>
@@ -85,11 +85,11 @@
                                       })
                         {
                             <div
-                                class="flex items-center justify-between p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
-                                <span class="font-medium text-slate-900 dark:text-slate-100 min-w-0 w-24">
+                                class="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 gap-3">
+                                <span class="font-medium text-slate-900 dark:text-slate-100 text-sm sm:text-base">
                                     @day.Item2
                                 </span>
-                                <select class="custom-day-select flex-1 max-w-xs ml-4 px-3 py-2 border border-slate-300/60 dark:border-slate-600/60 rounded-lg 
+                                <select class="custom-day-select w-full sm:max-w-xs px-3 py-2 border border-slate-300/60 dark:border-slate-600/60 rounded-lg 
                                                bg-white/80 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 
                                                focus:ring-2 focus:ring-teal-500 focus:border-teal-500 dark:focus:ring-teal-400"
                                         data-day="@((int)day.Item1)" onchange="updateCalendarUrl()">
@@ -114,7 +114,7 @@
 
     <!-- Weekly Calendar Preview -->
     <section class="mb-12">
-        <div class="card p-8 max-w-6xl mx-auto">
+        <div class="card p-4 sm:p-8 max-w-6xl mx-auto">
             <h3 class="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-6 text-center flex items-center justify-center">
                 <span class="text-2xl mr-3">📅</span>
                 Next 7 Days Preview
