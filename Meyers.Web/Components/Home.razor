@@ -33,7 +33,7 @@
                     <label class="flex items-center cursor-pointer">
                         <input type="radio" name="menuMode" value="simple" class="mr-3 w-4 h-4 text-teal-600 
                                bg-gray-100 border-gray-300 focus:ring-teal-500 dark:focus:ring-teal-600 
-                               dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" 
+                               dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                                checked onchange="toggleMenuMode()">
                         <span class="text-lg font-medium text-slate-900 dark:text-slate-100">
                             Simple - One menu for all days
@@ -42,7 +42,7 @@
                     <label class="flex items-center cursor-pointer">
                         <input type="radio" name="menuMode" value="custom" class="mr-3 w-4 h-4 text-teal-600 
                                bg-gray-100 border-gray-300 focus:ring-teal-500 dark:focus:ring-teal-600 
-                               dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" 
+                               dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                                onchange="toggleMenuMode()">
                         <span class="text-lg font-medium text-slate-900 dark:text-slate-100">
                             Custom - Different menus per day
@@ -52,52 +52,56 @@
             </div>
 
             <!-- Simple Mode: Single Dropdown -->
-            <div id="simpleMode" class="mb-8">
+            <div id="simpleMode">
                 <div class="max-w-md mx-auto">
                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3 text-center">
                         Select menu for all weekdays
                     </label>
                     <select id="simpleMenuSelect" class="w-full px-4 py-3 border border-slate-300/60 dark:border-slate-600/60 rounded-lg 
                                    bg-white/80 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 text-center
-                                   focus:ring-2 focus:ring-teal-500 focus:border-teal-500 dark:focus:ring-teal-400" 
+                                   focus:ring-2 focus:ring-teal-500 focus:border-teal-500 dark:focus:ring-teal-400"
                             onchange="updateCalendarUrl()">
                         @foreach (var menuType in menuTypes)
                         {
                             var isSelected = menuType.Slug == "det-velkendte";
-                            <option value="@menuType.Id" data-slug="@menuType.Slug" selected="@isSelected">@menuType.Name</option>
+                            <option value="@menuType.Id" data-slug="@menuType.Slug"
+                                    selected="@isSelected">@menuType.Name</option>
                         }
                     </select>
                 </div>
             </div>
 
             <!-- Custom Mode: Five Dropdowns -->
-            <div id="customMode" class="hidden mb-8">
+            <div id="customMode" class="hidden">
                 <div class="max-w-2xl mx-auto">
                     <div class="space-y-4">
-                        @foreach (var day in new[] { 
-                            (DayOfWeek.Monday, "Monday"), 
-                            (DayOfWeek.Tuesday, "Tuesday"), 
-                            (DayOfWeek.Wednesday, "Wednesday"), 
-                            (DayOfWeek.Thursday, "Thursday"), 
-                            (DayOfWeek.Friday, "Friday") 
-                        })
+                        @foreach (var day in new[]
+                                      {
+                                          (DayOfWeek.Monday, "Monday"),
+                                          (DayOfWeek.Tuesday, "Tuesday"),
+                                          (DayOfWeek.Wednesday, "Wednesday"),
+                                          (DayOfWeek.Thursday, "Thursday"),
+                                          (DayOfWeek.Friday, "Friday")
+                                      })
                         {
-                            <div class="flex items-center justify-between p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
+                            <div
+                                class="flex items-center justify-between p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
                                 <span class="font-medium text-slate-900 dark:text-slate-100 min-w-0 w-24">
                                     @day.Item2
                                 </span>
                                 <select class="custom-day-select flex-1 max-w-xs ml-4 px-3 py-2 border border-slate-300/60 dark:border-slate-600/60 rounded-lg 
                                                bg-white/80 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 
-                                               focus:ring-2 focus:ring-teal-500 focus:border-teal-500 dark:focus:ring-teal-400" 
+                                               focus:ring-2 focus:ring-teal-500 focus:border-teal-500 dark:focus:ring-teal-400"
                                         data-day="@((int)day.Item1)" onchange="updateCalendarUrl()">
                                     @foreach (var menuType in menuTypes)
                                     {
                                         var isSelected = (day.Item1 == DayOfWeek.Monday && menuType.Slug == "det-velkendte") ||
-                                                       (day.Item1 == DayOfWeek.Tuesday && menuType.Slug == "det-velkendte") ||
-                                                       (day.Item1 == DayOfWeek.Wednesday && menuType.Slug == "det-velkendte") ||
-                                                       (day.Item1 == DayOfWeek.Thursday && menuType.Slug == "den-groenne") ||
-                                                       (day.Item1 == DayOfWeek.Friday && menuType.Slug == "det-velkendte");
-                                        <option value="@menuType.Id" data-slug="@menuType.Slug" selected="@isSelected">@menuType.Name</option>
+                                                             (day.Item1 == DayOfWeek.Tuesday && menuType.Slug == "det-velkendte") ||
+                                                             (day.Item1 == DayOfWeek.Wednesday && menuType.Slug == "det-velkendte") ||
+                                                             (day.Item1 == DayOfWeek.Thursday && menuType.Slug == "den-groenne") ||
+                                                             (day.Item1 == DayOfWeek.Friday && menuType.Slug == "det-velkendte");
+                                        <option value="@menuType.Id" data-slug="@menuType.Slug"
+                                                selected="@isSelected">@menuType.Name</option>
                                     }
                                 </select>
                             </div>
@@ -115,11 +119,11 @@
                 <span class="text-2xl mr-3">📅</span>
                 Next 7 Days Preview
             </h3>
-            
+
             <div id="weeklyPreview" class="grid grid-cols-1 md:grid-cols-7 gap-2 mb-8">
                 <!-- This will be populated by JavaScript -->
             </div>
-            
+
             <!-- Calendar URL and Instructions -->
             <div class="border-t border-slate-200 dark:border-slate-700 pt-8">
                 <div class="max-w-2xl mx-auto">
@@ -135,7 +139,7 @@
                             </CopyButton>
                         </div>
                     </div>
-                    
+
                     <div class="p-6 rounded-xl border border-teal-200/60 dark:border-teal-700/50
                           bg-teal-50/70 dark:bg-teal-900/20">
                         <h4 class="font-semibold text-slate-900 dark:text-slate-100 mb-3 text-center">
@@ -208,14 +212,14 @@
 
             // Load all menu previews for the next 7 days
             var endDate = today.AddDays(6);
-            
+
             // Get extended menu data for the week view
             foreach (var menuType in menuTypes)
             {
                 var entries = await MenuRepository.GetMenusForDateRangeAsync(today, endDate, menuType.Id);
                 weeklyMenuData[menuType.Id] = entries.ToDictionary(e => e.Date.Date, e => e);
             }
-            
+
             // Keep the original format for compatibility
             allMenuPreviews = await MenuRepository.GetAllMenuPreviewsAsync(today, today.AddDays(1));
 
@@ -267,22 +271,24 @@
                 copenhagenTimeZone = TimeZoneInfo.Utc;
             }
         }
-        
+
         var copenhagenNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, copenhagenTimeZone);
         var today = copenhagenNow.Date;
-        
+
         var menuData = JsonSerializer.Serialize(new
         {
-            menuTypes = menuTypes.Select(mt => new { 
-                id = mt.Id, 
-                name = mt.Name, 
-                slug = mt.Slug 
+            menuTypes = menuTypes.Select(mt => new
+            {
+                id = mt.Id,
+                name = mt.Name,
+                slug = mt.Slug
             }).ToArray(),
             weeklyData = weeklyMenuData.ToDictionary(
                 kvp => kvp.Key.ToString(),
                 kvp => kvp.Value.ToDictionary(
                     dateKvp => dateKvp.Key.ToString("yyyy-MM-dd"),
-                    dateKvp => new { 
+                    dateKvp => new
+                    {
                         title = CalendarService.CleanupTitle(dateKvp.Value.MainDish),
                         dayName = dateKvp.Value.DayName
                     }

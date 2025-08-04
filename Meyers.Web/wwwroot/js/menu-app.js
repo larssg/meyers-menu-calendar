@@ -54,7 +54,6 @@ function toggleMenuMode() {
     }
     
     updateCalendarUrl();
-    updateWeeklyPreview();
 }
 
 // Calendar URL Generation
@@ -98,6 +97,9 @@ function updateCalendarUrl() {
     if (input) {
         input.value = calendarUrl;
     }
+    
+    // Also update the preview whenever URL changes
+    updateWeeklyPreview();
 }
 
 function getDayChar(dayOfWeek) {
@@ -218,7 +220,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Initialize interface
     updateCalendarUrl();
-    updateWeeklyPreview();
     
     startAutoRefresh();
 });
