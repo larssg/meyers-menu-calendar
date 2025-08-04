@@ -20,6 +20,11 @@ WORKDIR /src/Meyers.Web
 RUN npm install
 WORKDIR /src
 
+# Build Tailwind CSS
+WORKDIR /src/Meyers.Web
+RUN npm run build
+WORKDIR /src
+
 # Copy everything else and build
 COPY . .
 RUN dotnet publish Meyers.Web/Meyers.Web.csproj -c Release -o /app/publish
