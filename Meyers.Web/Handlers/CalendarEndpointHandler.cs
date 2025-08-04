@@ -70,10 +70,7 @@ public class CalendarEndpointHandler(
         {
             // Decode the configuration
             var weekdayMenuConfig = DecodeCustomConfig(config);
-            if (weekdayMenuConfig == null)
-            {
-                return Results.BadRequest("Invalid calendar configuration");
-            }
+            if (weekdayMenuConfig == null) return Results.BadRequest("Invalid calendar configuration");
 
             // Get current menu data
             var currentMenuDays = await menuScrapingService.ScrapeMenuAsync();
@@ -140,8 +137,8 @@ public class CalendarEndpointHandler(
         {
             // Simple encoding: M1T1W1R2F1 (M=Monday, T=Tuesday, W=Wednesday, R=Thursday, F=Friday, numbers=menu type IDs)
             var result = new Dictionary<DayOfWeek, int>();
-            
-            for (int i = 0; i < config.Length - 1; i += 2)
+
+            for (var i = 0; i < config.Length - 1; i += 2)
             {
                 var dayChar = config[i];
                 if (!int.TryParse(config[i + 1].ToString(), out var menuTypeId))
@@ -157,10 +154,7 @@ public class CalendarEndpointHandler(
                     _ => (DayOfWeek?)null
                 };
 
-                if (dayOfWeek.HasValue)
-                {
-                    result[dayOfWeek.Value] = menuTypeId;
-                }
+                if (dayOfWeek.HasValue) result[dayOfWeek.Value] = menuTypeId;
             }
 
             return result.Count > 0 ? result : null;
@@ -174,11 +168,11 @@ public class CalendarEndpointHandler(
     public static string EncodeCustomConfig(Dictionary<DayOfWeek, int> weekdayMenuConfig)
     {
         var sb = new StringBuilder();
-        
-        var orderedDays = new[] { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday };
-        
+
+        var orderedDays = new[]
+            { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday };
+
         foreach (var day in orderedDays)
-        {
             if (weekdayMenuConfig.TryGetValue(day, out var menuTypeId))
             {
                 var dayChar = day switch
@@ -193,8 +187,7 @@ public class CalendarEndpointHandler(
                 sb.Append(dayChar);
                 sb.Append(menuTypeId);
             }
-        }
-        
+
         return sb.ToString();
     }
 }

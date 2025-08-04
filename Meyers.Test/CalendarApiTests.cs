@@ -281,16 +281,16 @@ public class CalendarApiTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var content = await response.Content.ReadAsStringAsync();
-        
+
         // Should contain events, but only for Monday and Friday
         var eventCount = Regex.Matches(content, "BEGIN:VEVENT").Count;
         Assert.True(eventCount > 0, "Should have some events for Monday and Friday");
-        
+
         // Should be fewer events than a full week calendar
         var fullWeekResponse = await _client.GetAsync("/calendar/det-velkendte.ics");
         var fullWeekContent = await fullWeekResponse.Content.ReadAsStringAsync();
         var fullWeekEventCount = Regex.Matches(fullWeekContent, "BEGIN:VEVENT").Count;
-        
+
         Assert.True(eventCount < fullWeekEventCount, "Custom calendar should have fewer events than full week");
     }
 }

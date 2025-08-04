@@ -30,9 +30,9 @@ function copyToClipboard(text) {
 function formatDate(dateStr) {
     const date = new Date(dateStr + 'T12:00:00');
     return {
-        dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
+        dayName: date.toLocaleDateString('en-US', {weekday: 'short'}),
         dayNumber: date.getDate(),
-        monthName: date.toLocaleDateString('en-US', { month: 'short' })
+        monthName: date.toLocaleDateString('en-US', {month: 'short'})
     };
 }
 
@@ -42,7 +42,7 @@ function toggleMenuMode() {
     const customRadio = document.querySelector('input[name="menuMode"][value="custom"]');
     const simpleMode = $('simpleMode');
     const customMode = $('customMode');
-    
+
     if (simpleRadio.checked) {
         currentMenuMode = 'simple';
         simpleMode.classList.remove('hidden');
@@ -52,7 +52,7 @@ function toggleMenuMode() {
         simpleMode.classList.add('hidden');
         customMode.classList.remove('hidden');
     }
-    
+
     updateCalendarUrl();
 }
 
@@ -60,7 +60,7 @@ function toggleMenuMode() {
 function updateCalendarUrl() {
     const baseUrl = BASE_URL.replace(/^http:/, 'https:');
     let calendarUrl = '';
-    
+
     if (currentMenuMode === 'simple') {
         const simpleSelect = $('simpleMenuSelect');
         if (simpleSelect && simpleSelect.selectedOptions.length > 0) {
@@ -74,11 +74,11 @@ function updateCalendarUrl() {
         // Custom mode
         const daySelects = document.querySelectorAll('.custom-day-select');
         const config = [];
-        
+
         daySelects.forEach(select => {
             const dayOfWeek = parseInt(select.getAttribute('data-day'));
             const menuTypeId = select.value;
-            
+
             if (menuTypeId && menuTypeId !== '') {
                 const dayChar = getDayChar(dayOfWeek);
                 if (dayChar) {
@@ -86,18 +86,18 @@ function updateCalendarUrl() {
                 }
             }
         });
-        
+
         if (config.length > 0) {
             const configString = config.join('');
             calendarUrl = `${baseUrl}/calendar/custom/${configString}.ics`;
         }
     }
-    
+
     const input = $('calendarUrl');
     if (input) {
         input.value = calendarUrl;
     }
-    
+
     // Also update the preview whenever URL changes
     updateWeeklyPreview();
 }
@@ -105,12 +105,18 @@ function updateCalendarUrl() {
 function getDayChar(dayOfWeek) {
     // DayOfWeek enum: Sunday=0, Monday=1, Tuesday=2, Wednesday=3, Thursday=4, Friday=5, Saturday=6
     switch (dayOfWeek) {
-        case 1: return 'M'; // Monday
-        case 2: return 'T'; // Tuesday
-        case 3: return 'W'; // Wednesday
-        case 4: return 'R'; // Thursday
-        case 5: return 'F'; // Friday
-        default: return null;
+        case 1:
+            return 'M'; // Monday
+        case 2:
+            return 'T'; // Tuesday
+        case 3:
+            return 'W'; // Wednesday
+        case 4:
+            return 'R'; // Thursday
+        case 5:
+            return 'F'; // Friday
+        default:
+            return null;
     }
 }
 
@@ -118,27 +124,27 @@ function getDayChar(dayOfWeek) {
 function updateWeeklyPreview() {
     const previewContainer = $('weeklyPreview');
     if (!previewContainer || !menuData) return;
-    
+
     const startDate = new Date(menuData.startDate + 'T12:00:00');
     const weekDays = [];
-    
+
     // Generate 7 days starting from today
     for (let i = 0; i < 7; i++) {
         const currentDate = new Date(startDate);
         currentDate.setDate(startDate.getDate() + i);
         weekDays.push(currentDate);
     }
-    
+
     previewContainer.innerHTML = '';
-    
+
     weekDays.forEach((date, index) => {
         const dateStr = date.toISOString().split('T')[0];
         const dayInfo = formatDate(dateStr);
         const isWeekend = date.getDay() === 0 || date.getDay() === 6; // Sunday or Saturday
-        
+
         let menuEntry = null;
         let menuTypeName = '';
-        
+
         if (!isWeekend) {
             // Get menu entry based on current mode
             if (currentMenuMode === 'simple') {
@@ -165,31 +171,31 @@ function updateWeeklyPreview() {
                 }
             }
         }
-        
+
         const dayElement = document.createElement('div');
         dayElement.className = `p-3 rounded-lg border ${
-            isWeekend 
-                ? 'bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700' 
+            isWeekend
+                ? 'bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
                 : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
         } ${index === 0 ? 'ring-2 ring-teal-500' : ''}`;
-        
+
         dayElement.innerHTML = `
             <div class="text-center mb-2">
                 <div class="text-xs font-medium text-slate-600 dark:text-slate-400">${dayInfo.dayName}</div>
                 <div class="text-lg font-semibold text-slate-900 dark:text-slate-100">${dayInfo.dayNumber}</div>
                 <div class="text-xs text-slate-500 dark:text-slate-500">${dayInfo.monthName}</div>
             </div>
-            ${isWeekend ? 
-                '<div class="text-center text-xs text-gray-500 dark:text-gray-400">Weekend</div>' :
-                menuEntry ? 
-                    `<div class="text-center">
+            ${isWeekend ?
+            '<div class="text-center text-xs text-gray-500 dark:text-gray-400">Weekend</div>' :
+            menuEntry ?
+                `<div class="text-center">
                         <div class="text-xs font-medium text-teal-600 dark:text-teal-400 mb-1">${menuTypeName}</div>
                         <div class="text-xs text-slate-700 dark:text-slate-300 line-clamp-3" title="${menuEntry.title}">${menuEntry.title}</div>
                     </div>` :
-                    '<div class="text-center text-xs text-slate-500 dark:text-slate-400">No menu</div>'
-            }
+                '<div class="text-center text-xs text-slate-500 dark:text-slate-400">No menu</div>'
+        }
         `;
-        
+
         previewContainer.appendChild(dayElement);
     });
 }
@@ -217,10 +223,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.menuData) {
         menuData = window.menuData;
     }
-    
+
     // Initialize interface
     updateCalendarUrl();
-    
+
     startAutoRefresh();
 });
 
