@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using System.Text.RegularExpressions;
+using Meyers.Core.Utilities;
 
 namespace Meyers.Core.Models;
 
@@ -26,27 +26,7 @@ public class MenuType
     /// </summary>
     public static string GenerateSlug(string name)
     {
-        if (string.IsNullOrWhiteSpace(name))
-            return string.Empty;
-
-        // Convert to lowercase and handle Danish characters
-        var slug = name.ToLowerInvariant()
-            .Replace("ø", "oe")
-            .Replace("å", "aa")
-            .Replace("æ", "ae")
-            .Replace("é", "e")
-            .Replace("ü", "u");
-
-        // Replace spaces and special characters with hyphens
-        slug = Regex.Replace(slug, @"[^a-z0-9\-]", "-");
-
-        // Remove multiple consecutive hyphens
-        slug = Regex.Replace(slug, @"-+", "-");
-
-        // Trim hyphens from start and end
-        slug = slug.Trim('-');
-
-        return slug;
+        return SlugHelper.GenerateSlug(name);
     }
 
     /// <summary>

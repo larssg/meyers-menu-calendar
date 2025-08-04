@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using Meyers.Core.Interfaces;
 using Meyers.Core.Models;
+using Meyers.Core.Utilities;
 using static System.Net.WebUtility;
 
 namespace Meyers.Infrastructure.Services;
@@ -237,13 +238,7 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
 
     private static string ExtractMainDishFromFirstItem(string firstItem)
     {
-        var colonIndex = firstItem.IndexOf(':');
-        if (colonIndex <= 0 || colonIndex >= firstItem.Length - 1) return firstItem;
-
-        var content = firstItem.Substring(colonIndex + 1).Trim();
-        if (content.Length > 100) content = content.Substring(0, 100).Trim() + "...";
-
-        return content;
+        return StringHelper.ExtractMainDishFromFirstItem(firstItem);
     }
 
     private List<(string DayName, DateTime Date)> ExtractDatesFromWeekHeaders(HtmlDocument doc)
@@ -263,14 +258,14 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
                 var parts = headerText.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                 if (parts.Length < 4) continue;
 
-                var dayName = CapitalizeFirst(parts[0].Trim());
+                var dayName = StringHelper.CapitalizeFirst(parts[0].Trim());
                 var dayNumber = parts[1].Trim();
                 var monthName = parts[2].Trim().Replace(",", "");
                 var year = parts[3].Trim();
 
                 if (!int.TryParse(dayNumber, out var day) || !int.TryParse(year, out var yearInt)) continue;
 
-                var month = ParseDanishMonth(monthName);
+                var month = DanishDateHelper.ParseDanishMonth(monthName);
                 if (month <= 0) continue;
 
                 try
@@ -285,40 +280,9 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
             }
 
         // Only return weekdays (both weeks - up to 10 days)
-        return dateMapping.Where(d => IsWeekday(d.DayName)).ToList();
+        return dateMapping.Where(d => DanishDateHelper.IsWeekday(d.DayName)).ToList();
     }
 
-    private static int ParseDanishMonth(string monthName)
-    {
-        return monthName.ToLowerInvariant() switch
-        {
-            "jan" => 1,
-            "feb" => 2,
-            "mar" => 3,
-            "apr" => 4,
-            "maj" => 5,
-            "jun" => 6,
-            "jul" => 7,
-            "aug" => 8,
-            "sep" => 9,
-            "okt" => 10,
-            "nov" => 11,
-            "dec" => 12,
-            _ => 0
-        };
-    }
-
-    private static bool IsWeekday(string dayName)
-    {
-        string[] weekdays = ["Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag"];
-        return weekdays.Contains(dayName, StringComparer.OrdinalIgnoreCase);
-    }
-
-    private static string CapitalizeFirst(string input)
-    {
-        if (string.IsNullOrEmpty(input)) return input;
-        return char.ToUpper(input[0]) + input[1..].ToLower();
-    }
 
     [GeneratedRegex(@"\([^)]*\)\s*")]
     private static partial Regex AllergenRegex();

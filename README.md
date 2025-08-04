@@ -58,7 +58,7 @@ dotnet run --project Meyers.Web
     - `Components/`: Blazor pages and UI components
     - `Handlers/`: API endpoints for calendar feeds and previews
     - `wwwroot/`: Static assets (CSS, JavaScript)
-- **Meyers.Test/**: Comprehensive test suite with 54 tests
+- **Meyers.Test/**: Comprehensive test suite
 
 ## Development
 
@@ -67,7 +67,7 @@ dotnet run --project Meyers.Web
 cd Meyers.Web && npm install && cd ..
 dotnet run --project Meyers.Web
 
-# Run tests (54 total)
+# Run tests
 dotnet test
 
 # Database migrations

@@ -6,6 +6,7 @@ using Ical.Net.DataTypes;
 using Ical.Net.Serialization;
 using Meyers.Core.Interfaces;
 using Meyers.Core.Models;
+using Meyers.Core.Utilities;
 
 namespace Meyers.Infrastructure.Services;
 
@@ -190,28 +191,6 @@ public class CalendarService : ICalendarService
 
     private static string FormatDescription(string description)
     {
-        if (string.IsNullOrEmpty(description))
-            return description;
-
-        // Decode HTML entities first
-        var formatted = WebUtility.HtmlDecode(description);
-
-        // Add line breaks before section headers for better readability
-        // Use actual newlines - the iCal library will handle proper encoding
-        formatted = formatted.Replace(", Delikatesser:", "\n\nDelikatesser:")
-            .Replace(", Dagens salater:", "\n\nDagens salater:")
-            .Replace(", Brød:", "\n\nBrød:")
-            .Replace(" | ", "\n");
-
-        // Break up long lines by adding line breaks after sentences
-        formatted = Regex.Replace(formatted, @"(\. )([A-ZÆØÅ])", "$1\n$2");
-
-        // Clean up any multiple spaces and normalize whitespace
-        formatted = Regex.Replace(formatted, @"[ ]+", " ");
-
-        // Clean up any extra line breaks at the start
-        formatted = formatted.TrimStart('\n', ' ');
-
-        return formatted;
+        return StringHelper.FormatDescription(description);
     }
 }
