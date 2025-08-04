@@ -31,6 +31,7 @@ builder.Services.AddScoped<IMenuRepository, MenuRepository>();
 builder.Services.AddHttpClient<MenuScrapingService>();
 builder.Services.AddScoped<IMenuScrapingService, MenuScrapingService>();
 builder.Services.AddScoped<ICalendarService, CalendarService>();
+builder.Services.AddScoped<ITimeZoneService, TimeZoneService>();
 
 // Handler registration
 builder.Services.AddScoped<CalendarEndpointHandler>();

@@ -5,6 +5,7 @@
 @inject IHttpContextAccessor HttpContextAccessor
 @inject IMenuRepository MenuRepository
 @inject ICalendarService CalendarService
+@inject ITimeZoneService TimeZoneService
 
 <PageTitle>Meyers Menu Calendar</PageTitle>
 
@@ -200,25 +201,7 @@
             // Load available menu types
             menuTypes = await MenuRepository.GetMenuTypesAsync();
 
-            TimeZoneInfo copenhagenTimeZone;
-            try
-            {
-                copenhagenTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
-            }
-            catch
-            {
-                try
-                {
-                    copenhagenTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Copenhagen");
-                }
-                catch
-                {
-                    copenhagenTimeZone = TimeZoneInfo.Utc;
-                }
-            }
-
-            var copenhagenNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, copenhagenTimeZone);
-            var today = copenhagenNow.Date;
+            var today = TimeZoneService.GetCopenhagenDate();
             var tomorrow = today.AddDays(1);
 
             // Load all menu previews for the next 7 days
@@ -266,25 +249,7 @@
 @{
     if (menuTypes.Any())
     {
-        TimeZoneInfo copenhagenTimeZone;
-        try
-        {
-            copenhagenTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
-        }
-        catch
-        {
-            try
-            {
-                copenhagenTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Copenhagen");
-            }
-            catch
-            {
-                copenhagenTimeZone = TimeZoneInfo.Utc;
-            }
-        }
-
-        var copenhagenNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, copenhagenTimeZone);
-        var today = copenhagenNow.Date;
+        var today = TimeZoneService.GetCopenhagenDate();
 
         var menuData = JsonSerializer.Serialize(new
         {
