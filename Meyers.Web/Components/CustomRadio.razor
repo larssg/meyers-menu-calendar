@@ -1,0 +1,67 @@
+@*
+    CustomRadio - A cross-browser consistent radio button component
+    
+    Usage:
+    <CustomRadio name="option" value="1" checked="true" onchange="handleChange()">
+        Option 1
+    </CustomRadio>
+*@
+
+<label class="@GetLabelClasses()">
+    <input type="radio" class="@GetInputClasses()" @attributes="AdditionalAttributes" />
+    <span class="@GetTextClasses()">@ChildContent</span>
+</label>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string Class { get; set; } = "";
+    [Parameter] public RadioSize Size { get; set; } = RadioSize.Medium;
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AdditionalAttributes { get; set; }
+
+    public enum RadioSize
+    {
+        Small,
+        Medium,
+        Large
+    }
+
+    private string GetLabelClasses()
+    {
+        var baseClasses = "flex items-center cursor-pointer";
+        return $"{baseClasses} {Class}".Trim();
+    }
+
+    private string GetInputClasses()
+    {
+        var baseClasses = @"text-teal-600 bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 
+                           focus:ring-teal-500 dark:focus:ring-teal-400 focus:ring-2 
+                           transition-all duration-200 appearance-none rounded-full border-2 
+                           checked:bg-teal-600 checked:border-teal-600 dark:checked:bg-teal-500 dark:checked:border-teal-500
+                           hover:border-slate-400 dark:hover:border-slate-500
+                           relative cursor-pointer
+                           before:content-[''] before:absolute before:inset-0 before:rounded-full 
+                           before:bg-white dark:before:bg-slate-700 before:scale-0 before:transition-transform
+                           checked:before:scale-50 checked:before:bg-white";
+
+        var sizeClasses = Size switch
+        {
+            RadioSize.Small => "w-3 h-3 mr-2",
+            RadioSize.Large => "w-5 h-5 mr-4",
+            _ => "w-4 h-4 mr-3"
+        };
+
+        return $"{baseClasses} {sizeClasses}".Trim();
+    }
+
+    private string GetTextClasses()
+    {
+        var sizeClasses = Size switch
+        {
+            RadioSize.Small => "text-sm",
+            RadioSize.Large => "text-lg",
+            _ => "text-base"
+        };
+
+        return $"font-medium text-slate-900 dark:text-slate-100 {sizeClasses}".Trim();
+    }
+}
