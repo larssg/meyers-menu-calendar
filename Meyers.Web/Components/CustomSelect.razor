@@ -11,7 +11,7 @@
     </CustomSelect>
 *@
 
-<select class="@GetCssClasses()" 
+<select class="@GetCssClasses()"
         @attributes="AdditionalAttributes">
     @ChildContent
 </select>
@@ -20,8 +20,10 @@
     [Parameter] public RenderFragment? ChildContent { get; set; }
     [Parameter] public string Class { get; set; } = "";
     [Parameter] public SelectSize Size { get; set; } = SelectSize.Medium;
-    [Parameter] public bool Centered { get; set; } = false;
-    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AdditionalAttributes { get; set; }
+    [Parameter] public bool Centered { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? AdditionalAttributes { get; set; }
 
     public enum SelectSize
     {
@@ -32,14 +34,14 @@
 
     private string GetCssClasses()
     {
-        var baseClasses = @"border border-slate-300/60 dark:border-slate-600/60 rounded-lg 
-                           bg-white/80 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 
-                           focus:ring-2 focus:ring-teal-500 focus:border-teal-500 dark:focus:ring-teal-400
-                           appearance-none cursor-pointer transition-all duration-200
-                           hover:border-slate-400 dark:hover:border-slate-500
-                           bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGZpbGw9Im5vbmUiIHZpZXdCb3g9IjAgMCAyNCAyNCIgc3Ryb2tlPSIjNDc1NTY5Ij48cGF0aCBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS13aWR0aD0iMiIgZD0iTTE5IDlsLTcgNy03LTciLz48L3N2Zz4=')]
-                           dark:bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGZpbGw9Im5vbmUiIHZpZXdCb3g9IjAgMCAyNCAyNCIgc3Ryb2tlPSIjY2JkNWUxIj48cGF0aCBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS13aWR0aD0iMiIgZD0iTTE5IDlsLTcgNy03LTciLz48L3N2Zz4=')]
-                           bg-no-repeat";
+        var baseClasses = @"border border-slate-300/60 dark:border-slate-600/60 rounded-lg " +
+                          "bg-white/80 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100" +
+                          "focus:ring-2 focus:ring-teal-500 focus:border-teal-500 dark:focus:ring-teal-400 " +
+                          "appearance-none cursor-pointer transition-all duration-200 " +
+                          "hover:border-slate-400 dark:hover:border-slate-500 " +
+                          "bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGZpbGw9Im5vbmUiIHZpZXdCb3g9IjAgMCAyNCAyNCIgc3Ryb2tlPSIjNDc1NTY5Ij48cGF0aCBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS13aWR0aD0iMiIgZD0iTTE5IDlsLTcgNy03LTciLz48L3N2Zz4=')] " +
+                          "dark:bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGZpbGw9Im5vbmUiIHZpZXdCb3g9IjAgMCAyNCAyNCIgc3Ryb2tlPSIjY2JkNWUxIj48cGF0aCBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS13aWR0aD0iMiIgZD0iTTE5IDlsLTcgNy03LTciLz48L3N2Zz4=')] " +
+                          "bg-no-repeat";
 
         var sizeClasses = Size switch
         {
@@ -52,4 +54,5 @@
 
         return $"{baseClasses} {sizeClasses} {alignmentClasses} {Class}".Trim();
     }
+
 }

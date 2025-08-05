@@ -8,7 +8,7 @@
 *@
 
 <label class="@GetLabelClasses()">
-    <input type="radio" class="@GetInputClasses()" @attributes="AdditionalAttributes" />
+    <input type="radio" class="@GetInputClasses()" @attributes="AdditionalAttributes"/>
     <span class="@GetTextClasses()">@ChildContent</span>
 </label>
 
@@ -16,7 +16,9 @@
     [Parameter] public RenderFragment? ChildContent { get; set; }
     [Parameter] public string Class { get; set; } = "";
     [Parameter] public RadioSize Size { get; set; } = RadioSize.Medium;
-    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AdditionalAttributes { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? AdditionalAttributes { get; set; }
 
     public enum RadioSize
     {
@@ -33,15 +35,15 @@
 
     private string GetInputClasses()
     {
-        var baseClasses = @"text-teal-600 bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 
-                           focus:ring-teal-500 dark:focus:ring-teal-400 focus:ring-2 
-                           transition-all duration-200 appearance-none rounded-full border-2 
-                           checked:bg-teal-600 checked:border-teal-600 dark:checked:bg-teal-500 dark:checked:border-teal-500
-                           hover:border-slate-400 dark:hover:border-slate-500
-                           relative cursor-pointer
-                           before:content-[''] before:absolute before:inset-0 before:rounded-full 
-                           before:bg-white dark:before:bg-slate-700 before:scale-0 before:transition-transform
-                           checked:before:scale-50 checked:before:bg-white";
+        var baseClasses = @"text-teal-600 bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 " +
+                          "focus:ring-teal-500 dark:focus:ring-teal-400 focus:ring-2 " +
+                          "transition-all duration-200 appearance-none rounded-full border-2 " +
+                          "checked:bg-teal-600 checked:border-teal-600 dark:checked:bg-teal-500 dark:checked:border-teal-500 " +
+                          "hover:border-slate-400 dark:hover:border-slate-500 " +
+                          "relative cursor-pointer " +
+                          "before:content-[''] before:absolute before:inset-0 before:rounded-full " +
+                          "before:bg-white dark:before:bg-slate-700 before:scale-0 before:transition-transform " +
+                          "checked:before:scale-50 checked:before:bg-white";
 
         var sizeClasses = Size switch
         {
@@ -64,4 +66,5 @@
 
         return $"font-medium text-slate-900 dark:text-slate-100 {sizeClasses}".Trim();
     }
+
 }

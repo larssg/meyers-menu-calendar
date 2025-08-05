@@ -184,17 +184,17 @@ public class MenuRepository(MenuDbContext context) : IMenuRepository
 
     public async Task<DateTime?> GetFirstMenuDateAsync()
     {
-        return await context.MenuEntries
+        var entry = await context.MenuEntries
             .OrderBy(m => m.Date)
-            .Select(m => m.Date)
             .FirstOrDefaultAsync();
+        return entry?.Date;
     }
 
     public async Task<DateTime?> GetLastMenuDateAsync()
     {
-        return await context.MenuEntries
+        var entry = await context.MenuEntries
             .OrderByDescending(m => m.Date)
-            .Select(m => m.Date)
             .FirstOrDefaultAsync();
+        return entry?.Date;
     }
 }

@@ -8,7 +8,7 @@
 *@
 
 <label class="@GetLabelClasses()">
-    <input type="checkbox" class="@GetInputClasses()" @attributes="AdditionalAttributes" />
+    <input type="checkbox" class="@GetInputClasses()" @attributes="AdditionalAttributes"/>
     <span class="@GetTextClasses()">@ChildContent</span>
 </label>
 
@@ -16,7 +16,9 @@
     [Parameter] public RenderFragment? ChildContent { get; set; }
     [Parameter] public string Class { get; set; } = "";
     [Parameter] public CheckboxSize Size { get; set; } = CheckboxSize.Medium;
-    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AdditionalAttributes { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? AdditionalAttributes { get; set; }
 
     public enum CheckboxSize
     {
@@ -33,14 +35,14 @@
 
     private string GetInputClasses()
     {
-        var baseClasses = @"text-teal-600 bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 
-                           focus:ring-teal-500 dark:focus:ring-teal-400 focus:ring-2 
-                           transition-all duration-200 appearance-none rounded border-2 
-                           checked:bg-teal-600 checked:border-teal-600 dark:checked:bg-teal-500 dark:checked:border-teal-500
-                           hover:border-slate-400 dark:hover:border-slate-500
-                           relative cursor-pointer
-                           checked:bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDVMNi41IDEwLjUgNCA4IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4K')]
-                           bg-no-repeat bg-center";
+        var baseClasses = @"text-teal-600 bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 " +
+                          "focus:ring-teal-500 dark:focus:ring-teal-400 focus:ring-2 " +
+                          "transition-all duration-200 appearance-none rounded border-2 " +
+                          "checked:bg-teal-600 checked:border-teal-600 dark:checked:bg-teal-500 dark:checked:border-teal-500 " +
+                          "hover:border-slate-400 dark:hover:border-slate-500 " +
+                          "relative cursor-pointer " +
+                          "checked:bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDVMNi41IDEwLjUgNCA4IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4K')] " +
+                          "bg-no-repeat bg-center";
 
         var sizeClasses = Size switch
         {
@@ -63,4 +65,5 @@
 
         return $"font-medium text-slate-900 dark:text-slate-100 {sizeClasses}".Trim();
     }
+
 }
