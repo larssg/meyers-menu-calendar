@@ -57,7 +57,17 @@
                     <span class="text-2xl mr-3">📊</span>
                     <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Total Menu Entries</h3>
                 </div>
-                <p class="text-3xl font-bold text-teal-600">@totalEntries</p>
+                @if (totalEntriesLoading)
+                {
+                    <div class="flex items-center">
+                        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-600 mr-2"></div>
+                        <p class="text-lg text-slate-500 dark:text-slate-400">Loading...</p>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-3xl font-bold text-teal-600">@totalEntries</p>
+                }
             </div>
 
             <div class="card p-6">
@@ -162,6 +172,7 @@
     private bool componentInitialized;
 
     private int totalEntries;
+    private bool totalEntriesLoading = true;
     private int activeMenuTypes;
     private DateTime? lastUpdate;
     private string lastUpdateDisplay = "Never";
@@ -254,10 +265,8 @@
             var startDate = thisWeekStart.AddDays(-7); // Include last week for context
             var endDate = nextWeekEnd;
 
-            // Get basic stats
+            // Get basic stats - load efficiently
             var allEntries = await MenuRepository.GetMenusForDateRangeAsync(startDate, endDate);
-            totalEntries = allEntries.Count;
-
             var menuTypes = await MenuRepository.GetMenuTypesAsync();
             activeMenuTypes = menuTypes.Count;
 
@@ -279,10 +288,29 @@
                 };
                 menuHealth.Add(health);
             }
+
+            // Load total entries count separately and asynchronously for better performance
+            _ = LoadTotalEntriesCount();
         }
         catch (Exception ex)
         {
             actionResult = $"Error loading dashboard data: {ex.Message}";
+        }
+    }
+
+    private async Task LoadTotalEntriesCount()
+    {
+        try
+        {
+            totalEntries = await MenuRepository.GetTotalMenuEntriesCountAsync();
+            totalEntriesLoading = false;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            actionResult = $"Error loading total entries count: {ex.Message}";
+            totalEntriesLoading = false;
+            StateHasChanged();
         }
     }
 

@@ -176,4 +176,9 @@ public class MenuRepository(MenuDbContext context) : IMenuRepository
 
         return result;
     }
+
+    public async Task<int> GetTotalMenuEntriesCountAsync()
+    {
+        return await context.MenuEntries.CountAsync();
+    }
 }

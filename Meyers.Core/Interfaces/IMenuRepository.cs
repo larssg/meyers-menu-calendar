@@ -17,4 +17,5 @@ public interface IMenuRepository
 
     Task<Dictionary<int, (MenuEntry? today, MenuEntry? tomorrow)>> GetAllMenuPreviewsAsync(DateTime today,
         DateTime tomorrow);
+    Task<int> GetTotalMenuEntriesCountAsync();
 }
