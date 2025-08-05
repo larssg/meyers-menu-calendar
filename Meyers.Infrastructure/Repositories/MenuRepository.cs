@@ -181,4 +181,20 @@ public class MenuRepository(MenuDbContext context) : IMenuRepository
     {
         return await context.MenuEntries.CountAsync();
     }
+
+    public async Task<DateTime?> GetFirstMenuDateAsync()
+    {
+        return await context.MenuEntries
+            .OrderBy(m => m.Date)
+            .Select(m => m.Date)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<DateTime?> GetLastMenuDateAsync()
+    {
+        return await context.MenuEntries
+            .OrderByDescending(m => m.Date)
+            .Select(m => m.Date)
+            .FirstOrDefaultAsync();
+    }
 }

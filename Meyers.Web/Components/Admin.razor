@@ -51,7 +51,7 @@
     else
     {
         <!-- System Status -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <div class="card p-6">
                 <div class="flex items-center mb-2">
                     <span class="text-2xl mr-3">📊</span>
@@ -84,6 +84,34 @@
                     <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Active Menu Types</h3>
                 </div>
                 <p class="text-3xl font-bold text-teal-600">@activeMenuTypes</p>
+            </div>
+
+            <div class="card p-6">
+                <div class="flex items-center mb-2">
+                    <span class="text-2xl mr-3">📅</span>
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Date Range</h3>
+                </div>
+                @if (dateRangeLoading)
+                {
+                    <div class="flex items-center">
+                        <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-teal-600 mr-2"></div>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Loading...</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-sm text-slate-600 dark:text-slate-300">
+                        @if (firstMenuDate.HasValue && lastMenuDate.HasValue)
+                        {
+                            <p><strong>First:</strong> @firstMenuDate.Value.ToString("MMM d, yyyy")</p>
+                            <p><strong>Last:</strong> @lastMenuDate.Value.ToString("MMM d, yyyy")</p>
+                        }
+                        else
+                        {
+                            <p class="text-slate-400">No menu data</p>
+                        }
+                    </div>
+                }
             </div>
         </div>
 
@@ -176,6 +204,9 @@
     private int activeMenuTypes;
     private DateTime? lastUpdate;
     private string lastUpdateDisplay = "Never";
+    private DateTime? firstMenuDate;
+    private DateTime? lastMenuDate;
+    private bool dateRangeLoading = true;
     private readonly List<MenuTypeHealth> menuHealth = new();
 
     private bool isRefreshing;
@@ -289,8 +320,9 @@
                 menuHealth.Add(health);
             }
 
-            // Load total entries count separately and asynchronously for better performance
+            // Load total entries count and date range separately and asynchronously for better performance
             _ = LoadTotalEntriesCount();
+            _ = LoadDateRange();
         }
         catch (Exception ex)
         {
@@ -310,6 +342,23 @@
         {
             actionResult = $"Error loading total entries count: {ex.Message}";
             totalEntriesLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadDateRange()
+    {
+        try
+        {
+            firstMenuDate = await MenuRepository.GetFirstMenuDateAsync();
+            lastMenuDate = await MenuRepository.GetLastMenuDateAsync();
+            dateRangeLoading = false;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            actionResult = $"Error loading date range: {ex.Message}";
+            dateRangeLoading = false;
             StateHasChanged();
         }
     }
