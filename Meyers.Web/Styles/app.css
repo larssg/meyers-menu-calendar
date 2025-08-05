@@ -104,6 +104,32 @@
     overflow: hidden;
 }
 
+/* Custom select dropdown arrow - cross-browser compatible */
+.custom-select-arrow {
+    background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGZpbGw9Im5vbmUiIHZpZXdCb3g9IjAgMCAyNCAyNCIgc3Ryb2tlPSIjNDc1NTY5Ij48cGF0aCBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS13aWR0aD0iMiIgZD0iTTE5IDlsLTcgNy03LTciLz48L3N2Zz4=");
+}
+
+@media (prefers-color-scheme: dark) {
+    .custom-select-arrow {
+        background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGZpbGw9Im5vbmUiIHZpZXdCb3g9IjAgMCAyNCAyNCIgc3Ryb2tlPSIjY2JkNWUxIj48cGF0aCBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS13aWR0aD0iMiIgZD0iTTE5IDlsLTcgNy03LTciLz48L3N2Zz4=");
+    }
+}
+
+.custom-select-small {
+    background-size: 14px;
+    background-position: right 8px center;
+}
+
+.custom-select-medium {
+    background-size: 14px;
+    background-position: right 8px center;
+}
+
+.custom-select-large {
+    background-size: 16px;
+    background-position: right 12px center;
+}
+
 /* Blazor error UI */
 #blazor-error-ui {
     background: lightyellow;
