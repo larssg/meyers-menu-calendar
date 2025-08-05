@@ -28,13 +28,4 @@ public class MenuType
     {
         return SlugHelper.GenerateSlug(name);
     }
-
-    /// <summary>
-    ///     Sets the slug based on the name when creating or updating
-    /// </summary>
-    public void UpdateSlug()
-    {
-        Slug = GenerateSlug(Name);
-        UpdatedAt = DateTime.UtcNow;
-    }
 }
