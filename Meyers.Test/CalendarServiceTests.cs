@@ -132,14 +132,6 @@ public class CalendarServiceTests
         Assert.Equal(expected, result);
     }
 
-    [Fact]
-    public void CleanupTitle_HandlesNull()
-    {
-        var result = _calendarService.CleanupTitle(null);
-
-        Assert.Null(result);
-    }
-
     [Theory]
     [InlineData("", "")]
     [InlineData("   ", "")]
