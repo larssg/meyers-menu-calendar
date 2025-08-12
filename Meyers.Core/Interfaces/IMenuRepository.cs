@@ -17,10 +17,11 @@ public interface IMenuRepository
 
     Task<Dictionary<int, (MenuEntry? today, MenuEntry? tomorrow)>> GetAllMenuPreviewsAsync(DateTime today,
         DateTime tomorrow);
+
     Task<int> GetTotalMenuEntriesCountAsync();
     Task<DateTime?> GetFirstMenuDateAsync();
     Task<DateTime?> GetLastMenuDateAsync();
-    
+
     Task LogScrapingOperationAsync(ScrapingLog scrapingLog);
     Task<List<ScrapingLog>> GetRecentScrapingLogsAsync(int count = 50);
 }

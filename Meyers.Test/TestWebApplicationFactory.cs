@@ -45,7 +45,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IDispos
 
             // Remove background service to prevent it from running during tests
             services.RemoveAll<IHostedService>();
-            
+
             // Replace MenuScrapingService with test version
             services.RemoveAll<MenuScrapingService>();
             services.RemoveAll<HttpClient>();

@@ -17,7 +17,7 @@ class MenuUrlCodec {
         4: 'R', // Thursday
         5: 'F'  // Friday
     };
-    
+
     static CHAR_TO_DAY = {
         'M': 1, // Monday
         'T': 2, // Tuesday
@@ -25,9 +25,9 @@ class MenuUrlCodec {
         'R': 4, // Thursday
         'F': 5  // Friday
     };
-    
+
     static DEFAULT_MENU_SLUG = 'det-velkendte';
-    
+
     static parseUrl() {
         const params = new URLSearchParams(window.location.search);
         return {
@@ -37,10 +37,10 @@ class MenuUrlCodec {
             alarm: params.get('alarm') === 'true'
         };
     }
-    
+
     static buildUrl(state) {
         const params = new URLSearchParams();
-        
+
         if (state.mode === 'simple') {
             // Only add menu parameter if not default
             if (state.menuSlug && state.menuSlug !== this.DEFAULT_MENU_SLUG) {
@@ -52,53 +52,53 @@ class MenuUrlCodec {
                 params.set('config', state.config);
             }
         }
-        
+
         if (state.alarm) {
             params.set('alarm', 'true');
         }
-        
+
         const paramString = params.toString();
         return paramString ? `${window.location.pathname}?${paramString}` : window.location.pathname;
     }
-    
+
     static encodeCustomConfig(dayMenuMap) {
         const config = [];
-        
+
         Object.entries(dayMenuMap).forEach(([dayOfWeek, menuTypeId]) => {
             const dayChar = this.DAY_CHARS[parseInt(dayOfWeek)];
             if (dayChar && menuTypeId) {
                 config.push(dayChar + menuTypeId);
             }
         });
-        
+
         return config.join('');
     }
-    
+
     static decodeCustomConfig(configString) {
         const dayMenuMap = {};
-        
+
         if (!configString) return dayMenuMap;
-        
+
         const matches = configString.match(/([MTWRF])(\d+)/g);
         if (matches) {
             matches.forEach(match => {
                 const dayChar = match[0];
                 const menuTypeId = match.substring(1);
                 const dayOfWeek = this.CHAR_TO_DAY[dayChar];
-                
+
                 if (dayOfWeek) {
                     dayMenuMap[dayOfWeek] = menuTypeId;
                 }
             });
         }
-        
+
         return dayMenuMap;
     }
-    
+
     static getDayChar(dayOfWeek) {
         return this.DAY_CHARS[dayOfWeek] || null;
     }
-    
+
     static getDayOfWeek(dayChar) {
         return this.CHAR_TO_DAY[dayChar] || null;
     }
@@ -136,12 +136,12 @@ function formatDate(dateStr) {
 // URL Parameter handling
 function updateUrlParameters() {
     if (isInitializing) return; // Don't update URL during initialization
-    
+
     const state = {
         mode: currentMenuMode,
         alarm: false
     };
-    
+
     if (currentMenuMode === 'simple') {
         const simpleSelect = $('simpleMenuSelect');
         if (simpleSelect && simpleSelect.value) {
@@ -152,25 +152,25 @@ function updateUrlParameters() {
         // Custom mode
         const daySelects = document.querySelectorAll('.custom-day-select');
         const dayMenuMap = {};
-        
+
         daySelects.forEach(select => {
             const dayOfWeek = parseInt(select.getAttribute('data-day'));
             const menuTypeId = select.value;
-            
+
             if (menuTypeId && menuTypeId !== '') {
                 dayMenuMap[dayOfWeek] = menuTypeId;
             }
         });
-        
+
         state.config = MenuUrlCodec.encodeCustomConfig(dayMenuMap);
     }
-    
+
     // Add alarm parameter if checkbox is checked
     const alarmCheckbox = $('alarmCheckbox');
     if (alarmCheckbox && alarmCheckbox.checked) {
         state.alarm = true;
     }
-    
+
     // Update URL without reloading the page
     const newUrl = MenuUrlCodec.buildUrl(state);
     window.history.replaceState({}, '', newUrl);
@@ -178,10 +178,10 @@ function updateUrlParameters() {
 
 function loadFromUrlParameters() {
     if (!menuData) return;
-    
+
     isInitializing = true;
     const params = MenuUrlCodec.parseUrl();
-    
+
     // Set mode
     if (params.mode === 'custom') {
         currentMenuMode = 'custom';
@@ -196,10 +196,10 @@ function loadFromUrlParameters() {
             simpleRadio.checked = true;
         }
     }
-    
+
     // Update mode visibility
     toggleMenuMode();
-    
+
     // Set selections based on mode
     if (currentMenuMode === 'simple' && params.menu) {
         const simpleSelect = $('simpleMenuSelect');
@@ -216,7 +216,7 @@ function loadFromUrlParameters() {
     } else if (currentMenuMode === 'custom' && params.config) {
         // Parse config string like "M1T1W1R2F1"
         const dayMenuMap = MenuUrlCodec.decodeCustomConfig(params.config);
-        
+
         Object.entries(dayMenuMap).forEach(([dayOfWeek, menuTypeId]) => {
             const daySelect = document.querySelector(`select[data-day="${dayOfWeek}"]`);
             if (daySelect) {
@@ -224,13 +224,13 @@ function loadFromUrlParameters() {
             }
         });
     }
-    
+
     // Set alarm checkbox
     const alarmCheckbox = $('alarmCheckbox');
     if (alarmCheckbox) {
         alarmCheckbox.checked = params.alarm;
     }
-    
+
     isInitializing = false;
 }
 
@@ -419,7 +419,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Load URL parameters first, then initialize
     loadFromUrlParameters();
-    
+
     // Initialize interface
     updateCalendarUrl();
 

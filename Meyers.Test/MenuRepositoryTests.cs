@@ -1,3 +1,4 @@
+using System.Globalization;
 using Meyers.Core.Models;
 using Meyers.Infrastructure.Data;
 using Meyers.Infrastructure.Repositories;
@@ -40,7 +41,7 @@ public class MenuRepositoryTests
         var entry = new MenuEntry
         {
             Date = date,
-            DayName = date.ToString("dddd", new System.Globalization.CultureInfo("da-DK")),
+            DayName = date.ToString("dddd", new CultureInfo("da-DK")),
             MenuItems = "Test dish; Test side",
             MainDish = "Test main dish",
             Details = "Test details",
@@ -77,10 +78,7 @@ public class MenuRepositoryTests
         var menuType = await CreateTestMenuType(context);
 
         // Create 5 test entries
-        for (int i = 0; i < 5; i++)
-        {
-            await CreateTestMenuEntry(context, menuType, DateTime.Today.AddDays(i));
-        }
+        for (var i = 0; i < 5; i++) await CreateTestMenuEntry(context, menuType, DateTime.Today.AddDays(i));
 
         // Act
         var count = await repository.GetTotalMenuEntriesCountAsync();
@@ -111,7 +109,7 @@ public class MenuRepositoryTests
         var repository = new MenuRepository(context);
         var menuType = await CreateTestMenuType(context);
         var testDate = new DateTime(2024, 1, 15);
-        
+
         await CreateTestMenuEntry(context, menuType, testDate);
 
         // Act
@@ -129,7 +127,7 @@ public class MenuRepositoryTests
         using var context = CreateInMemoryContext();
         var repository = new MenuRepository(context);
         var menuType = await CreateTestMenuType(context);
-        
+
         var dates = new[]
         {
             new DateTime(2024, 3, 15),
@@ -138,10 +136,7 @@ public class MenuRepositoryTests
             new DateTime(2024, 4, 5)
         };
 
-        foreach (var date in dates)
-        {
-            await CreateTestMenuEntry(context, menuType, date);
-        }
+        foreach (var date in dates) await CreateTestMenuEntry(context, menuType, date);
 
         // Act
         var firstDate = await repository.GetFirstMenuDateAsync();
@@ -173,7 +168,7 @@ public class MenuRepositoryTests
         var repository = new MenuRepository(context);
         var menuType = await CreateTestMenuType(context);
         var testDate = new DateTime(2024, 6, 20);
-        
+
         await CreateTestMenuEntry(context, menuType, testDate);
 
         // Act
@@ -191,7 +186,7 @@ public class MenuRepositoryTests
         using var context = CreateInMemoryContext();
         var repository = new MenuRepository(context);
         var menuType = await CreateTestMenuType(context);
-        
+
         var dates = new[]
         {
             new DateTime(2024, 3, 15),
@@ -200,10 +195,7 @@ public class MenuRepositoryTests
             new DateTime(2024, 4, 5) // This should be the latest
         };
 
-        foreach (var date in dates)
-        {
-            await CreateTestMenuEntry(context, menuType, date);
-        }
+        foreach (var date in dates) await CreateTestMenuEntry(context, menuType, date);
 
         // Act
         var lastDate = await repository.GetLastMenuDateAsync();
@@ -219,14 +211,14 @@ public class MenuRepositoryTests
         // Arrange
         using var context = CreateInMemoryContext();
         var repository = new MenuRepository(context);
-        
+
         var menuType1 = await CreateTestMenuType(context, "Menu Type 1");
         var menuType2 = await CreateTestMenuType(context, "Menu Type 2");
-        
+
         // Add entries for menu type 1
         await CreateTestMenuEntry(context, menuType1, new DateTime(2024, 2, 15));
         await CreateTestMenuEntry(context, menuType1, new DateTime(2024, 3, 20));
-        
+
         // Add entries for menu type 2 with wider date range
         await CreateTestMenuEntry(context, menuType2, new DateTime(2024, 1, 5)); // Earliest overall
         await CreateTestMenuEntry(context, menuType2, new DateTime(2024, 5, 10)); // Latest overall
@@ -251,7 +243,7 @@ public class MenuRepositoryTests
         var menuType1 = await CreateTestMenuType(context, "Menu Type 1");
         var menuType2 = await CreateTestMenuType(context, "Menu Type 2");
         var testDate = new DateTime(2024, 3, 15);
-        
+
         // Create multiple entries for the same date but different menu types
         await CreateTestMenuEntry(context, menuType1, testDate);
         await CreateTestMenuEntry(context, menuType2, testDate);
@@ -274,7 +266,7 @@ public class MenuRepositoryTests
         using var context = CreateInMemoryContext();
         var repository = new MenuRepository(context);
         var menuType = await CreateTestMenuType(context);
-        
+
         // Create entries with different time components but same date
         var baseDate = new DateTime(2024, 3, 15);
         var entry1 = new MenuEntry
@@ -288,7 +280,7 @@ public class MenuRepositoryTests
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
-        
+
         var entry2 = new MenuEntry
         {
             Date = baseDate.AddHours(14), // 2 PM

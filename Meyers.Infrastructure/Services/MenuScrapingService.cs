@@ -120,6 +120,7 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
                 {
                     // Ignore logging errors
                 }
+
                 return menuDays;
             }
 
@@ -138,6 +139,7 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
                 {
                     // Ignore logging errors
                 }
+
                 return menuDays;
             }
 
@@ -238,7 +240,7 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
             scrapingLog.ParsingSuccessful = true;
             scrapingLog.NewMenuItemsCount = menuDays.Count;
             scrapingLog.Duration = DateTime.UtcNow - startTime;
-            
+
             try
             {
                 await menuRepository.LogScrapingOperationAsync(scrapingLog);
@@ -262,6 +264,7 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
             {
                 // Ignore logging errors
             }
+
             throw;
         }
     }

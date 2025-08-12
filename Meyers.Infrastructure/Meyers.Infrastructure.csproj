@@ -7,7 +7,7 @@
     <ItemGroup>
         <PackageReference Include="HtmlAgilityPack" Version="1.12.2"/>
         <PackageReference Include="Ical.Net" Version="5.1.0"/>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.8" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.8"/>
         <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.7"/>
     </ItemGroup>
 
