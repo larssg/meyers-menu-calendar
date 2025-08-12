@@ -7,6 +7,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 
 namespace Meyers.Test;
 
@@ -42,6 +43,9 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IDispos
             // Ensure HttpContextAccessor is registered for Blazor SSR
             services.AddHttpContextAccessor();
 
+            // Remove background service to prevent it from running during tests
+            services.RemoveAll<IHostedService>();
+            
             // Replace MenuScrapingService with test version
             services.RemoveAll<MenuScrapingService>();
             services.RemoveAll<HttpClient>();

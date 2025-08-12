@@ -20,4 +20,7 @@ public interface IMenuRepository
     Task<int> GetTotalMenuEntriesCountAsync();
     Task<DateTime?> GetFirstMenuDateAsync();
     Task<DateTime?> GetLastMenuDateAsync();
+    
+    Task LogScrapingOperationAsync(ScrapingLog scrapingLog);
+    Task<List<ScrapingLog>> GetRecentScrapingLogsAsync(int count = 50);
 }

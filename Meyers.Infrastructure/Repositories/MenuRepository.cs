@@ -197,4 +197,18 @@ public class MenuRepository(MenuDbContext context) : IMenuRepository
             .FirstOrDefaultAsync();
         return entry?.Date;
     }
+
+    public async Task LogScrapingOperationAsync(ScrapingLog scrapingLog)
+    {
+        await context.ScrapingLogs.AddAsync(scrapingLog);
+        await context.SaveChangesAsync();
+    }
+
+    public async Task<List<ScrapingLog>> GetRecentScrapingLogsAsync(int count = 50)
+    {
+        return await context.ScrapingLogs
+            .OrderByDescending(sl => sl.Timestamp)
+            .Take(count)
+            .ToListAsync();
+    }
 }

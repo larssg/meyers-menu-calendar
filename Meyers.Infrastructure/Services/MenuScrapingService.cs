@@ -14,6 +14,11 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
 
     public async Task<List<MenuDay>> ScrapeMenuAsync(bool forceRefresh = false)
     {
+        return await ScrapeMenuAsync(forceRefresh, "API");
+    }
+
+    public async Task<List<MenuDay>> ScrapeMenuAsync(bool forceRefresh, string source)
+    {
         // Check if we need to refresh the cache
         var lastUpdate = await menuRepository.GetLastUpdateTimeAsync();
         var shouldRefresh = forceRefresh || lastUpdate == null ||
@@ -27,7 +32,7 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
         }
 
         // Scrape fresh data from the website
-        var freshMenus = await ScrapeFromWebsiteAsync();
+        var freshMenus = await ScrapeFromWebsiteAsync(source);
 
         // Save to cache
         if (freshMenus.Count != 0) await SaveMenusToCache(freshMenus);
@@ -78,118 +83,187 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
         await menuRepository.SaveMenusAsync(menuEntries);
     }
 
-    private async Task<List<MenuDay>> ScrapeFromWebsiteAsync()
+    private async Task<List<MenuDay>> ScrapeFromWebsiteAsync(string source = "API")
     {
-        var html = await httpClient.GetStringAsync(Url);
-
-        var doc = new HtmlDocument();
-        doc.LoadHtml(html);
-
-        var menuDays = new List<MenuDay>();
-
-        // First, extract the dates from the week menu headers
-        var dateMapping = ExtractDatesFromWeekHeaders(doc);
-        if (dateMapping.Count == 0) return menuDays;
-
-        // Discover all available menu types from data-tab-content attributes
-        var allTabContentNodes = doc.DocumentNode.SelectNodes("//div[@data-tab-content]");
-        if (allTabContentNodes == null) return menuDays;
-
-        // Get unique menu types and decode HTML entities
-        var menuTypes = allTabContentNodes
-            .Select(node => node.GetAttributeValue("data-tab-content", ""))
-            .Where(content => !string.IsNullOrEmpty(content))
-            .Select(content => HtmlDecode(content)) // Decode HTML entities like "Den Gr&#248;nne" -> "Den Grønne"
-            .Distinct()
-            .ToList();
-
-        // Process each menu type
-        foreach (var menuType in menuTypes)
+        var startTime = DateTime.UtcNow;
+        var scrapingLog = new ScrapingLog
         {
-            // We need to search for both the decoded and original encoded versions
-            // since the HTML might have the encoded version in attributes
-            var encodedMenuType = HtmlEncode(menuType);
-            var tabNodes =
-                doc.DocumentNode.SelectNodes(
-                    $"//div[@data-tab-content='{menuType}' or @data-tab-content='{encodedMenuType}']");
-            if (tabNodes == null) continue;
+            Timestamp = startTime,
+            Source = source,
+            RequestSuccessful = false,
+            ParsingSuccessful = false,
+            NewMenuItemsCount = 0
+        };
 
-            var dayIndex = 0;
+        try
+        {
+            var html = await httpClient.GetStringAsync(Url);
+            scrapingLog.RequestSuccessful = true;
 
-            foreach (var tabNode in tabNodes)
+            var doc = new HtmlDocument();
+            doc.LoadHtml(html);
+
+            var menuDays = new List<MenuDay>();
+
+            // First, extract the dates from the week menu headers
+            var dateMapping = ExtractDatesFromWeekHeaders(doc);
+            if (dateMapping.Count == 0)
             {
-                // Only process weekdays and if we have date mapping
-                if (dayIndex >= dateMapping.Count) break;
-
-                var dayInfo = dateMapping[dayIndex];
-
-                // Look for menu recipe displays within this tab
-                var menuRecipes = tabNode.SelectNodes(".//div[contains(@class, 'menu-recipe-display')]");
-                if (menuRecipes != null)
+                scrapingLog.ParsingSuccessful = false;
+                scrapingLog.ErrorMessage = "No date mapping found in HTML";
+                scrapingLog.Duration = DateTime.UtcNow - startTime;
+                try
                 {
-                    var dayMenuItems = new List<string>();
-                    var mainDishContent = "";
-                    var detailsContent = "";
+                    await menuRepository.LogScrapingOperationAsync(scrapingLog);
+                }
+                catch
+                {
+                    // Ignore logging errors
+                }
+                return menuDays;
+            }
 
-                    foreach (var recipe in menuRecipes)
+            // Discover all available menu types from data-tab-content attributes
+            var allTabContentNodes = doc.DocumentNode.SelectNodes("//div[@data-tab-content]");
+            if (allTabContentNodes == null)
+            {
+                scrapingLog.ParsingSuccessful = false;
+                scrapingLog.ErrorMessage = "No tab content nodes found in HTML";
+                scrapingLog.Duration = DateTime.UtcNow - startTime;
+                try
+                {
+                    await menuRepository.LogScrapingOperationAsync(scrapingLog);
+                }
+                catch
+                {
+                    // Ignore logging errors
+                }
+                return menuDays;
+            }
+
+            // Get unique menu types and decode HTML entities
+            var menuTypes = allTabContentNodes
+                .Select(node => node.GetAttributeValue("data-tab-content", ""))
+                .Where(content => !string.IsNullOrEmpty(content))
+                .Select(content => HtmlDecode(content)) // Decode HTML entities like "Den Gr&#248;nne" -> "Den Grønne"
+                .Distinct()
+                .ToList();
+
+            // Process each menu type
+            foreach (var menuType in menuTypes)
+            {
+                // We need to search for both the decoded and original encoded versions
+                // since the HTML might have the encoded version in attributes
+                var encodedMenuType = HtmlEncode(menuType);
+                var tabNodes =
+                    doc.DocumentNode.SelectNodes(
+                        $"//div[@data-tab-content='{menuType}' or @data-tab-content='{encodedMenuType}']");
+                if (tabNodes == null) continue;
+
+                var dayIndex = 0;
+
+                foreach (var tabNode in tabNodes)
+                {
+                    // Only process weekdays and if we have date mapping
+                    if (dayIndex >= dateMapping.Count) break;
+
+                    var dayInfo = dateMapping[dayIndex];
+
+                    // Look for menu recipe displays within this tab
+                    var menuRecipes = tabNode.SelectNodes(".//div[contains(@class, 'menu-recipe-display')]");
+                    if (menuRecipes != null)
                     {
-                        var titleNode =
-                            recipe.SelectSingleNode(".//h4[contains(@class, 'menu-recipe-display__title')]");
-                        var title = titleNode?.InnerText?.Trim();
+                        var dayMenuItems = new List<string>();
+                        var mainDishContent = "";
+                        var detailsContent = "";
 
-                        // Normalize whitespace in title (remove newlines and multiple spaces)
-                        if (!string.IsNullOrEmpty(title)) title = Regex.Replace(title, @"\s+", " ").Trim();
-                        var descriptionNode =
-                            recipe.SelectSingleNode(".//p[contains(@class, 'menu-recipe-display__description')]");
-
-                        if (!string.IsNullOrEmpty(title))
+                        foreach (var recipe in menuRecipes)
                         {
-                            // Get the plain text content and clean it up
-                            var plainText = HtmlDecode(descriptionNode?.InnerText?.Trim() ?? "");
-                            plainText = Regex.Replace(plainText, @"\s+", " ").Trim();
+                            var titleNode =
+                                recipe.SelectSingleNode(".//h4[contains(@class, 'menu-recipe-display__title')]");
+                            var title = titleNode?.InnerText?.Trim();
 
-                            if (!string.IsNullOrEmpty(plainText))
+                            // Normalize whitespace in title (remove newlines and multiple spaces)
+                            if (!string.IsNullOrEmpty(title)) title = Regex.Replace(title, @"\s+", " ").Trim();
+                            var descriptionNode =
+                                recipe.SelectSingleNode(".//p[contains(@class, 'menu-recipe-display__description')]");
+
+                            if (!string.IsNullOrEmpty(title))
                             {
-                                // For backward compatibility, also add to MenuItems
-                                var fullDescription = HtmlDecode(descriptionNode?.InnerText?.Trim() ?? "");
-                                fullDescription = Regex
-                                    .Replace(fullDescription, @"\s+", " ").Trim();
-                                dayMenuItems.Add($"{title}: {fullDescription}");
+                                // Get the plain text content and clean it up
+                                var plainText = HtmlDecode(descriptionNode?.InnerText?.Trim() ?? "");
+                                plainText = Regex.Replace(plainText, @"\s+", " ").Trim();
 
-                                // Only extract main dish from "Varm ret med tilbehør" section
-                                if (title.Contains("Varm ret med tilbehør", StringComparison.OrdinalIgnoreCase))
+                                if (!string.IsNullOrEmpty(plainText))
                                 {
-                                    var (mainDish, details) = ExtractMainDishAndDetails(plainText);
-                                    mainDishContent = mainDish;
-                                    detailsContent = details;
+                                    // For backward compatibility, also add to MenuItems
+                                    var fullDescription = HtmlDecode(descriptionNode?.InnerText?.Trim() ?? "");
+                                    fullDescription = Regex
+                                        .Replace(fullDescription, @"\s+", " ").Trim();
+                                    dayMenuItems.Add($"{title}: {fullDescription}");
+
+                                    // Only extract main dish from "Varm ret med tilbehør" section
+                                    if (title.Contains("Varm ret med tilbehør", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        var (mainDish, details) = ExtractMainDishAndDetails(plainText);
+                                        mainDishContent = mainDish;
+                                        detailsContent = details;
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    if (dayMenuItems.Any())
-                    {
-                        // If we didn't find a main dish in "Varm ret med tilbehør", use the first menu item
-                        if (string.IsNullOrEmpty(mainDishContent) && dayMenuItems.Count > 0)
-                            mainDishContent = ExtractMainDishFromFirstItem(dayMenuItems[0]);
-
-                        menuDays.Add(new MenuDay
+                        if (dayMenuItems.Any())
                         {
-                            DayName = dayInfo.DayName,
-                            Date = dayInfo.Date,
-                            MenuItems = dayMenuItems,
-                            MainDish = mainDishContent,
-                            Details = detailsContent,
-                            MenuType = menuType
-                        });
+                            // If we didn't find a main dish in "Varm ret med tilbehør", use the first menu item
+                            if (string.IsNullOrEmpty(mainDishContent) && dayMenuItems.Count > 0)
+                                mainDishContent = ExtractMainDishFromFirstItem(dayMenuItems[0]);
+
+                            menuDays.Add(new MenuDay
+                            {
+                                DayName = dayInfo.DayName,
+                                Date = dayInfo.Date,
+                                MenuItems = dayMenuItems,
+                                MainDish = mainDishContent,
+                                Details = detailsContent,
+                                MenuType = menuType
+                            });
+                        }
                     }
+
+                    dayIndex++;
                 }
-
-                dayIndex++;
             }
-        }
 
-        return menuDays;
+            scrapingLog.ParsingSuccessful = true;
+            scrapingLog.NewMenuItemsCount = menuDays.Count;
+            scrapingLog.Duration = DateTime.UtcNow - startTime;
+            
+            try
+            {
+                await menuRepository.LogScrapingOperationAsync(scrapingLog);
+            }
+            catch
+            {
+                // Ignore logging errors to prevent breaking the scraping functionality
+            }
+
+            return menuDays;
+        }
+        catch (Exception ex)
+        {
+            scrapingLog.ErrorMessage = ex.Message;
+            scrapingLog.Duration = DateTime.UtcNow - startTime;
+            try
+            {
+                await menuRepository.LogScrapingOperationAsync(scrapingLog);
+            }
+            catch
+            {
+                // Ignore logging errors
+            }
+            throw;
+        }
     }
 
     private (string mainDish, string details) ExtractMainDishAndDetails(string plainText)

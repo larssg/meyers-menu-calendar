@@ -68,7 +68,7 @@ public class MenuCacheBackgroundService(
             try
             {
                 // Force refresh by calling the scraping service directly
-                var menuDays = await menuScrapingService.ScrapeMenuAsync(true);
+                var menuDays = await menuScrapingService.ScrapeMenuAsync(true, "Background");
 
                 logger.LogInformation("Successfully refreshed menu cache with {Count} menu days", menuDays.Count);
             }

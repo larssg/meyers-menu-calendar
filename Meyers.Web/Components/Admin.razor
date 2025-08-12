@@ -7,6 +7,7 @@
 @inject IHttpContextAccessor HttpContextAccessor
 @using Meyers.Core.Interfaces
 @using Meyers.Core.Utilities
+@using Meyers.Core.Models
 @implements IDisposable
 
 <PageTitle>Admin Dashboard - Meyers Menu Calendar</PageTitle>
@@ -164,6 +165,86 @@
             </div>
         </div>
 
+        <!-- Scraping Logs -->
+        <div class="card p-6 mb-8">
+            <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-4 flex items-center">
+                <span class="text-2xl mr-3">📋</span>
+                Recent Scraping Operations
+            </h3>
+            @if (scrapingLogsLoading)
+            {
+                <div class="flex items-center justify-center py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mr-2"></div>
+                    <p class="text-slate-600 dark:text-slate-300">Loading scraping logs...</p>
+                </div>
+            }
+            else if (scrapingLogs.Count == 0)
+            {
+                <p class="text-slate-600 dark:text-slate-300 text-center py-8">No scraping operations recorded yet.</p>
+            }
+            else
+            {
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="border-b border-slate-200 dark:border-slate-700">
+                        <tr>
+                            <th class="text-left py-3 px-2 font-medium text-slate-700 dark:text-slate-300">Timestamp</th>
+                            <th class="text-left py-3 px-2 font-medium text-slate-700 dark:text-slate-300">Source</th>
+                            <th class="text-left py-3 px-2 font-medium text-slate-700 dark:text-slate-300">Request</th>
+                            <th class="text-left py-3 px-2 font-medium text-slate-700 dark:text-slate-300">Parsing</th>
+                            <th class="text-left py-3 px-2 font-medium text-slate-700 dark:text-slate-300">New Items</th>
+                            <th class="text-left py-3 px-2 font-medium text-slate-700 dark:text-slate-300">Duration</th>
+                            <th class="text-left py-3 px-2 font-medium text-slate-700 dark:text-slate-300">Error</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var log in scrapingLogs)
+                        {
+                            <tr class="border-b border-slate-100 dark:border-slate-800">
+                                <td class="py-3 px-2 text-slate-600 dark:text-slate-300 tabular-nums">
+                                    @log.Timestamp.ToLocalTime().ToString("MMM d, HH:mm:ss")
+                                </td>
+                                <td class="py-3 px-2">
+                                    <span class="pill @GetSourceClass(log.Source)">
+                                        @log.Source
+                                    </span>
+                                </td>
+                                <td class="py-3 px-2">
+                                    <span class="pill @(log.RequestSuccessful ? "bg-green-100 text-green-800 ring-green-300/60" : "bg-red-100 text-red-800 ring-red-300/60")">
+                                        @(log.RequestSuccessful ? "✓" : "✗")
+                                    </span>
+                                </td>
+                                <td class="py-3 px-2">
+                                    <span class="pill @(log.ParsingSuccessful ? "bg-green-100 text-green-800 ring-green-300/60" : "bg-red-100 text-red-800 ring-red-300/60")">
+                                        @(log.ParsingSuccessful ? "✓" : "✗")
+                                    </span>
+                                </td>
+                                <td class="py-3 px-2 text-slate-600 dark:text-slate-300 tabular-nums">
+                                    @log.NewMenuItemsCount
+                                </td>
+                                <td class="py-3 px-2 text-slate-600 dark:text-slate-300 tabular-nums">
+                                    @($"{log.Duration.TotalSeconds:F1}s")
+                                </td>
+                                <td class="py-3 px-2 text-slate-600 dark:text-slate-300">
+                                    @if (!string.IsNullOrEmpty(log.ErrorMessage))
+                                    {
+                                        <span class="text-red-600 dark:text-red-400 text-xs" title="@log.ErrorMessage">
+                                            @(log.ErrorMessage.Length > 30 ? log.ErrorMessage[..30] + "..." : log.ErrorMessage)
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-slate-400">-</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+
         <!-- Actions -->
         <div class="card p-6">
             <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-4 flex items-center">
@@ -208,6 +289,8 @@
     private DateTime? lastMenuDate;
     private bool dateRangeLoading = true;
     private readonly List<MenuTypeHealth> menuHealth = new();
+    private readonly List<ScrapingLog> scrapingLogs = new();
+    private bool scrapingLogsLoading = true;
 
     private bool isRefreshing;
     private bool isTesting;
@@ -320,9 +403,10 @@
                 menuHealth.Add(health);
             }
 
-            // Load total entries count and date range separately and asynchronously for better performance
+            // Load total entries count, date range, and scraping logs separately and asynchronously for better performance
             _ = LoadTotalEntriesCount();
             _ = LoadDateRange();
+            _ = LoadScrapingLogs();
         }
         catch (Exception ex)
         {
@@ -363,6 +447,24 @@
         }
     }
 
+    private async Task LoadScrapingLogs()
+    {
+        try
+        {
+            var logs = await MenuRepository.GetRecentScrapingLogsAsync(20);
+            scrapingLogs.Clear();
+            scrapingLogs.AddRange(logs);
+            scrapingLogsLoading = false;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            actionResult = $"Error loading scraping logs: {ex.Message}";
+            scrapingLogsLoading = false;
+            StateHasChanged();
+        }
+    }
+
     private async Task RefreshMenus()
     {
         isRefreshing = true;
@@ -371,7 +473,7 @@
 
         try
         {
-            var menuDays = await MenuScrapingService.ScrapeMenuAsync();
+            var menuDays = await MenuScrapingService.ScrapeMenuAsync(true, "Manual");
             await LoadDashboardData(); // Refresh the data
 
             actionResult = $"✅ Successfully refreshed menus!\n\nScraped {menuDays.Count} menu entries across {menuDays.GroupBy(m => m.MenuType).Count()} menu types.";
@@ -465,6 +567,17 @@
             "Poor" => "bg-orange-100 text-orange-800 ring-orange-300/60",
             "Concerning" => "bg-purple-100 text-purple-800 ring-purple-300/60",
             _ => "bg-green-100 text-green-800 ring-green-300/60"
+        };
+    }
+
+    private string GetSourceClass(string source)
+    {
+        return source switch
+        {
+            "Background" => "bg-blue-100 text-blue-800 ring-blue-300/60",
+            "Manual" => "bg-purple-100 text-purple-800 ring-purple-300/60",
+            "API" => "bg-teal-100 text-teal-800 ring-teal-300/60",
+            _ => "bg-slate-100 text-slate-800 ring-slate-300/60"
         };
     }
 

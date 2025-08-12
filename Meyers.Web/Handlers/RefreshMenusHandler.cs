@@ -17,7 +17,7 @@ public class RefreshMenusHandler(IMenuScrapingService scrapingService)
 
         try
         {
-            var result = await scrapingService.ScrapeMenuAsync(true);
+            var result = await scrapingService.ScrapeMenuAsync(true, "Manual");
             var count = result.Count;
             return Results.Ok(new
             {
