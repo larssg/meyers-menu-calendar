@@ -74,18 +74,18 @@ public class CalendarApiTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(10, eventCount);
 
         // Verify the calendar contains the correct dates for both weeks with Det velkendte suffix
-        // UIDs now include menu type: "meyers-menu-2025-07-28-det-velkendte"
-        Assert.Contains("UID:meyers-menu-2025-07-28-det-velkendte", content); // Monday
-        Assert.Contains("UID:meyers-menu-2025-07-29-det-velkendte", content); // Tuesday
-        Assert.Contains("UID:meyers-menu-2025-07-30-det-velkendte", content); // Wednesday
-        Assert.Contains("UID:meyers-menu-2025-07-31-det-velkendte", content); // Thursday
-        Assert.Contains("UID:meyers-menu-2025-08-01-det-velkendte", content); // Friday
-        // Second week: August 4 - August 8, 2025
-        Assert.Contains("UID:meyers-menu-2025-08-04-det-velkendte", content); // Monday
-        Assert.Contains("UID:meyers-menu-2025-08-05-det-velkendte", content); // Tuesday
-        Assert.Contains("UID:meyers-menu-2025-08-06-det-velkendte", content); // Wednesday
-        Assert.Contains("UID:meyers-menu-2025-08-07-det-velkendte", content); // Thursday
-        Assert.Contains("UID:meyers-menu-2025-08-08-det-velkendte", content); // Friday
+        // UIDs now include menu type: "meyers-menu-2025-11-10-det-velkendte"
+        Assert.Contains("UID:meyers-menu-2025-11-10-det-velkendte", content); // Monday
+        Assert.Contains("UID:meyers-menu-2025-11-11-det-velkendte", content); // Tuesday
+        Assert.Contains("UID:meyers-menu-2025-11-12-det-velkendte", content); // Wednesday
+        Assert.Contains("UID:meyers-menu-2025-11-13-det-velkendte", content); // Thursday
+        Assert.Contains("UID:meyers-menu-2025-11-14-det-velkendte", content); // Friday
+        // Second week: November 17 - November 21, 2025
+        Assert.Contains("UID:meyers-menu-2025-11-17-det-velkendte", content); // Monday
+        Assert.Contains("UID:meyers-menu-2025-11-18-det-velkendte", content); // Tuesday
+        Assert.Contains("UID:meyers-menu-2025-11-19-det-velkendte", content); // Wednesday
+        Assert.Contains("UID:meyers-menu-2025-11-20-det-velkendte", content); // Thursday
+        Assert.Contains("UID:meyers-menu-2025-11-21-det-velkendte", content); // Friday
     }
 
     [Fact]

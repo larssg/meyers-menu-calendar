@@ -150,11 +150,11 @@ public class MenuScrapingServiceTests
         var result = await scrapingService.ScrapeMenuAsync();
 
         // Assert
-        var mondayMenus = result.Where(r => r.DayName == "Mandag" && r.Date == new DateTime(2025, 7, 28)).ToList();
+        var mondayMenus = result.Where(r => r.DayName == "Mandag" && r.Date == new DateTime(2025, 11, 10)).ToList();
         Assert.NotEmpty(mondayMenus);
         Assert.Equal(8, mondayMenus.Count); // Should have 8 menu types for Monday
 
-        // Find "Det velkendte" menu for Monday July 28, 2025 
+        // Find "Det velkendte" menu for Monday November 10, 2025 
         var detVelkendteMonday = mondayMenus.FirstOrDefault(m =>
             m.MenuItems.Any(item => item.Contains("Kylling og champignon", StringComparison.OrdinalIgnoreCase)));
 
@@ -178,16 +178,16 @@ public class MenuScrapingServiceTests
         // Expected dates for each week
         var expectedDates = new[]
         {
-            new DateTime(2025, 7, 28), // Monday week 1
-            new DateTime(2025, 7, 29), // Tuesday week 1
-            new DateTime(2025, 7, 30), // Wednesday week 1
-            new DateTime(2025, 7, 31), // Thursday week 1
-            new DateTime(2025, 8, 1), // Friday week 1
-            new DateTime(2025, 8, 4), // Monday week 2
-            new DateTime(2025, 8, 5), // Tuesday week 2
-            new DateTime(2025, 8, 6), // Wednesday week 2
-            new DateTime(2025, 8, 7), // Thursday week 2
-            new DateTime(2025, 8, 8) // Friday week 2
+            new DateTime(2025, 11, 10), // Monday week 1
+            new DateTime(2025, 11, 11), // Tuesday week 1
+            new DateTime(2025, 11, 12), // Wednesday week 1
+            new DateTime(2025, 11, 13), // Thursday week 1
+            new DateTime(2025, 11, 14), // Friday week 1
+            new DateTime(2025, 11, 17), // Monday week 2
+            new DateTime(2025, 11, 18), // Tuesday week 2
+            new DateTime(2025, 11, 19), // Wednesday week 2
+            new DateTime(2025, 11, 20), // Thursday week 2
+            new DateTime(2025, 11, 21) // Friday week 2
         };
 
         // Verify that all expected dates appear (8 times each, once per menu type)
