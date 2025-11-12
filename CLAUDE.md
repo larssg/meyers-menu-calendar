@@ -7,7 +7,7 @@ changing architecture, or modifying key components.
 
 ## Project Overview
 
-A .NET 9 Blazor SSR application that scrapes Meyers restaurant menus and provides iCal feeds for 8 different menu types.
+A .NET 10 Blazor SSR application that scrapes Meyers restaurant menus and provides iCal feeds for 8 different menu types.
 Features multi-menu support, responsive design, and automatic caching.
 
 ## Architecture
@@ -51,7 +51,7 @@ Features multi-menu support, responsive design, and automatic caching.
 
 ## Key Dependencies
 
-- .NET 9.0 with MapStaticAssets
+- .NET 10.0 with MapStaticAssets
 - HtmlAgilityPack (web scraping)
 - Ical.Net (calendar generation)
 - EntityFrameworkCore.Sqlite (database)
@@ -130,5 +130,5 @@ menu types, web interface, API endpoints, mobile responsiveness, and MapStaticAs
 
 ## Build System
 
-Tailwind CSS auto-compilation via MSBuild. .NET 9 MapStaticAssets for fingerprinting. CSS compiled before static asset
+Tailwind CSS auto-compilation via MSBuild. .NET 10 MapStaticAssets for fingerprinting. CSS compiled before static asset
 processing. Docker includes Node.js 20.x.
