@@ -8,6 +8,6 @@
     "watch": "tailwindcss -i ./Styles/app.css -o ./wwwroot/css/app.css --watch"
   },
   "devDependencies": {
-    "@tailwindcss/cli": "4.0.0-alpha.34"
+    "@tailwindcss/cli": "4.1.17"
   }
 }
