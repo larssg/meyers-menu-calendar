@@ -14,7 +14,9 @@ updates:
       - "dotnet"
     open-pull-requests-limit: 5
     groups:
-      minor-and-patch:
+      microsoft:
+        patterns:
+          - "Microsoft.*"
         update-types:
           - "minor"
           - "patch"
