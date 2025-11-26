@@ -11,6 +11,18 @@ using Microsoft.Extensions.Hosting;
 
 namespace Meyers.Test;
 
+public class TestTimeZoneService : ITimeZoneService
+{
+    // Fixed date matching the test fixture data (Nov 10-21, 2025)
+    private static readonly DateTime FixedDate = new(2025, 11, 10);
+
+    public TimeZoneInfo CopenhagenTimeZone => TimeZoneInfo.FindSystemTimeZoneById("Europe/Copenhagen");
+
+    public DateTime GetCopenhagenNow() => FixedDate.AddHours(12); // Noon on the fixed date
+
+    public DateTime GetCopenhagenDate() => FixedDate;
+}
+
 public class TestWebApplicationFactory : WebApplicationFactory<Program>, IDisposable
 {
     private SqliteConnection? _connection;
@@ -45,6 +57,10 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IDispos
 
             // Remove background service to prevent it from running during tests
             services.RemoveAll<IHostedService>();
+
+            // Replace ITimeZoneService with test version that returns fixed dates
+            services.RemoveAll<ITimeZoneService>();
+            services.AddSingleton<ITimeZoneService, TestTimeZoneService>();
 
             // Replace MenuScrapingService with test version
             services.RemoveAll<MenuScrapingService>();
