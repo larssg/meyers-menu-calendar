@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using Meyers.Infrastructure.Data;
 using Meyers.Infrastructure.Repositories;
 using Meyers.Infrastructure.Services;
@@ -209,7 +210,8 @@ public class MenuScrapingServiceTests
         var callCount = 0;
         var mockHandler = new MockHttpMessageHandler(_testHtmlPath)
         {
-            OnSendAsync = () => callCount++
+            OnSendAsync = () => callCount++,
+            UseCurrentWeekDates = true // Use dynamic dates so cache entries are within valid range
         };
         var httpClient = new HttpClient(mockHandler);
         var repository = new MenuRepository(context);
@@ -221,16 +223,8 @@ public class MenuScrapingServiceTests
         Assert.Equal(1, callCount); // HTTP client should be called once
 
         // Update timestamps to ensure cache is considered fresh
-        // Also shift entry dates to be within the valid cache range (today -7 to +14 days)
-        // since the test HTML has fixed dates that may be outside the current date window
         var entries = await context.MenuEntries.ToListAsync();
-        var minDate = entries.Min(e => e.Date);
-        var dateOffset = DateTime.Today - minDate; // Shift all dates to start from today
-        foreach (var entry in entries)
-        {
-            entry.UpdatedAt = DateTime.UtcNow;
-            entry.Date = entry.Date.Add(dateOffset);
-        }
+        foreach (var entry in entries) entry.UpdatedAt = DateTime.UtcNow;
         await context.SaveChangesAsync();
 
         // Act - Second call should use cache (not call HTTP)
@@ -251,7 +245,8 @@ public class MenuScrapingServiceTests
         var callCount = 0;
         var mockHandler = new MockHttpMessageHandler(_testHtmlPath)
         {
-            OnSendAsync = () => callCount++
+            OnSendAsync = () => callCount++,
+            UseCurrentWeekDates = true // Use dynamic dates for consistency with cache tests
         };
         var httpClient = new HttpClient(mockHandler);
         var repository = new MenuRepository(context);
@@ -275,9 +270,12 @@ public class MenuScrapingServiceTests
 }
 
 // Mock HttpMessageHandler for testing
-public class MockHttpMessageHandler : HttpMessageHandler
+public partial class MockHttpMessageHandler : HttpMessageHandler
 {
     private readonly string _filePath;
+
+    // Danish month abbreviations for date replacement
+    private static readonly string[] DanishMonths = ["jan", "feb", "mar", "apr", "maj", "jun", "jul", "aug", "sep", "okt", "nov", "dec"];
 
     public MockHttpMessageHandler(string filePath)
     {
@@ -285,6 +283,12 @@ public class MockHttpMessageHandler : HttpMessageHandler
     }
 
     public Action? OnSendAsync { get; set; }
+
+    /// <summary>
+    /// When true, replaces hardcoded dates in the HTML with current-week dates.
+    /// This prevents cache tests from becoming flaky as time passes.
+    /// </summary>
+    public bool UseCurrentWeekDates { get; set; }
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
         CancellationToken cancellationToken)
@@ -294,6 +298,11 @@ public class MockHttpMessageHandler : HttpMessageHandler
         if (File.Exists(_filePath))
         {
             var content = await File.ReadAllTextAsync(_filePath, cancellationToken);
+            // Optionally replace static dates with current-week dates
+            if (UseCurrentWeekDates)
+            {
+                content = ReplaceWithCurrentWeekDates(content);
+            }
             return new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent(content, Encoding.UTF8, "text/html")
@@ -302,4 +311,42 @@ public class MockHttpMessageHandler : HttpMessageHandler
 
         throw new FileNotFoundException($"Test file not found: {_filePath}");
     }
+
+    /// <summary>
+    /// Replaces hardcoded dates in the test HTML with dates relative to the current week.
+    /// This ensures the test data is always within the valid cache date range.
+    /// </summary>
+    private static string ReplaceWithCurrentWeekDates(string html)
+    {
+        // Find the Monday of the current week
+        var today = DateTime.Today;
+        var daysUntilMonday = ((int)today.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
+        var currentMonday = today.AddDays(-daysUntilMonday);
+
+        // The test HTML has 10 weekdays: Mon-Fri of week 1, then Mon-Fri of week 2
+        // We'll replace them with dates starting from the current Monday
+        var weekdayDates = new List<DateTime>();
+        var date = currentMonday;
+        while (weekdayDates.Count < 10)
+        {
+            if (date.DayOfWeek != DayOfWeek.Saturday && date.DayOfWeek != DayOfWeek.Sunday)
+            {
+                weekdayDates.Add(date);
+            }
+            date = date.AddDays(1);
+        }
+
+        // Replace dates in the format "DD mon, YYYY" (e.g., "10 nov, 2025")
+        var dateIndex = 0;
+        return DatePatternRegex().Replace(html, match =>
+        {
+            if (dateIndex >= weekdayDates.Count) return match.Value;
+            var newDate = weekdayDates[dateIndex++];
+            var month = DanishMonths[newDate.Month - 1];
+            return $"{newDate.Day} {month}, {newDate.Year}";
+        });
+    }
+
+    [GeneratedRegex(@"\d{1,2} (jan|feb|mar|apr|maj|jun|jul|aug|sep|okt|nov|dec), \d{4}")]
+    private static partial Regex DatePatternRegex();
 }
