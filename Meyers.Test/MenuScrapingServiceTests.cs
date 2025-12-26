@@ -221,8 +221,16 @@ public class MenuScrapingServiceTests
         Assert.Equal(1, callCount); // HTTP client should be called once
 
         // Update timestamps to ensure cache is considered fresh
+        // Also shift entry dates to be within the valid cache range (today -7 to +14 days)
+        // since the test HTML has fixed dates that may be outside the current date window
         var entries = await context.MenuEntries.ToListAsync();
-        foreach (var entry in entries) entry.UpdatedAt = DateTime.UtcNow;
+        var minDate = entries.Min(e => e.Date);
+        var dateOffset = DateTime.Today - minDate; // Shift all dates to start from today
+        foreach (var entry in entries)
+        {
+            entry.UpdatedAt = DateTime.UtcNow;
+            entry.Date = entry.Date.Add(dateOffset);
+        }
         await context.SaveChangesAsync();
 
         // Act - Second call should use cache (not call HTTP)
