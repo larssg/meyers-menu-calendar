@@ -66,21 +66,37 @@ public class MenuRepository(MenuDbContext context) : IMenuRepository
 
     public async Task SaveMenusAsync(List<MenuEntry> menuEntries)
     {
+        if (menuEntries.Count == 0) return;
+
+        // Batch lookup: get all dates and menu type IDs we need to check
+        var datesToCheck = menuEntries.Select(e => e.Date.Date).Distinct().ToList();
+        var menuTypeIds = menuEntries.Select(e => e.MenuTypeId).Distinct().ToList();
+
+        // Single query to fetch all existing entries matching any of our date/menuType combinations
+        var existingEntries = await context.MenuEntries
+            .AsTracking()
+            .Where(m => datesToCheck.Contains(m.Date.Date) && menuTypeIds.Contains(m.MenuTypeId))
+            .ToListAsync();
+
+        // Create lookup dictionary for O(1) access
+        var existingLookup = existingEntries.ToDictionary(
+            e => (e.Date.Date, e.MenuTypeId),
+            e => e);
+
+        var now = DateTime.UtcNow;
+
         foreach (var menuEntry in menuEntries)
         {
-            var existing = await context.MenuEntries
-                .AsTracking()
-                .Include(m => m.MenuType)
-                .FirstOrDefaultAsync(m => m.Date.Date == menuEntry.Date.Date && m.MenuTypeId == menuEntry.MenuTypeId);
+            var key = (menuEntry.Date.Date, menuEntry.MenuTypeId);
 
-            if (existing != null)
+            if (existingLookup.TryGetValue(key, out var existing))
             {
                 existing.DayName = menuEntry.DayName;
                 existing.MenuItems = menuEntry.MenuItems;
                 existing.MainDish = menuEntry.MainDish;
                 existing.Details = menuEntry.Details;
                 existing.MenuTypeId = menuEntry.MenuTypeId;
-                existing.UpdatedAt = DateTime.UtcNow;
+                existing.UpdatedAt = now;
                 context.MenuEntries.Update(existing);
             }
             else
