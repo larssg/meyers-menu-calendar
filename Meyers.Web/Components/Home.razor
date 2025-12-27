@@ -194,19 +194,34 @@
 
             var today = TimeZoneService.GetCopenhagenDate();
             var tomorrow = today.AddDays(1);
-
-            // Load all menu previews for the next 7 days
             var endDate = today.AddDays(6);
 
-            // Get extended menu data for the week view
-            foreach (var menuType in menuTypes)
+            // Single query to get all menu entries for the week (fixes N+1)
+            var allEntries = await MenuRepository.GetMenusForDateRangeAsync(today, endDate);
+
+            // Group entries by menu type in memory
+            var entriesByType = allEntries.GroupBy(e => e.MenuTypeId);
+            foreach (var group in entriesByType)
             {
-                var entries = await MenuRepository.GetMenusForDateRangeAsync(today, endDate, menuType.Id);
-                weeklyMenuData[menuType.Id] = entries.ToDictionary(e => e.Date.Date, e => e);
+                weeklyMenuData[group.Key] = group.ToDictionary(e => e.Date.Date, e => e);
             }
 
-            // Keep the original format for compatibility
-            allMenuPreviews = await MenuRepository.GetAllMenuPreviewsAsync(today, today.AddDays(1));
+            // Ensure all active menu types have an entry (even if empty)
+            foreach (var menuType in menuTypes)
+            {
+                if (!weeklyMenuData.ContainsKey(menuType.Id))
+                {
+                    weeklyMenuData[menuType.Id] = new Dictionary<DateTime, MenuEntry>();
+                }
+            }
+
+            // Derive allMenuPreviews from weeklyMenuData (removes redundant query)
+            allMenuPreviews = menuTypes.ToDictionary(
+                mt => mt.Id,
+                mt => (
+                    today: weeklyMenuData.TryGetValue(mt.Id, out var data) && data.TryGetValue(today.Date, out var todayEntry) ? todayEntry : null,
+                    tomorrow: weeklyMenuData.TryGetValue(mt.Id, out var data2) && data2.TryGetValue(tomorrow.Date, out var tomorrowEntry) ? tomorrowEntry : null
+                ));
 
             lastUpdated = await MenuRepository.GetLastUpdateTimeAsync();
         }

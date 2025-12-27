@@ -93,6 +93,14 @@ public partial class CalendarEndpointHandler(
             var allMenuTypes = await menuRepository.GetMenuTypesAsync();
             var menuTypeDict = allMenuTypes.ToDictionary(mt => mt.Id, mt => mt);
 
+            // Single query to get all entries for the date range (fixes N+1)
+            var allCachedEntries = await menuRepository.GetMenusForDateRangeAsync(startDate, endDate);
+
+            // Group entries by menu type for efficient lookup
+            var entriesByMenuType = allCachedEntries
+                .GroupBy(e => e.MenuTypeId)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
             // Collect all menu days based on the configuration
             var customMenuDays = new List<MenuDay>();
 
@@ -100,8 +108,10 @@ public partial class CalendarEndpointHandler(
             {
                 if (!menuTypeDict.TryGetValue(menuTypeId, out var menuType)) continue;
 
-                // Get cached entries for this menu type
-                var cachedEntries = await menuRepository.GetMenusForDateRangeAsync(startDate, endDate, menuType.Id);
+                // Get cached entries for this menu type from in-memory lookup
+                var cachedEntries = entriesByMenuType.TryGetValue(menuType.Id, out var entries)
+                    ? entries
+                    : [];
 
                 // Convert cached entries to MenuDay objects and filter by day of week
                 var historicalMenuDays = cachedEntries
