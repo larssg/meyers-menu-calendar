@@ -34,7 +34,30 @@ builder.Services.AddDbContext<MenuDbContext>(options =>
 builder.Services.AddScoped<IMenuRepository, MenuRepository>();
 
 // Service registration
-builder.Services.AddHttpClient<MenuScrapingService>();
+builder.Services.AddHttpClient<MenuScrapingService>(client =>
+    {
+        client.Timeout = TimeSpan.FromSeconds(30);
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("MeyersMenuCalendar/1.0");
+    })
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        AutomaticDecompression = System.Net.DecompressionMethods.All
+    })
+    .AddStandardResilienceHandler(options =>
+    {
+        // Configure retry policy for transient failures
+        options.Retry.MaxRetryAttempts = 3;
+        options.Retry.Delay = TimeSpan.FromSeconds(1);
+        options.Retry.UseJitter = true;
+
+        // Configure circuit breaker
+        options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(30);
+        options.CircuitBreaker.FailureRatio = 0.5;
+        options.CircuitBreaker.MinimumThroughput = 5;
+
+        // Configure total request timeout (includes retries)
+        options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(60);
+    });
 builder.Services.AddScoped<IMenuScrapingService, MenuScrapingService>();
 builder.Services.AddScoped<ICalendarService, CalendarService>();
 builder.Services.AddScoped<ITimeZoneService, TimeZoneService>();

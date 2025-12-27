@@ -7,35 +7,36 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="HtmlAgilityPack" Version="1.12.4"/>
-        <PackageReference Include="Ical.Net" Version="5.2.0"/>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.1"/>
+        <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
+        <PackageReference Include="Ical.Net" Version="5.2.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.1" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.1">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="10.1.0" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Meyers.Core\Meyers.Core.csproj"/>
-        <ProjectReference Include="..\Meyers.Infrastructure\Meyers.Infrastructure.csproj"/>
+        <ProjectReference Include="..\Meyers.Core\Meyers.Core.csproj" />
+        <ProjectReference Include="..\Meyers.Infrastructure\Meyers.Infrastructure.csproj" />
     </ItemGroup>
 
     <!-- Tailwind CSS Build Integration -->
     <Target Name="CheckNodeModules" BeforeTargets="BuildTailwindCss">
-        <Message Text="Checking if node_modules exists..." Importance="high"/>
-        <Exec Command="npm install" WorkingDirectory="$(MSBuildProjectDirectory)" Condition="!Exists('$(MSBuildProjectDirectory)/node_modules')"/>
+        <Message Text="Checking if node_modules exists..." Importance="high" />
+        <Exec Command="npm install" WorkingDirectory="$(MSBuildProjectDirectory)" Condition="!Exists('$(MSBuildProjectDirectory)/node_modules')" />
     </Target>
 
     <Target Name="BuildTailwindCss" BeforeTargets="ResolveStaticWebAssetsInputs">
-        <Message Text="Building Tailwind CSS..." Importance="high"/>
-        <Exec Command="npm run build" WorkingDirectory="$(MSBuildProjectDirectory)"/>
+        <Message Text="Building Tailwind CSS..." Importance="high" />
+        <Exec Command="npm run build" WorkingDirectory="$(MSBuildProjectDirectory)" />
     </Target>
 
     <!-- Clean generated CSS on clean -->
     <Target Name="CleanTailwindCss" BeforeTargets="Clean">
-        <Message Text="Cleaning generated Tailwind CSS..." Importance="high"/>
-        <Delete Files="$(MSBuildProjectDirectory)/wwwroot/css/app.css"/>
+        <Message Text="Cleaning generated Tailwind CSS..." Importance="high" />
+        <Delete Files="$(MSBuildProjectDirectory)/wwwroot/css/app.css" />
     </Target>
 
 
