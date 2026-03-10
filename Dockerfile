@@ -9,8 +9,9 @@ RUN apt-get update && apt-get install -y curl && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy csproj files and restore dependencies
+COPY Meyers.Core/Meyers.Core.csproj Meyers.Core/
+COPY Meyers.Infrastructure/Meyers.Infrastructure.csproj Meyers.Infrastructure/
 COPY Meyers.Web/Meyers.Web.csproj Meyers.Web/
-COPY Meyers.Test/Meyers.Test.csproj Meyers.Test/
 RUN dotnet restore Meyers.Web/Meyers.Web.csproj
 
 # Copy package.json and Tailwind source files, install npm dependencies
