@@ -10,11 +10,11 @@
 
 <PageTitle>Calendar Traffic - Meyers Menu Calendar</PageTitle>
 
-<div class="max-w-6xl mx-auto p-4">
-    <div class="mb-8 flex items-center justify-between">
+<div class="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+    <div class="mb-10 flex items-center justify-between">
         <div>
-            <h1 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">Calendar Traffic</h1>
-            <p class="text-slate-600 dark:text-slate-300">Feed download analytics</p>
+            <h1 class="text-3xl font-bold text-slate-900 dark:text-white mb-1">Calendar Traffic</h1>
+            <p class="text-slate-500 dark:text-slate-400">Feed download analytics</p>
         </div>
         <a href="/admin" class="btn-ghost">Back to Dashboard</a>
     </div>
@@ -49,37 +49,37 @@
     else
     {
         <!-- Summary Stats -->
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-10">
             <div class="card p-5">
-                <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Today</p>
-                <p class="text-2xl font-bold text-teal-600 tabular-nums">@statsToday</p>
+                <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Today</p>
+                <p class="text-3xl font-bold text-teal-600 tabular-nums">@statsToday</p>
             </div>
             <div class="card p-5">
-                <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">7 Days</p>
-                <p class="text-2xl font-bold text-teal-600 tabular-nums">@stats7d</p>
+                <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">7 Days</p>
+                <p class="text-3xl font-bold text-teal-600 tabular-nums">@stats7d</p>
             </div>
             <div class="card p-5">
-                <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">30 Days</p>
-                <p class="text-2xl font-bold text-teal-600 tabular-nums">@stats30d</p>
+                <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">30 Days</p>
+                <p class="text-3xl font-bold text-teal-600 tabular-nums">@stats30d</p>
             </div>
             <div class="card p-5">
-                <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">All Time</p>
-                <p class="text-2xl font-bold text-teal-600 tabular-nums">@statsTotal</p>
+                <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">All Time</p>
+                <p class="text-3xl font-bold text-teal-600 tabular-nums">@statsTotal</p>
             </div>
             <div class="card p-5">
-                <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Unique IPs (30d)</p>
-                <p class="text-2xl font-bold text-teal-600 tabular-nums">@uniqueIps30d</p>
+                <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Unique IPs (30d)</p>
+                <p class="text-3xl font-bold text-teal-600 tabular-nums">@uniqueIps30d</p>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
             <!-- Downloads Per Day (last 30 days) -->
             <div class="card p-6">
                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Downloads Per Day</h3>
                 @if (dailyCounts.Count > 0)
                 {
                     var maxDaily = dailyCounts.Max(d => d.Count);
-                    <div class="flex items-end gap-[2px] h-40">
+                    <div class="flex items-end gap-px h-48">
                         @foreach (var day in dailyCounts)
                         {
                             var pct = maxDaily > 0 ? (double)day.Count / maxDaily * 100 : 0;
@@ -108,7 +108,7 @@
                 @if (hourlyCounts.Any(h => h.Count > 0))
                 {
                     var maxHourly = hourlyCounts.Max(h => h.Count);
-                    <div class="flex items-end gap-[2px] h-40">
+                    <div class="flex items-end gap-px h-48">
                         @foreach (var hour in hourlyCounts)
                         {
                             var pct = maxHourly > 0 ? (double)hour.Count / maxHourly * 100 : 0;
@@ -135,7 +135,7 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
             <!-- Top Clients -->
             <div class="card p-6">
                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Top Clients (30d)</h3>
@@ -194,7 +194,7 @@
         </div>
 
         <!-- Unique Subscribers (by IP hash) -->
-        <div class="card p-6 mb-8">
+        <div class="card p-6 mb-10">
             <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Unique Subscribers (30d)</h3>
             @if (subscribers.Count > 0)
             {
