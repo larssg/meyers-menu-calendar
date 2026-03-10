@@ -3,8 +3,10 @@
 @layout AdminLayout
 @inject IMenuRepository MenuRepository
 @inject IHttpContextAccessor HttpContextAccessor
+@inject ProtectedSessionStorage SessionStorage
 @using Meyers.Core.Interfaces
 @using Meyers.Core.Models
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 
 <PageTitle>Calendar Traffic - Meyers Menu Calendar</PageTitle>
 
@@ -297,14 +299,10 @@
         try
         {
             var request = HttpContextAccessor.HttpContext?.Request;
-            if (request?.Query.ContainsKey("secret") == true)
+            if (request?.Query.ContainsKey("secret") == true && IsValidSecret(request.Query["secret"].ToString()))
             {
-                var querySecret = request.Query["secret"].ToString();
-                if (IsValidSecret(querySecret))
-                {
-                    isAuthorized = true;
-                    await LoadTrafficData();
-                }
+                isAuthorized = true;
+                await LoadTrafficData();
             }
         }
         catch (Exception ex)
@@ -313,7 +311,26 @@
         }
 
         componentInitialized = true;
-        StateHasChanged();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        if (isAuthorized)
+        {
+            await SessionStorage.SetAsync("admin_auth", true);
+        }
+        else
+        {
+            var result = await SessionStorage.GetAsync<bool>("admin_auth");
+            if (result is { Success: true, Value: true })
+            {
+                isAuthorized = true;
+                await LoadTrafficData();
+                StateHasChanged();
+            }
+        }
     }
 
     private async Task CheckAccess()
@@ -322,6 +339,7 @@
         {
             isAuthorized = true;
             authError = false;
+            await SessionStorage.SetAsync("admin_auth", true);
             await LoadTrafficData();
         }
         else

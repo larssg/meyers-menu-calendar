@@ -5,9 +5,11 @@
 @inject IMenuScrapingService MenuScrapingService
 @inject ITimeZoneService TimeZoneService
 @inject IHttpContextAccessor HttpContextAccessor
+@inject ProtectedSessionStorage SessionStorage
 @using Meyers.Core.Interfaces
 @using Meyers.Core.Models
 @using Meyers.Core.Utilities
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @implements IDisposable
 
 <PageTitle>Admin Dashboard - Meyers Menu Calendar</PageTitle>
@@ -165,6 +167,19 @@
             </div>
         </div>
 
+        <!-- Calendar Traffic -->
+        <div class="card p-6 mb-8">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-semibold text-slate-900 dark:text-white flex items-center">
+                    <span class="text-2xl mr-3">📈</span>
+                    Calendar Traffic
+                </h3>
+                <a href="/admin/traffic" class="btn-primary">
+                    View Traffic Dashboard
+                </a>
+            </div>
+        </div>
+
         <!-- Scraping Logs -->
         <div class="card p-6 mb-8">
             <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-4 flex items-center">
@@ -256,8 +271,7 @@
                     <span class="text-2xl mr-3">📈</span>
                     Calendar Traffic
                 </h3>
-                <a href="/admin/traffic@(HttpContextAccessor.HttpContext?.Request.Query.ContainsKey("secret") == true ? $"?secret={HttpContextAccessor.HttpContext.Request.Query["secret"]}" : "")"
-                   class="btn-primary">
+                <a href="/admin/traffic" class="btn-primary">
                     View Traffic Dashboard
                 </a>
             </div>
@@ -318,27 +332,14 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Console.WriteLine("Admin component initializing...");
-
         try
         {
-            // Check if already authorized via query parameter
             var request = HttpContextAccessor.HttpContext?.Request;
-            if (request?.Query.ContainsKey("secret") == true)
+            if (request?.Query.ContainsKey("secret") == true && IsValidSecret(request.Query["secret"].ToString()))
             {
-                var querySecret = request.Query["secret"].ToString();
-                Console.WriteLine($"Found query secret: {querySecret}");
-                if (IsValidSecret(querySecret))
-                {
-                    Console.WriteLine("Query secret is valid, loading dashboard...");
-                    isAuthorized = true;
-                    await LoadDashboardData();
-                    StartUpdateTimer();
-                }
-            }
-            else
-            {
-                Console.WriteLine("No query secret found");
+                isAuthorized = true;
+                await LoadDashboardData();
+                StartUpdateTimer();
             }
         }
         catch (Exception ex)
@@ -346,31 +347,46 @@
             Console.WriteLine($"Error in OnInitializedAsync: {ex.Message}");
         }
 
-        Console.WriteLine($"Initialization complete. isAuthorized: {isAuthorized}");
-
         componentInitialized = true;
-        StateHasChanged();
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        if (isAuthorized)
+        {
+            await SessionStorage.SetAsync("admin_auth", true);
+        }
+        else
+        {
+            var result = await SessionStorage.GetAsync<bool>("admin_auth");
+            if (result is { Success: true, Value: true })
+            {
+                isAuthorized = true;
+                await LoadDashboardData();
+                StartUpdateTimer();
+                StateHasChanged();
+            }
+        }
+    }
 
     private async Task CheckAccess()
     {
-        Console.WriteLine($"CheckAccess called with secret: {secretInput}");
         if (IsValidSecret(secretInput))
         {
-            Console.WriteLine("Secret is valid, authorizing...");
             isAuthorized = true;
             authError = false;
+            await SessionStorage.SetAsync("admin_auth", true);
             await LoadDashboardData();
             StartUpdateTimer();
         }
         else
         {
-            Console.WriteLine("Secret is invalid");
             authError = true;
         }
 
-        StateHasChanged(); // Force UI update
+        StateHasChanged();
     }
 
 
