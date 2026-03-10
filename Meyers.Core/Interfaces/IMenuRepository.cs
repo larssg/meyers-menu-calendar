@@ -28,5 +28,12 @@ public interface IMenuRepository
 
     Task LogCalendarDownloadAsync(CalendarDownloadLog downloadLog);
     Task<List<CalendarDownloadLog>> GetRecentCalendarDownloadsAsync(int count = 50);
-    Task<List<CalendarDownloadLog>> GetCalendarDownloadsAfterAsync(DateTime since);
+    Task<int> GetCalendarDownloadCountAsync(DateTime since);
+    Task<int> GetCalendarDownloadTotalCountAsync();
+    Task<int> GetUniqueCalendarDownloadIpsCountAsync(DateTime since);
+    Task<Dictionary<DateTime, int>> GetDailyDownloadCountsAsync(DateTime since);
+    Task<Dictionary<int, int>> GetHourlyDownloadCountsAsync(DateTime since);
+    Task<List<(string Name, int Count)>> GetTopDownloadClientsAsync(DateTime since, int limit = 10);
+    Task<List<(string Name, int Count)>> GetTopDownloadFeedsAsync(DateTime since, int limit = 10);
+    Task<List<DownloadSubscriberSummary>> GetDownloadSubscribersAsync(DateTime since, int limit = 20);
 }

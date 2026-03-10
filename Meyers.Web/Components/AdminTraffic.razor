@@ -212,7 +212,7 @@
                         @foreach (var sub in subscribers)
                         {
                             <tr class="border-b border-slate-100 dark:border-slate-800">
-                                <td class="py-3 px-2 font-mono text-xs text-slate-600 dark:text-slate-300">@sub.IpHash</td>
+                                <td class="py-3 px-2 font-mono text-xs text-slate-600 dark:text-slate-300">@sub.IpHash[..8]</td>
                                 <td class="py-3 px-2 text-slate-700 dark:text-slate-300">@sub.Client</td>
                                 <td class="py-3 px-2 text-slate-600 dark:text-slate-300">@sub.Feeds</td>
                                 <td class="py-3 px-2 text-slate-600 dark:text-slate-300 tabular-nums">@sub.Count</td>
@@ -289,7 +289,7 @@
     private List<(int Hour, int Count)> hourlyCounts = new();
     private List<(string Name, int Count)> topClients = new();
     private List<(string Name, int Count)> topFeeds = new();
-    private List<SubscriberInfo> subscribers = new();
+    private List<DownloadSubscriberSummary> subscribers = new();
     private List<CalendarDownloadLog> recentDownloads = new();
 
     protected override async Task OnInitializedAsync()
@@ -340,81 +340,33 @@
 
     private async Task LoadTrafficData()
     {
-        var now = DateTime.UtcNow;
-        var today = now.Date;
+        var today = DateTime.UtcNow.Date;
         var thirtyDaysAgo = today.AddDays(-30);
         var sevenDaysAgo = today.AddDays(-7);
 
-        // Get all downloads from last 30 days for analysis
-        var downloads30d = await MenuRepository.GetCalendarDownloadsAfterAsync(thirtyDaysAgo);
-        recentDownloads = await MenuRepository.GetRecentCalendarDownloadsAsync(50);
+        // All queries run against SQL - no bulk loading into memory
+        statsToday = await MenuRepository.GetCalendarDownloadCountAsync(today);
+        stats7d = await MenuRepository.GetCalendarDownloadCountAsync(sevenDaysAgo);
+        stats30d = await MenuRepository.GetCalendarDownloadCountAsync(thirtyDaysAgo);
+        statsTotal = await MenuRepository.GetCalendarDownloadTotalCountAsync();
+        uniqueIps30d = await MenuRepository.GetUniqueCalendarDownloadIpsCountAsync(thirtyDaysAgo);
 
-        // Summary stats
-        stats30d = downloads30d.Count;
-        stats7d = downloads30d.Count(d => d.Timestamp >= sevenDaysAgo);
-        statsToday = downloads30d.Count(d => d.Timestamp.Date == today);
-        statsTotal = stats30d; // Will be same until we have >30d of data
-        uniqueIps30d = downloads30d.Select(d => d.IpHash).Distinct().Count();
-
-        // Daily counts (last 30 days, fill gaps with 0)
-        var dailyGroups = downloads30d
-            .GroupBy(d => d.Timestamp.Date)
-            .ToDictionary(g => g.Key, g => g.Count());
-
+        // Daily counts (fill gaps with 0)
+        var dailyGroups = await MenuRepository.GetDailyDownloadCountsAsync(thirtyDaysAgo);
         dailyCounts = Enumerable.Range(0, 30)
             .Select(i => thirtyDaysAgo.AddDays(i))
             .Select(date => (Date: date, Count: dailyGroups.GetValueOrDefault(date, 0)))
             .ToList();
 
-        // Hourly counts (all 24 hours)
-        var hourlyGroups = downloads30d
-            .GroupBy(d => d.Timestamp.Hour)
-            .ToDictionary(g => g.Key, g => g.Count());
-
+        // Hourly counts (fill gaps with 0)
+        var hourlyGroups = await MenuRepository.GetHourlyDownloadCountsAsync(thirtyDaysAgo);
         hourlyCounts = Enumerable.Range(0, 24)
             .Select(h => (Hour: h, Count: hourlyGroups.GetValueOrDefault(h, 0)))
             .ToList();
 
-        // Top clients
-        topClients = downloads30d
-            .GroupBy(d => d.ClientName)
-            .Select(g => (Name: g.Key, Count: g.Count()))
-            .OrderByDescending(x => x.Count)
-            .Take(10)
-            .ToList();
-
-        // Top feeds
-        topFeeds = downloads30d
-            .GroupBy(d => d.FeedPath)
-            .Select(g => (Name: g.Key, Count: g.Count()))
-            .OrderByDescending(x => x.Count)
-            .Take(10)
-            .ToList();
-
-        // Unique subscribers
-        subscribers = downloads30d
-            .GroupBy(d => d.IpHash)
-            .Select(g => new SubscriberInfo
-            {
-                IpHash = g.Key,
-                Client = g.Select(d => d.ClientName).GroupBy(c => c).OrderByDescending(c => c.Count()).First().Key,
-                Feeds = string.Join(", ", g.Select(d => d.FeedPath).Distinct().OrderBy(f => f)),
-                Count = g.Count(),
-                FirstSeen = g.Min(d => d.Timestamp),
-                LastSeen = g.Max(d => d.Timestamp)
-            })
-            .OrderByDescending(s => s.Count)
-            .Take(20)
-            .ToList();
-    }
-
-    private class SubscriberInfo
-    {
-        public string IpHash { get; set; } = "";
-        public string Client { get; set; } = "";
-        public string Feeds { get; set; } = "";
-        public int Count { get; set; }
-        public DateTime FirstSeen { get; set; }
-        public DateTime LastSeen { get; set; }
+        topClients = await MenuRepository.GetTopDownloadClientsAsync(thirtyDaysAgo);
+        topFeeds = await MenuRepository.GetTopDownloadFeedsAsync(thirtyDaysAgo);
+        subscribers = await MenuRepository.GetDownloadSubscribersAsync(thirtyDaysAgo);
+        recentDownloads = await MenuRepository.GetRecentCalendarDownloadsAsync(50);
     }
 }
