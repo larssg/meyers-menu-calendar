@@ -422,6 +422,9 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
         mainDish = AllergenRegex().Replace(mainDish, "").Trim();
         details = AllergenRegex().Replace(details, "").Trim();
 
+        // Strip trailing period for cleaner display in calendar feeds and previews
+        mainDish = mainDish.TrimEnd('.', ' ');
+
         return (mainDish, details);
     }
 
