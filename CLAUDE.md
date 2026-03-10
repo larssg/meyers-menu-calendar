@@ -7,7 +7,7 @@ changing architecture, or modifying key components.
 
 ## Project Overview
 
-A .NET 10 Blazor SSR application that scrapes Meyers restaurant menus and provides iCal feeds for 8 different menu types.
+A .NET 10 Blazor SSR application that scrapes Meyers restaurant menus and provides iCal feeds for 6 different menu types.
 Features multi-menu support, responsive design, and automatic caching.
 
 ## Architecture
@@ -31,7 +31,7 @@ Features multi-menu support, responsive design, and automatic caching.
 - `Data/MenuDbContext.cs`: Entity Framework context with model configuration
 - `Migrations/`: Database schema migrations
 - `Repositories/MenuRepository.cs`: Data access with optimized queries
-- `Services/MenuScrapingService.cs`: Scrapes all 8 menu types from meyers.dk
+- `Services/MenuScrapingService.cs`: Parses Nuxt SSR data from meyers.dk for all 6 menu types
 - `Services/CalendarService.cs`: Generates iCal feeds with 5-minute alarms and menu-type-specific UIDs
 - `Services/MenuCacheBackgroundService.cs`: Background refresh every 6 hours
 - `Configuration/MenuCacheOptions.cs`: Background service configuration
@@ -46,13 +46,12 @@ Features multi-menu support, responsive design, and automatic caching.
 ### Meyers.Test
 
 - Comprehensive tests with TestWebApplicationFactory, MockHttpMessageHandler, and real HTML fixtures
-- Tests all 8 menu types, web interface, API endpoints, mobile responsiveness, CalendarService title cleanup,
+- Tests all 6 menu types, web interface, API endpoints, mobile responsiveness, CalendarService title cleanup,
   MapStaticAssets fingerprinting, and all utility helper classes
 
 ## Key Dependencies
 
 - .NET 10.0 with MapStaticAssets
-- HtmlAgilityPack (web scraping)
 - Ical.Net (calendar generation)
 - EntityFrameworkCore.Sqlite (database)
 - Tailwind CSS v4 (styling)
@@ -65,7 +64,7 @@ Features multi-menu support, responsive design, and automatic caching.
 cd Meyers.Web && npm install && cd ..
 dotnet run --project Meyers.Web
 
-# Testing (54 tests total)
+# Testing (167 tests total)
 dotnet test
 
 # Database migrations (note: context is in Infrastructure but migrations run via Web project)
@@ -92,9 +91,11 @@ refreshes every 6 hours. Unique constraints per date/menu type.
 
 ## Web Scraping Implementation
 
-Scrapes meyers.dk tab structure. Auto-discovers menu types from `data-tab-content` attributes. Extracts dates from
-`week-menu-day__header-heading` and menu items from `menu-recipe-display`. Handles HTML entities. Auto-creates menu
-types. Supports all 8 menu types with clean title extraction and HTML entity decoding.
+Parses the `__NUXT_DATA__` JSON payload from meyers.dk/ugens-menuer (Nuxt SSR). The payload is a flat array with
+index-based references. Menu data is structured as: content → menuBlock objects (with menuTitle + weeks) → days
+(with weekday + menu → categories → items). Dates are computed from ISO week numbers in "Uge N" labels.
+Supports 6 menu types: Almanak, Den Grønne, Det Velkendte, Meyers til frokost Aarhus, En Bid Grønnere,
+Det Velkendte - Portionspakket.
 
 ## Custom Calendar Feature
 
@@ -113,8 +114,8 @@ handlers from triggering expensive scraping operations.
 
 ## Testing
 
-Comprehensive test suite with TestWebApplicationFactory, MockHttpMessageHandler, and real HTML fixtures. Tests all 8
-menu types, web interface, API endpoints, mobile responsiveness, and MapStaticAssets fingerprinting.
+Comprehensive test suite (167 tests) with TestWebApplicationFactory, MockHttpMessageHandler, and real HTML fixtures.
+Tests all 6 menu types, web interface, API endpoints, mobile responsiveness, and MapStaticAssets fingerprinting.
 
 ## Important Notes
 
@@ -123,7 +124,7 @@ menu types, web interface, API endpoints, mobile responsiveness, and MapStaticAs
 - **JS Assets**: Use `@Assets["js/menu-app.js"]` for JavaScript files
 - **Regex**: Always use `GeneratedRegex` attribute
 - **Database**: Repository pattern with optimized single queries in Infrastructure layer
-- **Testing**: Update all tests when adding features (currently 54 tests)
+- **Testing**: Update all tests when adding features (currently 167 tests)
 - **Calendar Events**: All events include 5-minute alarm notifications
 - **Title Cleanup**: CalendarService.CleanupTitle() only adds "..." when actually truncating content
 - **Namespace Updates**: Use Infrastructure namespaces for moved services and repositories

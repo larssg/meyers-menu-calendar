@@ -2,13 +2,13 @@
 
 [![Build and Deploy](https://github.com/larssg/meyers-menu-calendar/actions/workflows/build-and-deploy.yml/badge.svg)](https://github.com/larssg/meyers-menu-calendar/actions/workflows/build-and-deploy.yml)
 
-A .NET 10 Blazor SSR application that scrapes Meyers restaurant menus and provides iCal feeds for 8 different menu types.
+A .NET 10 Blazor SSR application that scrapes Meyers restaurant menus and provides iCal feeds for 6 different menu types.
 Features clean architecture, multi-menu support, custom calendar builder, and automatic caching with 5-minute alarm
 notifications.
 
 ## Features
 
-- 📅 **iCal Feeds**: Individual calendar subscriptions for each of 8 menu types
+- 📅 **iCal Feeds**: Individual calendar subscriptions for each of 6 menu types
 - 🔔 **Alarm Notifications**: 5-minute reminders before lunch events
 - 🎛️ **Custom Calendar Builder**: Mix different menus per weekday (e.g., "Det velkendte" Mon-Wed-Fri, "Den grønne" Thu)
 - 🚀 **Fast**: Blazor SSR with .NET 10 MapStaticAssets and clean architecture
