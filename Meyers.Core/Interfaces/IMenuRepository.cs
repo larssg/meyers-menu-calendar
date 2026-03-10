@@ -25,4 +25,8 @@ public interface IMenuRepository
 
     Task LogScrapingOperationAsync(ScrapingLog scrapingLog);
     Task<List<ScrapingLog>> GetRecentScrapingLogsAsync(int count = 50);
+
+    Task LogCalendarDownloadAsync(CalendarDownloadLog downloadLog);
+    Task<List<CalendarDownloadLog>> GetRecentCalendarDownloadsAsync(int count = 50);
+    Task<List<CalendarDownloadLog>> GetCalendarDownloadsAfterAsync(DateTime since);
 }

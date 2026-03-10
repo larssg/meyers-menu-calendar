@@ -66,7 +66,9 @@ public partial class CalendarEndpointHandler(
             var icalContent = calendarService.GenerateCalendar(allMenuDays, menuTypeName, includeAlarms);
             var lastModified = await menuRepository.GetLastUpdateTimeAsync() ?? DateTime.UtcNow;
 
-            return CreateCachedCalendarResponse(icalContent, lastModified, httpContext);
+            var result = CreateCachedCalendarResponse(icalContent, lastModified, httpContext);
+            await LogDownloadAsync(menuTypeSlug, httpContext);
+            return result;
         }
         catch (Exception ex)
         {
@@ -148,7 +150,9 @@ public partial class CalendarEndpointHandler(
             var icalContent = calendarService.GenerateCalendar(customMenuDays, "Custom Menu Selection", includeAlarms);
             var lastModified = await menuRepository.GetLastUpdateTimeAsync() ?? DateTime.UtcNow;
 
-            return CreateCachedCalendarResponse(icalContent, lastModified, httpContext);
+            var result = CreateCachedCalendarResponse(icalContent, lastModified, httpContext);
+            await LogDownloadAsync($"custom/{config}", httpContext);
+            return result;
         }
         catch (Exception ex)
         {
@@ -225,6 +229,58 @@ public partial class CalendarEndpointHandler(
             }
 
         return sb.ToString();
+    }
+
+    private async Task LogDownloadAsync(string feedPath, HttpContext httpContext)
+    {
+        try
+        {
+            var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var ipHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(ip)))[..16];
+            var userAgent = httpContext.Request.Headers.UserAgent.ToString();
+            var clientName = ParseClientName(userAgent);
+
+            await menuRepository.LogCalendarDownloadAsync(new CalendarDownloadLog
+            {
+                Timestamp = DateTime.UtcNow,
+                FeedPath = feedPath,
+                ClientName = clientName,
+                IpHash = ipHash,
+                NotModified = false
+            });
+        }
+        catch
+        {
+            // Don't let logging failures affect calendar delivery
+        }
+    }
+
+    private static string ParseClientName(string userAgent)
+    {
+        if (string.IsNullOrEmpty(userAgent)) return "Unknown";
+
+        // Common calendar clients
+        if (userAgent.Contains("Thunderbird", StringComparison.OrdinalIgnoreCase)) return "Thunderbird";
+        if (userAgent.Contains("Google-Calendar", StringComparison.OrdinalIgnoreCase)) return "Google Calendar";
+        if (userAgent.Contains("Microsoft Outlook", StringComparison.OrdinalIgnoreCase)) return "Outlook";
+        if (userAgent.Contains("CalendarAgent", StringComparison.OrdinalIgnoreCase) ||
+            userAgent.Contains("dataaccessd", StringComparison.OrdinalIgnoreCase) ||
+            userAgent.Contains("CoreDAV", StringComparison.OrdinalIgnoreCase))
+            return "Apple Calendar";
+        if (userAgent.Contains("CalDAV", StringComparison.OrdinalIgnoreCase)) return "CalDAV Client";
+        if (userAgent.Contains("curl", StringComparison.OrdinalIgnoreCase)) return "curl";
+        if (userAgent.Contains("wget", StringComparison.OrdinalIgnoreCase)) return "wget";
+        if (userAgent.Contains("Python", StringComparison.OrdinalIgnoreCase)) return "Python";
+
+        // Browsers
+        if (userAgent.Contains("Firefox", StringComparison.OrdinalIgnoreCase)) return "Firefox";
+        if (userAgent.Contains("Chrome", StringComparison.OrdinalIgnoreCase) &&
+            !userAgent.Contains("Edg", StringComparison.OrdinalIgnoreCase)) return "Chrome";
+        if (userAgent.Contains("Edg", StringComparison.OrdinalIgnoreCase)) return "Edge";
+        if (userAgent.Contains("Safari", StringComparison.OrdinalIgnoreCase)) return "Safari";
+
+        // Truncate unknown user agents
+        return userAgent.Length > 50 ? userAgent[..50] + "..." : userAgent;
     }
 
     private IResult CreateCachedCalendarResponse(string icalContent, DateTime lastModified, HttpContext httpContext)

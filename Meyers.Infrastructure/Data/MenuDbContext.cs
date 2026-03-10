@@ -8,6 +8,7 @@ public class MenuDbContext(DbContextOptions<MenuDbContext> options) : DbContext(
     public DbSet<MenuEntry> MenuEntries { get; set; } = null!;
     public DbSet<MenuType> MenuTypes { get; set; } = null!;
     public DbSet<ScrapingLog> ScrapingLogs { get; set; } = null!;
+    public DbSet<CalendarDownloadLog> CalendarDownloadLogs { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -52,6 +53,17 @@ public class MenuDbContext(DbContextOptions<MenuDbContext> options) : DbContext(
             entity.Property(e => e.ErrorMessage).HasMaxLength(1000);
             entity.Property(e => e.Duration).IsRequired();
             entity.Property(e => e.Source).IsRequired().HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<CalendarDownloadLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Timestamp).IsRequired();
+            entity.Property(e => e.FeedPath).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.ClientName).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.IpHash).IsRequired().HasMaxLength(16);
+            entity.Property(e => e.NotModified).IsRequired();
+            entity.HasIndex(e => e.Timestamp);
         });
     }
 }

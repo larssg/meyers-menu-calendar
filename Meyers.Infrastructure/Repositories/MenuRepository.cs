@@ -244,4 +244,26 @@ public class MenuRepository(MenuDbContext context) : IMenuRepository
             .Take(count)
             .ToListAsync();
     }
+
+    public async Task LogCalendarDownloadAsync(CalendarDownloadLog downloadLog)
+    {
+        await context.CalendarDownloadLogs.AddAsync(downloadLog);
+        await context.SaveChangesAsync();
+    }
+
+    public async Task<List<CalendarDownloadLog>> GetRecentCalendarDownloadsAsync(int count = 50)
+    {
+        return await context.CalendarDownloadLogs
+            .OrderByDescending(dl => dl.Timestamp)
+            .Take(count)
+            .ToListAsync();
+    }
+
+    public async Task<List<CalendarDownloadLog>> GetCalendarDownloadsAfterAsync(DateTime since)
+    {
+        return await context.CalendarDownloadLogs
+            .Where(dl => dl.Timestamp >= since)
+            .OrderByDescending(dl => dl.Timestamp)
+            .ToListAsync();
+    }
 }
