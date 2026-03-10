@@ -1,15 +1,15 @@
+using System.Globalization;
+using System.Text.Json;
 using System.Text.RegularExpressions;
-using HtmlAgilityPack;
 using Meyers.Core.Interfaces;
 using Meyers.Core.Models;
 using Meyers.Core.Utilities;
-using static System.Net.WebUtility;
 
 namespace Meyers.Infrastructure.Services;
 
 public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository menuRepository) : IMenuScrapingService
 {
-    private const string Url = "https://meyers.dk/erhverv/frokostordning/ugens-menuer/";
+    private const string Url = "https://meyers.dk/ugens-menuer";
     private static readonly TimeSpan CacheRefreshInterval = TimeSpan.FromHours(6);
 
     public async Task<List<MenuDay>> ScrapeMenuAsync(bool forceRefresh = false)
@@ -100,146 +100,17 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
             var html = await httpClient.GetStringAsync(Url);
             scrapingLog.RequestSuccessful = true;
 
-            var doc = new HtmlDocument();
-            doc.LoadHtml(html);
-
-            var menuDays = new List<MenuDay>();
-
-            // First, extract the dates from the week menu headers
-            var dateMapping = ExtractDatesFromWeekHeaders(doc);
-            if (dateMapping.Count == 0)
-            {
-                scrapingLog.ParsingSuccessful = false;
-                scrapingLog.ErrorMessage = "No date mapping found in HTML";
-                scrapingLog.Duration = DateTime.UtcNow - startTime;
-                try
-                {
-                    await menuRepository.LogScrapingOperationAsync(scrapingLog);
-                }
-                catch
-                {
-                    // Ignore logging errors
-                }
-
-                return menuDays;
-            }
-
-            // Discover all available menu types from data-tab-content attributes
-            var allTabContentNodes = doc.DocumentNode.SelectNodes("//div[@data-tab-content]");
-            if (allTabContentNodes == null)
-            {
-                scrapingLog.ParsingSuccessful = false;
-                scrapingLog.ErrorMessage = "No tab content nodes found in HTML";
-                scrapingLog.Duration = DateTime.UtcNow - startTime;
-                try
-                {
-                    await menuRepository.LogScrapingOperationAsync(scrapingLog);
-                }
-                catch
-                {
-                    // Ignore logging errors
-                }
-
-                return menuDays;
-            }
-
-            // Get unique menu types and decode HTML entities
-            var menuTypes = allTabContentNodes
-                .Select(node => node.GetAttributeValue("data-tab-content", ""))
-                .Where(content => !string.IsNullOrEmpty(content))
-                .Select(content => HtmlDecode(content)) // Decode HTML entities like "Den Gr&#248;nne" -> "Den Grønne"
-                .Distinct()
-                .ToList();
-
-            // Process each menu type
-            foreach (var menuType in menuTypes)
-            {
-                // We need to search for both the decoded and original encoded versions
-                // since the HTML might have the encoded version in attributes
-                var encodedMenuType = HtmlEncode(menuType);
-                var tabNodes =
-                    doc.DocumentNode.SelectNodes(
-                        $"//div[@data-tab-content='{menuType}' or @data-tab-content='{encodedMenuType}']");
-                if (tabNodes == null) continue;
-
-                var dayIndex = 0;
-
-                foreach (var tabNode in tabNodes)
-                {
-                    // Only process weekdays and if we have date mapping
-                    if (dayIndex >= dateMapping.Count) break;
-
-                    var dayInfo = dateMapping[dayIndex];
-
-                    // Look for menu recipe displays within this tab
-                    var menuRecipes = tabNode.SelectNodes(".//div[contains(@class, 'menu-recipe-display')]");
-                    if (menuRecipes != null)
-                    {
-                        var dayMenuItems = new List<string>();
-                        var mainDishContent = "";
-                        var detailsContent = "";
-
-                        foreach (var recipe in menuRecipes)
-                        {
-                            var titleNode =
-                                recipe.SelectSingleNode(".//h4[contains(@class, 'menu-recipe-display__title')]");
-                            var title = titleNode?.InnerText?.Trim();
-
-                            // Normalize whitespace in title (remove newlines and multiple spaces)
-                            if (!string.IsNullOrEmpty(title)) title = Regex.Replace(title, @"\s+", " ").Trim();
-                            var descriptionNode =
-                                recipe.SelectSingleNode(".//p[contains(@class, 'menu-recipe-display__description')]");
-
-                            if (!string.IsNullOrEmpty(title))
-                            {
-                                // Get the plain text content and clean it up
-                                var plainText = HtmlDecode(descriptionNode?.InnerText?.Trim() ?? "");
-                                plainText = Regex.Replace(plainText, @"\s+", " ").Trim();
-
-                                if (!string.IsNullOrEmpty(plainText))
-                                {
-                                    // For backward compatibility, also add to MenuItems
-                                    var fullDescription = HtmlDecode(descriptionNode?.InnerText?.Trim() ?? "");
-                                    fullDescription = Regex
-                                        .Replace(fullDescription, @"\s+", " ").Trim();
-                                    dayMenuItems.Add($"{title}: {fullDescription}");
-
-                                    // Only extract main dish from "Varm ret med tilbehør" section
-                                    if (title.Contains("Varm ret med tilbehør", StringComparison.OrdinalIgnoreCase))
-                                    {
-                                        var (mainDish, details) = ExtractMainDishAndDetails(plainText);
-                                        mainDishContent = mainDish;
-                                        detailsContent = details;
-                                    }
-                                }
-                            }
-                        }
-
-                        if (dayMenuItems.Any())
-                        {
-                            // If we didn't find a main dish in "Varm ret med tilbehør", use the first menu item
-                            if (string.IsNullOrEmpty(mainDishContent) && dayMenuItems.Count > 0)
-                                mainDishContent = ExtractMainDishFromFirstItem(dayMenuItems[0]);
-
-                            menuDays.Add(new MenuDay
-                            {
-                                DayName = dayInfo.DayName,
-                                Date = dayInfo.Date,
-                                MenuItems = dayMenuItems,
-                                MainDish = mainDishContent,
-                                Details = detailsContent,
-                                MenuType = menuType
-                            });
-                        }
-                    }
-
-                    dayIndex++;
-                }
-            }
+            var menuDays = ParseNuxtData(html);
 
             scrapingLog.ParsingSuccessful = true;
             scrapingLog.NewMenuItemsCount = menuDays.Count;
             scrapingLog.Duration = DateTime.UtcNow - startTime;
+
+            if (menuDays.Count == 0)
+            {
+                scrapingLog.ParsingSuccessful = false;
+                scrapingLog.ErrorMessage = "No menu data found in __NUXT_DATA__";
+            }
 
             try
             {
@@ -269,7 +140,241 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
         }
     }
 
-    private (string mainDish, string details) ExtractMainDishAndDetails(string plainText)
+    internal static List<MenuDay> ParseNuxtData(string html)
+    {
+        var menuDays = new List<MenuDay>();
+
+        // Extract the __NUXT_DATA__ JSON array from the script tag
+        var match = NuxtDataRegex().Match(html);
+        if (!match.Success) return menuDays;
+
+        var jsonText = match.Groups[1].Value;
+        JsonElement[] data;
+        try
+        {
+            data = JsonSerializer.Deserialize<JsonElement[]>(jsonText) ?? [];
+        }
+        catch
+        {
+            return menuDays;
+        }
+
+        if (data.Length == 0) return menuDays;
+
+        // Find menuBlock entries by scanning for _type: "menuBlock"
+        // The Nuxt data is a flat array where dicts use index references
+        for (var i = 0; i < data.Length; i++)
+        {
+            if (data[i].ValueKind != JsonValueKind.Object) continue;
+
+            var obj = data[i];
+            if (!obj.TryGetProperty("_type", out var typeRef)) continue;
+            if (!obj.TryGetProperty("menuTitle", out var titleRef)) continue;
+            if (!obj.TryGetProperty("weeks", out var weeksRef)) continue;
+
+            // Resolve the type string
+            var typeIdx = typeRef.GetInt32();
+            if (typeIdx >= data.Length || data[typeIdx].ValueKind != JsonValueKind.String) continue;
+            if (data[typeIdx].GetString() != "menuBlock") continue;
+
+            // Resolve the menu title
+            var titleIdx = titleRef.GetInt32();
+            if (titleIdx >= data.Length || data[titleIdx].ValueKind != JsonValueKind.String) continue;
+            var menuTypeName = data[titleIdx].GetString()!;
+
+            // Resolve the weeks array
+            var weeksIdx = weeksRef.GetInt32();
+            if (weeksIdx >= data.Length || data[weeksIdx].ValueKind != JsonValueKind.Array) continue;
+
+            var weeksArray = data[weeksIdx];
+            foreach (var weekIdxEl in weeksArray.EnumerateArray())
+            {
+                var weekIdx = weekIdxEl.GetInt32();
+                if (weekIdx >= data.Length || data[weekIdx].ValueKind != JsonValueKind.Object) continue;
+
+                var week = data[weekIdx];
+                if (!week.TryGetProperty("days", out var daysRef) ||
+                    !week.TryGetProperty("weekLabel", out var wlRef)) continue;
+
+                var weekLabelIdx = wlRef.GetInt32();
+                if (weekLabelIdx >= data.Length) continue;
+
+                var weekLabel = data[weekLabelIdx].GetString() ?? "";
+                var weekDates = ParseWeekDates(weekLabel);
+                if (weekDates.Count == 0) continue;
+
+                // Resolve days array
+                var daysIdx = daysRef.GetInt32();
+                if (daysIdx >= data.Length || data[daysIdx].ValueKind != JsonValueKind.Array) continue;
+
+                var daysArray = data[daysIdx];
+                var dayIndex = 0;
+
+                foreach (var dayIdxEl in daysArray.EnumerateArray())
+                {
+                    if (dayIndex >= weekDates.Count) break;
+
+                    var dayIdx = dayIdxEl.GetInt32();
+                    if (dayIdx >= data.Length || data[dayIdx].ValueKind != JsonValueKind.Object) continue;
+
+                    var day = data[dayIdx];
+                    if (!day.TryGetProperty("menu", out var menuRef) ||
+                        !day.TryGetProperty("weekday", out var wdRef)) continue;
+
+                    // Resolve weekday name
+                    var wdIdx = wdRef.GetInt32();
+                    if (wdIdx >= data.Length || data[wdIdx].ValueKind != JsonValueKind.String) continue;
+                    var weekdayName = StringHelper.CapitalizeFirst(data[wdIdx].GetString()!);
+
+                    // Skip non-weekdays
+                    if (!DanishDateHelper.IsWeekday(weekdayName))
+                    {
+                        dayIndex++;
+                        continue;
+                    }
+
+                    var date = weekDates[dayIndex];
+
+                    // Resolve menu -> categories
+                    var menuIdx = menuRef.GetInt32();
+                    if (menuIdx >= data.Length || data[menuIdx].ValueKind != JsonValueKind.Object) continue;
+
+                    var menu = data[menuIdx];
+                    if (!menu.TryGetProperty("categories", out var catsRef)) continue;
+
+                    var catsIdx = catsRef.GetInt32();
+                    if (catsIdx >= data.Length || data[catsIdx].ValueKind != JsonValueKind.Array) continue;
+
+                    var dayMenuItems = new List<string>();
+                    var mainDishContent = "";
+                    var detailsContent = "";
+
+                    foreach (var catIdxEl in data[catsIdx].EnumerateArray())
+                    {
+                        var catIdx = catIdxEl.GetInt32();
+                        if (catIdx >= data.Length || data[catIdx].ValueKind != JsonValueKind.Object) continue;
+
+                        var category = data[catIdx];
+                        if (!category.TryGetProperty("name", out var catNameRef) ||
+                            !category.TryGetProperty("items", out var itemsRef)) continue;
+
+                        var catNameIdx = catNameRef.GetInt32();
+                        var categoryName = catNameIdx < data.Length && data[catNameIdx].ValueKind == JsonValueKind.String
+                            ? data[catNameIdx].GetString()!
+                            : "";
+
+                        var itemsIdx = itemsRef.GetInt32();
+                        if (itemsIdx >= data.Length || data[itemsIdx].ValueKind != JsonValueKind.Array) continue;
+
+                        foreach (var itemIdxEl in data[itemsIdx].EnumerateArray())
+                        {
+                            var itemIdx = itemIdxEl.GetInt32();
+                            if (itemIdx >= data.Length || data[itemIdx].ValueKind != JsonValueKind.Object) continue;
+
+                            var item = data[itemIdx];
+                            var title = ResolveString(data, item, "title") ?? "";
+                            var description = ResolveString(data, item, "description")?.Trim() ?? "";
+
+                            // Normalize whitespace
+                            title = WhitespaceRegex().Replace(title, " ").Trim();
+                            description = WhitespaceRegex().Replace(description, " ").Trim();
+
+                            if (string.IsNullOrEmpty(title)) continue;
+
+                            var fullItem = string.IsNullOrEmpty(description)
+                                ? $"{categoryName}: {title}"
+                                : $"{categoryName}: {title} ({description})";
+                            dayMenuItems.Add(fullItem);
+
+                            // Extract main dish from "Varm ret" categories
+                            if (categoryName.Contains("Varm ret", StringComparison.OrdinalIgnoreCase) &&
+                                string.IsNullOrEmpty(mainDishContent))
+                            {
+                                var (mainDish, details) = ExtractMainDishAndDetails(title);
+                                mainDishContent = mainDish;
+                                detailsContent = details;
+                            }
+                        }
+                    }
+
+                    if (dayMenuItems.Count > 0)
+                    {
+                        if (string.IsNullOrEmpty(mainDishContent))
+                            mainDishContent = ExtractMainDishFromFirstItem(dayMenuItems[0]);
+
+                        menuDays.Add(new MenuDay
+                        {
+                            DayName = weekdayName,
+                            Date = date,
+                            MenuItems = dayMenuItems,
+                            MainDish = mainDishContent,
+                            Details = detailsContent,
+                            MenuType = menuTypeName
+                        });
+                    }
+
+                    dayIndex++;
+                }
+            }
+        }
+
+        return menuDays;
+    }
+
+    private static string? ResolveString(JsonElement[] data, JsonElement obj, string property)
+    {
+        if (!obj.TryGetProperty(property, out var prop)) return null;
+
+        // Null references in Nuxt data point to index 9 which holds null
+        if (prop.ValueKind == JsonValueKind.Number)
+        {
+            var idx = prop.GetInt32();
+            if (idx >= data.Length) return null;
+            return data[idx].ValueKind == JsonValueKind.String ? data[idx].GetString() : null;
+        }
+
+        return prop.ValueKind == JsonValueKind.String ? prop.GetString() : null;
+    }
+
+    /// <summary>
+    /// Computes Mon-Fri dates from a week label like "Uge 11".
+    /// Uses ISO 8601 week numbering. Year is inferred from proximity to current date.
+    /// </summary>
+    internal static List<DateTime> ParseWeekDates(string weekLabel)
+    {
+        var dates = new List<DateTime>();
+
+        var weekMatch = WeekLabelRegex().Match(weekLabel);
+        if (!weekMatch.Success) return dates;
+
+        var weekNumber = int.Parse(weekMatch.Groups[1].Value);
+        var year = DetermineYear(weekNumber);
+        var monday = ISOWeek.GetYearStart(year).AddDays((weekNumber - 1) * 7);
+
+        // Generate Mon-Fri dates
+        for (var i = 0; i < 5; i++)
+        {
+            dates.Add(monday.AddDays(i));
+        }
+
+        return dates;
+    }
+
+    private static int DetermineYear(int weekNumber)
+    {
+        var now = DateTime.Today;
+        var year = now.Year;
+
+        // Handle year boundary: Dec showing week 1-2 = next year, Jan showing week 52+ = previous year
+        if (now.Month >= 11 && weekNumber <= 2)
+            return year + 1;
+        if (now.Month <= 2 && weekNumber > 50)
+            return year - 1;
+
+        return year;
+    }
+
+    private static (string mainDish, string details) ExtractMainDishAndDetails(string plainText)
     {
         // Find the first sentence or phrase (up to the first period followed by space, or first 100 chars)
         var firstSentenceMatch = Regex.Match(plainText, @"^([^.]*\.)");
@@ -318,49 +423,15 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
         return StringHelper.ExtractMainDishFromFirstItem(firstItem);
     }
 
-    private List<(string DayName, DateTime Date)> ExtractDatesFromWeekHeaders(HtmlDocument doc)
-    {
-        var dateMapping = new List<(string DayName, DateTime Date)>();
-
-        // Look for day headers with dates like "mandag <span>28 jul, 2025</span>"
-        var dayHeaders = doc.DocumentNode.SelectNodes("//h5[contains(@class, 'week-menu-day__header-heading')]");
-
-        if (dayHeaders != null)
-            foreach (var header in dayHeaders)
-            {
-                var headerText = header.InnerText?.Trim();
-                if (string.IsNullOrEmpty(headerText)) continue;
-
-                // Parse format like "mandag 28 jul, 2025"
-                var parts = headerText.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                if (parts.Length < 4) continue;
-
-                var dayName = StringHelper.CapitalizeFirst(parts[0].Trim());
-                var dayNumber = parts[1].Trim();
-                var monthName = parts[2].Trim().Replace(",", "");
-                var year = parts[3].Trim();
-
-                if (!int.TryParse(dayNumber, out var day) || !int.TryParse(year, out var yearInt)) continue;
-
-                var month = DanishDateHelper.ParseDanishMonth(monthName);
-                if (month <= 0) continue;
-
-                try
-                {
-                    var date = new DateTime(yearInt, month, day);
-                    dateMapping.Add((dayName, date));
-                }
-                catch
-                {
-                    // Skip invalid dates
-                }
-            }
-
-        // Only return weekdays (both weeks - up to 10 days)
-        return dateMapping.Where(d => DanishDateHelper.IsWeekday(d.DayName)).ToList();
-    }
-
-
     [GeneratedRegex(@"\([^)]*\)\s*")]
     private static partial Regex AllergenRegex();
+
+    [GeneratedRegex(@"<script[^>]*id=""__NUXT_DATA__""[^>]*>(.*?)</script>", RegexOptions.Singleline)]
+    private static partial Regex NuxtDataRegex();
+
+    [GeneratedRegex(@"\s+")]
+    private static partial Regex WhitespaceRegex();
+
+    [GeneratedRegex(@"Uge\s+(\d+)")]
+    private static partial Regex WeekLabelRegex();
 }

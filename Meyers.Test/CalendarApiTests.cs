@@ -74,18 +74,18 @@ public class CalendarApiTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(10, eventCount);
 
         // Verify the calendar contains the correct dates for both weeks with Det velkendte suffix
-        // UIDs now include menu type: "meyers-menu-2025-11-10-det-velkendte"
-        Assert.Contains("UID:meyers-menu-2025-11-10-det-velkendte", content); // Monday
-        Assert.Contains("UID:meyers-menu-2025-11-11-det-velkendte", content); // Tuesday
-        Assert.Contains("UID:meyers-menu-2025-11-12-det-velkendte", content); // Wednesday
-        Assert.Contains("UID:meyers-menu-2025-11-13-det-velkendte", content); // Thursday
-        Assert.Contains("UID:meyers-menu-2025-11-14-det-velkendte", content); // Friday
-        // Second week: November 17 - November 21, 2025
-        Assert.Contains("UID:meyers-menu-2025-11-17-det-velkendte", content); // Monday
-        Assert.Contains("UID:meyers-menu-2025-11-18-det-velkendte", content); // Tuesday
-        Assert.Contains("UID:meyers-menu-2025-11-19-det-velkendte", content); // Wednesday
-        Assert.Contains("UID:meyers-menu-2025-11-20-det-velkendte", content); // Thursday
-        Assert.Contains("UID:meyers-menu-2025-11-21-det-velkendte", content); // Friday
+        // Uge 11: March 9-13, Uge 12: March 16-20, 2026
+        Assert.Contains("UID:meyers-menu-2026-03-09-det-velkendte", content); // Monday
+        Assert.Contains("UID:meyers-menu-2026-03-10-det-velkendte", content); // Tuesday
+        Assert.Contains("UID:meyers-menu-2026-03-11-det-velkendte", content); // Wednesday
+        Assert.Contains("UID:meyers-menu-2026-03-12-det-velkendte", content); // Thursday
+        Assert.Contains("UID:meyers-menu-2026-03-13-det-velkendte", content); // Friday
+        // Second week
+        Assert.Contains("UID:meyers-menu-2026-03-16-det-velkendte", content); // Monday
+        Assert.Contains("UID:meyers-menu-2026-03-17-det-velkendte", content); // Tuesday
+        Assert.Contains("UID:meyers-menu-2026-03-18-det-velkendte", content); // Wednesday
+        Assert.Contains("UID:meyers-menu-2026-03-19-det-velkendte", content); // Thursday
+        Assert.Contains("UID:meyers-menu-2026-03-20-det-velkendte", content); // Friday
     }
 
     [Fact]
@@ -137,8 +137,8 @@ public class CalendarApiTests : IClassFixture<TestWebApplicationFactory>
         var menuCount = menuCountProperty.GetInt32();
         Assert.True(menuCount > 0, $"Expected menu count > 0, but got {menuCount}");
 
-        // Should have 80 entries (8 menu types × 10 weekdays)
-        Assert.Equal(80, menuCount);
+        // Should have 60 entries (6 menu types × 10 weekdays)
+        Assert.Equal(60, menuCount);
     }
 
     [Fact]

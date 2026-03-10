@@ -13,8 +13,8 @@ namespace Meyers.Test;
 
 public class TestTimeZoneService : ITimeZoneService
 {
-    // Fixed date matching the test fixture data (Nov 10-21, 2025)
-    private static readonly DateTime FixedDate = new(2025, 11, 10);
+    // Fixed date matching the test fixture data (Mar 9-20, 2026)
+    private static readonly DateTime FixedDate = new(2026, 3, 9);
 
     public TimeZoneInfo CopenhagenTimeZone => TimeZoneInfo.FindSystemTimeZoneById("Europe/Copenhagen");
 

@@ -56,17 +56,17 @@ public class MenuScrapingServiceTests
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
-        // Verify we have entries for all menu types and all weekdays (8 menu types × 10 days = 80 total)
+        // Verify we have entries for all menu types and all weekdays (6 menu types × 10 days = 60 total)
         var expectedDays = new[] { "Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag" };
         var foundDays = result.Select(r => r.DayName).ToList();
 
-        Assert.Equal(80, foundDays.Count); // 8 menu types × 10 weekdays
+        Assert.Equal(60, foundDays.Count); // 6 menu types × 10 weekdays
 
-        // Verify each weekday appears multiple times (once per menu type)
+        // Verify each weekday appears multiple times (once per menu type per week)
         foreach (var expectedDay in expectedDays)
         {
             var dayCount = foundDays.Count(d => d == expectedDay);
-            Assert.True(dayCount >= 8, $"Expected at least 8 entries for {expectedDay}, but found {dayCount}");
+            Assert.True(dayCount >= 6, $"Expected at least 6 entries for {expectedDay}, but found {dayCount}");
         }
 
         // Verify menu items contain expected patterns
@@ -96,17 +96,14 @@ public class MenuScrapingServiceTests
         Assert.NotNull(mondayMenu);
         Assert.NotEmpty(mondayMenu.MenuItems);
 
-        // Verify Monday contains actual menu content (not specific dishes as they change daily)
+        // Verify Monday contains actual menu content
         var hasMenuContent = mondayMenu.MenuItems.Any(item =>
             item.Contains("Varm ret", StringComparison.OrdinalIgnoreCase) ||
-            item.Contains("Alm./Halal:", StringComparison.OrdinalIgnoreCase) ||
+            item.Contains("Alm.", StringComparison.OrdinalIgnoreCase) ||
             item.Contains("Vegetarisk", StringComparison.OrdinalIgnoreCase));
 
         Assert.True(hasMenuContent,
             $"Expected Monday menu to contain valid menu structure. Found items: {string.Join("; ", mondayMenu.MenuItems)}");
-
-        // Log the actual content for debugging
-        foreach (var item in mondayMenu.MenuItems) Console.WriteLine($"Menu item: {item}");
     }
 
     [Fact]
@@ -150,17 +147,17 @@ public class MenuScrapingServiceTests
         // Act
         var result = await scrapingService.ScrapeMenuAsync();
 
-        // Assert
-        var mondayMenus = result.Where(r => r.DayName == "Mandag" && r.Date == new DateTime(2025, 11, 10)).ToList();
+        // Assert - Uge 11 2026: March 9-13 (Monday March 9)
+        var mondayMenus = result.Where(r => r.DayName == "Mandag" && r.Date == new DateTime(2026, 3, 9)).ToList();
         Assert.NotEmpty(mondayMenus);
-        Assert.Equal(8, mondayMenus.Count); // Should have 8 menu types for Monday
+        Assert.Equal(6, mondayMenus.Count); // Should have 6 menu types for Monday
 
-        // Find "Det velkendte" menu for Monday November 10, 2025 
-        var detVelkendteMonday = mondayMenus.FirstOrDefault(m =>
-            m.MenuItems.Any(item => item.Contains("Kylling og champignon", StringComparison.OrdinalIgnoreCase)));
+        // Find "Almanak" menu for Monday with Cassoulet
+        var almanakMonday = mondayMenus.FirstOrDefault(m =>
+            m.MenuItems.Any(item => item.Contains("Cassoulet", StringComparison.OrdinalIgnoreCase)));
 
-        Assert.NotNull(detVelkendteMonday);
-        Assert.NotEmpty(detVelkendteMonday.MenuItems);
+        Assert.NotNull(almanakMonday);
+        Assert.NotEmpty(almanakMonday.MenuItems);
     }
 
     [Fact]
@@ -174,44 +171,41 @@ public class MenuScrapingServiceTests
         var result = await scrapingService.ScrapeMenuAsync();
 
         // Assert
-        Assert.Equal(80, result.Count); // 8 menu types × 10 weekdays
+        Assert.Equal(60, result.Count); // 6 menu types × 10 weekdays
 
-        // Expected dates for each week
+        // Expected dates: Uge 11 (March 9-13) and Uge 12 (March 16-20), 2026
         var expectedDates = new[]
         {
-            new DateTime(2025, 11, 10), // Monday week 1
-            new DateTime(2025, 11, 11), // Tuesday week 1
-            new DateTime(2025, 11, 12), // Wednesday week 1
-            new DateTime(2025, 11, 13), // Thursday week 1
-            new DateTime(2025, 11, 14), // Friday week 1
-            new DateTime(2025, 11, 17), // Monday week 2
-            new DateTime(2025, 11, 18), // Tuesday week 2
-            new DateTime(2025, 11, 19), // Wednesday week 2
-            new DateTime(2025, 11, 20), // Thursday week 2
-            new DateTime(2025, 11, 21) // Friday week 2
+            new DateTime(2026, 3, 9), // Monday week 1
+            new DateTime(2026, 3, 10), // Tuesday week 1
+            new DateTime(2026, 3, 11), // Wednesday week 1
+            new DateTime(2026, 3, 12), // Thursday week 1
+            new DateTime(2026, 3, 13), // Friday week 1
+            new DateTime(2026, 3, 16), // Monday week 2
+            new DateTime(2026, 3, 17), // Tuesday week 2
+            new DateTime(2026, 3, 18), // Wednesday week 2
+            new DateTime(2026, 3, 19), // Thursday week 2
+            new DateTime(2026, 3, 20) // Friday week 2
         };
 
-        // Verify that all expected dates appear (8 times each, once per menu type)
+        // Verify that all expected dates appear (6 times each, once per menu type)
         foreach (var expectedDate in expectedDates)
         {
             var entriesForDate = result.Where(r => r.Date == expectedDate).ToList();
-            Assert.Equal(8, entriesForDate.Count); // Should have 8 menu types for each date
+            Assert.Equal(6, entriesForDate.Count); // Should have 6 menu types for each date
         }
     }
 
     [Fact]
     public async Task ScrapeMenuAsync_WithCachedData_UsesCache()
     {
-        // This test verifies that when data is cached and fresh, it doesn't scrape again
-        // We'll test this by checking that the HTTP client is not called on the second request
-
         // Arrange
         using var context = CreateInMemoryContext();
         var callCount = 0;
         var mockHandler = new MockHttpMessageHandler(_testHtmlPath)
         {
             OnSendAsync = () => callCount++,
-            UseCurrentWeekDates = true // Use dynamic dates so cache entries are within valid range
+            UseCurrentWeekDates = true
         };
         var httpClient = new HttpClient(mockHandler);
         var repository = new MenuRepository(context);
@@ -220,7 +214,7 @@ public class MenuScrapingServiceTests
         // Act - First call should scrape from website
         var firstResult = await scrapingService.ScrapeMenuAsync();
         Assert.NotEmpty(firstResult);
-        Assert.Equal(1, callCount); // HTTP client should be called once
+        Assert.Equal(1, callCount);
 
         // Update timestamps to ensure cache is considered fresh
         var entries = await context.MenuEntries.ToListAsync();
@@ -229,24 +223,19 @@ public class MenuScrapingServiceTests
 
         // Act - Second call should use cache (not call HTTP)
         var secondResult = await scrapingService.ScrapeMenuAsync();
-        Assert.Equal(1, callCount); // HTTP client should NOT be called again
-
-        // The results might differ in count due to date filtering in GetCachedMenusAsync
-        // but the important thing is that no new HTTP request was made
+        Assert.Equal(1, callCount);
     }
 
     [Fact]
     public async Task ScrapeMenuAsync_WithExpiredCache_RefreshesData()
     {
-        // This test verifies that when cache is expired, it scrapes fresh data
-
         // Arrange
         using var context = CreateInMemoryContext();
         var callCount = 0;
         var mockHandler = new MockHttpMessageHandler(_testHtmlPath)
         {
             OnSendAsync = () => callCount++,
-            UseCurrentWeekDates = true // Use dynamic dates for consistency with cache tests
+            UseCurrentWeekDates = true
         };
         var httpClient = new HttpClient(mockHandler);
         var repository = new MenuRepository(context);
@@ -264,8 +253,43 @@ public class MenuScrapingServiceTests
 
         // Act - Second call should scrape again because cache is expired
         var secondResult = await scrapingService.ScrapeMenuAsync();
-        Assert.Equal(2, callCount); // HTTP client should be called again
+        Assert.Equal(2, callCount);
         Assert.NotEmpty(secondResult);
+    }
+
+    [Fact]
+    public void ParseNuxtData_ExtractsAllMenuTypes()
+    {
+        var html = File.ReadAllText(_testHtmlPath);
+        var result = MenuScrapingService.ParseNuxtData(html);
+
+        var groups = result.GroupBy(r => r.MenuType).OrderBy(g => g.Key).ToList();
+        foreach (var g in groups)
+        {
+            Console.WriteLine($"{g.Key}: {g.Count()} entries");
+        }
+        Console.WriteLine($"Total: {result.Count}");
+
+        var menuTypes = groups.Select(g => g.Key).ToList();
+        Assert.Equal(6, menuTypes.Count);
+        Assert.Contains("Almanak", menuTypes);
+        Assert.Contains("Den Grønne", menuTypes);
+        Assert.Contains("Det Velkendte", menuTypes);
+        Assert.Contains("Meyers til frokost Aarhus", menuTypes);
+        Assert.Contains("En Bid Grønnere", menuTypes);
+        Assert.Contains("Det Velkendte - Portionspakket", menuTypes);
+
+        // 6 menu types × 2 weeks × 5 days = 60
+        Assert.Equal(60, result.Count);
+    }
+
+    [Fact]
+    public void ParseWeekDates_ParsesCorrectly()
+    {
+        var dates = MenuScrapingService.ParseWeekDates("Uge 11");
+        Assert.Equal(5, dates.Count);
+        Assert.Equal(new DateTime(2026, 3, 9), dates[0]); // Monday
+        Assert.Equal(new DateTime(2026, 3, 13), dates[4]); // Friday
     }
 }
 
@@ -273,9 +297,6 @@ public class MenuScrapingServiceTests
 public partial class MockHttpMessageHandler : HttpMessageHandler
 {
     private readonly string _filePath;
-
-    // Danish month abbreviations for date replacement
-    private static readonly string[] DanishMonths = ["jan", "feb", "mar", "apr", "maj", "jun", "jul", "aug", "sep", "okt", "nov", "dec"];
 
     public MockHttpMessageHandler(string filePath)
     {
@@ -285,7 +306,7 @@ public partial class MockHttpMessageHandler : HttpMessageHandler
     public Action? OnSendAsync { get; set; }
 
     /// <summary>
-    /// When true, replaces hardcoded dates in the HTML with current-week dates.
+    /// When true, replaces hardcoded week numbers with current-week equivalents.
     /// This prevents cache tests from becoming flaky as time passes.
     /// </summary>
     public bool UseCurrentWeekDates { get; set; }
@@ -298,10 +319,9 @@ public partial class MockHttpMessageHandler : HttpMessageHandler
         if (File.Exists(_filePath))
         {
             var content = await File.ReadAllTextAsync(_filePath, cancellationToken);
-            // Optionally replace static dates with current-week dates
             if (UseCurrentWeekDates)
             {
-                content = ReplaceWithCurrentWeekDates(content);
+                content = ReplaceWithCurrentWeekNumbers(content);
             }
             return new HttpResponseMessage(HttpStatusCode.OK)
             {
@@ -313,40 +333,32 @@ public partial class MockHttpMessageHandler : HttpMessageHandler
     }
 
     /// <summary>
-    /// Replaces hardcoded dates in the test HTML with dates relative to the current week.
-    /// This ensures the test data is always within the valid cache date range.
+    /// Replaces hardcoded "Uge N" labels with current and next week numbers.
+    /// The fixture has two distinct week numbers — map them to current and next week.
     /// </summary>
-    private static string ReplaceWithCurrentWeekDates(string html)
+    private static string ReplaceWithCurrentWeekNumbers(string content)
     {
-        // Find the Monday of the current week
         var today = DateTime.Today;
-        var daysUntilMonday = ((int)today.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
-        var currentMonday = today.AddDays(-daysUntilMonday);
+        var currentWeek = System.Globalization.ISOWeek.GetWeekOfYear(today);
+        var nextWeek = System.Globalization.ISOWeek.GetWeekOfYear(today.AddDays(7));
 
-        // The test HTML has 10 weekdays: Mon-Fri of week 1, then Mon-Fri of week 2
-        // We'll replace them with dates starting from the current Monday
-        var weekdayDates = new List<DateTime>();
-        var date = currentMonday;
-        while (weekdayDates.Count < 10)
+        // Find the two distinct week numbers in the fixture
+        var fixtureWeeks = WeekLabelRegex().Matches(content)
+            .Select(m => int.Parse(m.Groups[1].Value))
+            .Distinct()
+            .OrderBy(w => w)
+            .ToList();
+
+        if (fixtureWeeks.Count >= 2)
         {
-            if (date.DayOfWeek != DayOfWeek.Saturday && date.DayOfWeek != DayOfWeek.Sunday)
-            {
-                weekdayDates.Add(date);
-            }
-            date = date.AddDays(1);
+            // Replace first fixture week with current, second with next
+            content = content.Replace($"Uge {fixtureWeeks[0]}", $"Uge {currentWeek}");
+            content = content.Replace($"Uge {fixtureWeeks[1]}", $"Uge {nextWeek}");
         }
 
-        // Replace dates in the format "DD mon, YYYY" (e.g., "10 nov, 2025")
-        var dateIndex = 0;
-        return DatePatternRegex().Replace(html, match =>
-        {
-            if (dateIndex >= weekdayDates.Count) return match.Value;
-            var newDate = weekdayDates[dateIndex++];
-            var month = DanishMonths[newDate.Month - 1];
-            return $"{newDate.Day} {month}, {newDate.Year}";
-        });
+        return content;
     }
 
-    [GeneratedRegex(@"\d{1,2} (jan|feb|mar|apr|maj|jun|jul|aug|sep|okt|nov|dec), \d{4}")]
-    private static partial Regex DatePatternRegex();
+    [GeneratedRegex(@"Uge (\d+)")]
+    private static partial Regex WeekLabelRegex();
 }
