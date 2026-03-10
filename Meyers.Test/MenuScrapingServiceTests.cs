@@ -337,6 +337,19 @@ public class MenuScrapingServiceTests
             Assert.DoesNotMatch(@"^Vegansk\s*:", day.MainDish);
         }
     }
+
+    [Fact]
+    public void ParseNuxtData_MainDishHasNoTrailingPeriod()
+    {
+        var html = File.ReadAllText(_testHtmlPath);
+        var result = MenuScrapingService.ParseNuxtData(html);
+
+        foreach (var day in result)
+        {
+            Assert.False(day.MainDish.EndsWith('.'),
+                $"{day.MenuType} {day.DayName}: MainDish ends with period: \"{day.MainDish}\"");
+        }
+    }
 }
 
 // Mock HttpMessageHandler for testing

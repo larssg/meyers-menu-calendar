@@ -309,6 +309,10 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
                         if (string.IsNullOrEmpty(mainDishContent))
                             mainDishContent = StripDietPrefix(ExtractMainDishFromFirstItem(dayMenuItems[0]));
 
+                        // Clean up main dish: remove allergens and trailing periods
+                        mainDishContent = AllergenRegex().Replace(mainDishContent, "").Trim();
+                        mainDishContent = mainDishContent.TrimEnd('.', ' ');
+
                         menuDays.Add(new MenuDay
                         {
                             DayName = weekdayName,
