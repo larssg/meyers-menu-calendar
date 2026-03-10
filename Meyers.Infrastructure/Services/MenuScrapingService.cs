@@ -294,7 +294,10 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
                             if (categoryName.Contains("Varm ret", StringComparison.OrdinalIgnoreCase) &&
                                 string.IsNullOrEmpty(mainDishContent))
                             {
-                                var (mainDish, details) = ExtractMainDishAndDetails(title);
+                                // Strip diet prefix like "Alm./halal:", "Vegetarisk:" etc.
+                                // to avoid the period in "Alm." being treated as a sentence ending
+                                var dishText = StripDietPrefix(title);
+                                var (mainDish, details) = ExtractMainDishAndDetails(dishText);
                                 mainDishContent = mainDish;
                                 detailsContent = details;
                             }
@@ -304,7 +307,7 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
                     if (dayMenuItems.Count > 0)
                     {
                         if (string.IsNullOrEmpty(mainDishContent))
-                            mainDishContent = ExtractMainDishFromFirstItem(dayMenuItems[0]);
+                            mainDishContent = StripDietPrefix(ExtractMainDishFromFirstItem(dayMenuItems[0]));
 
                         menuDays.Add(new MenuDay
                         {
@@ -426,6 +429,18 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
     {
         return StringHelper.ExtractMainDishFromFirstItem(firstItem);
     }
+
+    /// <summary>
+    /// Strips diet/variant prefixes like "Alm./halal:", "Vegetarisk:", "Vegansk:" from menu titles.
+    /// </summary>
+    private static string StripDietPrefix(string title)
+    {
+        var match = DietPrefixRegex().Match(title);
+        return match.Success ? title[match.Length..].Trim() : title;
+    }
+
+    [GeneratedRegex(@"^(Alm\.?\s*/?\s*(halal|Halal)?\s*:?|Vegetarisk(/vegansk)?|Vegansk|Halal)\s*:?\s*", RegexOptions.IgnoreCase)]
+    private static partial Regex DietPrefixRegex();
 
     [GeneratedRegex(@"\([^)]*\)\s*")]
     private static partial Regex AllergenRegex();

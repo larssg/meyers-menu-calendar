@@ -320,6 +320,23 @@ public class MenuScrapingServiceTests
         Assert.Equal(new DateTime(2026, 3, 9), dates[0]); // Monday
         Assert.Equal(new DateTime(2026, 3, 13), dates[4]); // Friday
     }
+
+    [Fact]
+    public void ParseNuxtData_MainDishDoesNotContainDietPrefix()
+    {
+        var html = File.ReadAllText(_testHtmlPath);
+        var result = MenuScrapingService.ParseNuxtData(html);
+
+        foreach (var day in result)
+        {
+            // MainDish should never be just "Alm." or start with diet prefixes
+            Assert.False(day.MainDish == "Alm.",
+                $"{day.MenuType} {day.DayName}: MainDish is just 'Alm.' — diet prefix not stripped");
+            Assert.DoesNotMatch(@"^Alm\.?\s*/?\s*(halal)?\s*:", day.MainDish);
+            Assert.DoesNotMatch(@"^Vegetarisk\s*:", day.MainDish);
+            Assert.DoesNotMatch(@"^Vegansk\s*:", day.MainDish);
+        }
+    }
 }
 
 // Mock HttpMessageHandler for testing
