@@ -72,13 +72,13 @@ public class CalendarService : ICalendarService
                     title = CleanupTitle(menuDay.MainDish);
                     description = !string.IsNullOrEmpty(menuDay.Details)
                         ? FormatDescription(menuDay.Details)
-                        : FormatDescription(string.Join(", ", menuDay.MenuItems));
+                        : StringHelper.FormatMenuItemsGrouped(menuDay.MenuItems);
                 }
                 else
                 {
                     // Fallback to old format
                     title = $"Meyers Menu - {menuDay.DayName}";
-                    description = FormatDescription(string.Join(", ", menuDay.MenuItems));
+                    description = StringHelper.FormatMenuItemsGrouped(menuDay.MenuItems);
                 }
 
                 // Include menu type in UID to avoid conflicts when multiple menu types exist
