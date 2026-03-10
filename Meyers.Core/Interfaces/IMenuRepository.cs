@@ -14,6 +14,7 @@ public interface IMenuRepository
     Task<List<MenuType>> GetMenuTypesAsync();
     Task<MenuType?> GetMenuTypeBySlugAsync(string slug);
     Task<MenuType> GetOrCreateMenuTypeAsync(string name);
+    Task DeactivateMenuTypesNotInAsync(IEnumerable<string> activeNames);
 
     Task<Dictionary<int, (MenuEntry? today, MenuEntry? tomorrow)>> GetAllMenuPreviewsAsync(DateTime today,
         DateTime tomorrow);

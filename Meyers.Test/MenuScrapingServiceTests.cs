@@ -284,6 +284,35 @@ public class MenuScrapingServiceTests
     }
 
     [Fact]
+    public async Task ScrapeMenuAsync_DeactivatesStaleMenuTypes()
+    {
+        // Arrange - create a menu type that won't appear in the scraped data
+        using var context = CreateInMemoryContext();
+        context.MenuTypes.Add(new Meyers.Core.Models.MenuType
+        {
+            Name = "Det friske",
+            Slug = "det-friske",
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        });
+        await context.SaveChangesAsync();
+
+        var scrapingService = CreateService(context);
+
+        // Act
+        await scrapingService.ScrapeMenuAsync(forceRefresh: true);
+
+        // Assert - "Det friske" should be deactivated
+        var detFriske = await context.MenuTypes.FirstAsync(mt => mt.Slug == "det-friske");
+        Assert.False(detFriske.IsActive);
+
+        // Active scraped types should still be active
+        var activeTypes = await context.MenuTypes.Where(mt => mt.IsActive).ToListAsync();
+        Assert.Equal(6, activeTypes.Count);
+    }
+
+    [Fact]
     public void ParseWeekDates_ParsesCorrectly()
     {
         var dates = MenuScrapingService.ParseWeekDates("Uge 11");

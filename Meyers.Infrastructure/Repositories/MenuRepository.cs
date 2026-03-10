@@ -164,6 +164,23 @@ public class MenuRepository(MenuDbContext context) : IMenuRepository
         return menuType;
     }
 
+    public async Task DeactivateMenuTypesNotInAsync(IEnumerable<string> activeNames)
+    {
+        var activeSlugs = activeNames.Select(MenuType.GenerateSlug).ToHashSet();
+        var toDeactivate = await context.MenuTypes
+            .AsTracking()
+            .Where(mt => mt.IsActive)
+            .ToListAsync();
+
+        foreach (var mt in toDeactivate.Where(mt => !activeSlugs.Contains(mt.Slug)))
+        {
+            mt.IsActive = false;
+            mt.UpdatedAt = DateTime.UtcNow;
+        }
+
+        await context.SaveChangesAsync();
+    }
+
     public async Task<Dictionary<int, (MenuEntry? today, MenuEntry? tomorrow)>> GetAllMenuPreviewsAsync(DateTime today,
         DateTime tomorrow)
     {
