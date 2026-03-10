@@ -60,7 +60,7 @@ public static partial class StringHelper
             var colonIndex = item.IndexOf(':');
             if (colonIndex > 0)
             {
-                var category = item[..colonIndex].Trim();
+                var category = WebUtility.HtmlDecode(item[..colonIndex].Trim());
                 var content = WebUtility.HtmlDecode(item[(colonIndex + 1)..].Trim());
 
                 if (!grouped.ContainsKey(category))

@@ -81,4 +81,104 @@ public class StringHelperTests
 
         Assert.Equal("Soup & bread", result);
     }
+
+    [Fact]
+    public void FormatMenuItemsGrouped_GroupsRepeatedCategories()
+    {
+        var items = new List<string>
+        {
+            "Varm ret med tilbehør: Alm.: Quiche Lorraine",
+            "Varm ret med tilbehør: Halal: Quiche med kylling",
+            "Varm ret med tilbehør: Vegetarisk: Tærte med squash",
+            "Delikatesser: Sennepsstegt kyllingebryst",
+            "Delikatesser: Kalvesteg med bearnaisecreme",
+            "Dagens salater: Stegte persillerødder",
+            "Dagens salater: Kålsalat med broccoli",
+            "Brød: Økologisk rugbrød",
+            "Brød: Sødmælksfranskbrød"
+        };
+
+        var result = StringHelper.FormatMenuItemsGrouped(items);
+
+        // Each category header should appear exactly once
+        Assert.Equal(1, result.Split("Varm ret med tilbehør").Length - 1);
+        Assert.Equal(1, result.Split("Delikatesser").Length - 1);
+        Assert.Equal(1, result.Split("Dagens salater").Length - 1);
+        Assert.Equal(1, result.Split("Brød").Length - 1);
+
+        // Items should be present
+        Assert.Contains("Alm.: Quiche Lorraine", result);
+        Assert.Contains("Halal: Quiche med kylling", result);
+        Assert.Contains("Sennepsstegt kyllingebryst", result);
+        Assert.Contains("Kålsalat med broccoli", result);
+    }
+
+    [Fact]
+    public void FormatMenuItemsGrouped_SingleItemCategory_StaysOnSameLine()
+    {
+        var items = new List<string>
+        {
+            "Delikatesser: Kyllingebryst",
+            "Brød: Rugbrød"
+        };
+
+        var result = StringHelper.FormatMenuItemsGrouped(items);
+
+        Assert.Equal("Delikatesser: Kyllingebryst\n\nBrød: Rugbrød", result);
+    }
+
+    [Fact]
+    public void FormatMenuItemsGrouped_MultipleItemCategory_ListsUnderHeader()
+    {
+        var items = new List<string>
+        {
+            "Brød: Rugbrød",
+            "Brød: Franskbrød"
+        };
+
+        var result = StringHelper.FormatMenuItemsGrouped(items);
+
+        Assert.Equal("Brød:\nRugbrød\nFranskbrød", result);
+    }
+
+    [Fact]
+    public void FormatMenuItemsGrouped_PreservesOriginalCategoryOrder()
+    {
+        var items = new List<string>
+        {
+            "Varm ret: Suppe",
+            "Delikatesser: Ost",
+            "Brød: Rugbrød"
+        };
+
+        var result = StringHelper.FormatMenuItemsGrouped(items);
+
+        var warmIndex = result.IndexOf("Varm ret");
+        var deliIndex = result.IndexOf("Delikatesser");
+        var breadIndex = result.IndexOf("Brød");
+
+        Assert.True(warmIndex < deliIndex);
+        Assert.True(deliIndex < breadIndex);
+    }
+
+    [Fact]
+    public void FormatMenuItemsGrouped_DecodesHtmlEntities()
+    {
+        var items = new List<string>
+        {
+            "Varm ret med tilbeh&#248;r: Suppe &amp; brød"
+        };
+
+        var result = StringHelper.FormatMenuItemsGrouped(items);
+
+        Assert.Equal("Varm ret med tilbehør: Suppe & brød", result);
+    }
+
+    [Fact]
+    public void FormatMenuItemsGrouped_EmptyList_ReturnsEmpty()
+    {
+        var result = StringHelper.FormatMenuItemsGrouped([]);
+
+        Assert.Equal("", result);
+    }
 }
