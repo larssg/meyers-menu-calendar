@@ -7,6 +7,7 @@ using Meyers.Infrastructure.Services;
 using Meyers.Web;
 using Meyers.Web.Handlers;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -65,6 +66,12 @@ builder.Services.AddScoped<ITimeZoneService, TimeZoneService>();
 // Handler registration
 builder.Services.AddScoped<CalendarEndpointHandler>();
 builder.Services.AddScoped<RefreshMenusHandler>();
+
+// Persist Data Protection keys so ProtectedSessionStorage survives restarts
+var keysPath = Environment.GetEnvironmentVariable("DATA_PROTECTION_KEYS_PATH") ?? "/app/keys";
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(keysPath))
+    .SetApplicationName("MeyersMenuCalendar");
 
 // Blazor SSR services with interactivity
 builder.Services.AddRazorComponents()
