@@ -81,6 +81,10 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
         }
 
         await menuRepository.SaveMenusAsync(menuEntries);
+
+        // Deactivate menu types that no longer appear on the website
+        var activeMenuTypeNames = menuDays.Select(d => d.MenuType).Distinct();
+        await menuRepository.DeactivateMenuTypesNotInAsync(activeMenuTypeNames);
     }
 
     private async Task<List<MenuDay>> ScrapeFromWebsiteAsync(string source = "API")
