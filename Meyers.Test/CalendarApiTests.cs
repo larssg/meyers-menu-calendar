@@ -1,6 +1,9 @@
 using System.Net;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Meyers.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Meyers.Test;
 
@@ -292,5 +295,40 @@ public class CalendarApiTests : IClassFixture<TestWebApplicationFactory>
         var fullWeekEventCount = Regex.Matches(fullWeekContent, "BEGIN:VEVENT").Count;
 
         Assert.True(eventCount < fullWeekEventCount, "Custom calendar should have fewer events than full week");
+    }
+
+    [Fact]
+    public async Task Get_Calendar_LogsDownload()
+    {
+        var response = await _client.GetAsync("/calendar/det-velkendte.ics");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<MenuDbContext>();
+        var logs = await context.CalendarDownloadLogs
+            .Where(dl => dl.FeedPath == "det-velkendte")
+            .ToListAsync();
+
+        Assert.True(logs.Count > 0, "Calendar download should be logged");
+        Assert.All(logs, log =>
+        {
+            Assert.NotEmpty(log.IpHash);
+            Assert.NotEmpty(log.ClientName);
+        });
+    }
+
+    [Fact]
+    public async Task Get_CustomCalendar_LogsDownload()
+    {
+        var response = await _client.GetAsync("/calendar/custom/M1T1W1R2F1.ics");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<MenuDbContext>();
+        var logs = await context.CalendarDownloadLogs
+            .Where(dl => dl.FeedPath == "custom/M1T1W1R2F1")
+            .ToListAsync();
+
+        Assert.True(logs.Count > 0, "Custom calendar download should be logged");
     }
 }

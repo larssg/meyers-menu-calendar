@@ -244,4 +244,129 @@ public class MenuRepository(MenuDbContext context) : IMenuRepository
             .Take(count)
             .ToListAsync();
     }
+
+    public async Task LogCalendarDownloadAsync(CalendarDownloadLog downloadLog)
+    {
+        await context.CalendarDownloadLogs.AddAsync(downloadLog);
+        await context.SaveChangesAsync();
+    }
+
+    public async Task<List<CalendarDownloadLog>> GetRecentCalendarDownloadsAsync(int count = 50)
+    {
+        return await context.CalendarDownloadLogs
+            .OrderByDescending(dl => dl.Timestamp)
+            .Take(count)
+            .ToListAsync();
+    }
+
+    public async Task<int> GetCalendarDownloadCountAsync(DateTime since)
+    {
+        return await context.CalendarDownloadLogs
+            .CountAsync(dl => dl.Timestamp >= since);
+    }
+
+    public async Task<int> GetCalendarDownloadTotalCountAsync()
+    {
+        return await context.CalendarDownloadLogs.CountAsync();
+    }
+
+    public async Task<int> GetUniqueCalendarDownloadIpsCountAsync(DateTime since)
+    {
+        return await context.CalendarDownloadLogs
+            .Where(dl => dl.Timestamp >= since)
+            .Select(dl => dl.IpHash)
+            .Distinct()
+            .CountAsync();
+    }
+
+    public async Task<Dictionary<DateTime, int>> GetDailyDownloadCountsAsync(DateTime since)
+    {
+        return await context.CalendarDownloadLogs
+            .Where(dl => dl.Timestamp >= since)
+            .GroupBy(dl => dl.Timestamp.Date)
+            .Select(g => new { Date = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.Date, x => x.Count);
+    }
+
+    public async Task<Dictionary<int, int>> GetHourlyDownloadCountsAsync(DateTime since)
+    {
+        return await context.CalendarDownloadLogs
+            .Where(dl => dl.Timestamp >= since)
+            .GroupBy(dl => dl.Timestamp.Hour)
+            .Select(g => new { Hour = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.Hour, x => x.Count);
+    }
+
+    public async Task<List<(string Name, int Count)>> GetTopDownloadClientsAsync(DateTime since, int limit = 10)
+    {
+        var results = await context.CalendarDownloadLogs
+            .Where(dl => dl.Timestamp >= since)
+            .GroupBy(dl => dl.ClientName)
+            .Select(g => new { Name = g.Key, Count = g.Count() })
+            .OrderByDescending(x => x.Count)
+            .Take(limit)
+            .ToListAsync();
+
+        return results.Select(x => (x.Name, x.Count)).ToList();
+    }
+
+    public async Task<List<(string Name, int Count)>> GetTopDownloadFeedsAsync(DateTime since, int limit = 10)
+    {
+        var results = await context.CalendarDownloadLogs
+            .Where(dl => dl.Timestamp >= since)
+            .GroupBy(dl => dl.FeedPath)
+            .Select(g => new { Name = g.Key, Count = g.Count() })
+            .OrderByDescending(x => x.Count)
+            .Take(limit)
+            .ToListAsync();
+
+        return results.Select(x => (x.Name, x.Count)).ToList();
+    }
+
+    public async Task<List<DownloadSubscriberSummary>> GetDownloadSubscribersAsync(DateTime since, int limit = 20)
+    {
+        // Group by IpHash in SQL for counts and timestamps, then enrich with client/feeds
+        var ipGroups = await context.CalendarDownloadLogs
+            .Where(dl => dl.Timestamp >= since)
+            .GroupBy(dl => dl.IpHash)
+            .Select(g => new
+            {
+                IpHash = g.Key,
+                Count = g.Count(),
+                FirstSeen = g.Min(dl => dl.Timestamp),
+                LastSeen = g.Max(dl => dl.Timestamp)
+            })
+            .OrderByDescending(x => x.Count)
+            .Take(limit)
+            .ToListAsync();
+
+        if (ipGroups.Count == 0) return [];
+
+        // Fetch client/feed details for just the top IPs
+        var topIpHashes = ipGroups.Select(g => g.IpHash).ToList();
+        var details = await context.CalendarDownloadLogs
+            .Where(dl => dl.Timestamp >= since && topIpHashes.Contains(dl.IpHash))
+            .Select(dl => new { dl.IpHash, dl.ClientName, dl.FeedPath })
+            .ToListAsync();
+
+        var detailsByIp = details.GroupBy(d => d.IpHash).ToDictionary(g => g.Key, g => g.ToList());
+
+        return ipGroups.Select(g =>
+        {
+            var ipDetails = detailsByIp.GetValueOrDefault(g.IpHash, []);
+            return new DownloadSubscriberSummary
+            {
+                IpHash = g.IpHash,
+                Client = ipDetails
+                    .GroupBy(d => d.ClientName)
+                    .OrderByDescending(c => c.Count())
+                    .Select(c => c.Key)
+                    .FirstOrDefault() ?? "Unknown",
+                Feeds = string.Join(", ", ipDetails.Select(d => d.FeedPath).Distinct().OrderBy(f => f)),
+                Count = g.Count,
+                FirstSeen = g.FirstSeen,
+                LastSeen = g.LastSeen
+            };
+        }).ToList();
+    }
 }

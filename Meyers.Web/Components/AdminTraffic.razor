@@ -1,0 +1,372 @@
+@page "/admin/traffic"
+@rendermode @(new InteractiveServerRenderMode())
+@layout AdminLayout
+@inject IMenuRepository MenuRepository
+@inject IHttpContextAccessor HttpContextAccessor
+@using Meyers.Core.Interfaces
+@using Meyers.Core.Models
+
+<PageTitle>Calendar Traffic - Meyers Menu Calendar</PageTitle>
+
+<div class="max-w-6xl mx-auto p-4">
+    <div class="mb-8 flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">Calendar Traffic</h1>
+            <p class="text-slate-600 dark:text-slate-300">Feed download analytics</p>
+        </div>
+        <a href="/admin" class="btn-ghost">Back to Dashboard</a>
+    </div>
+
+    @if (!componentInitialized)
+    {
+        <div class="card p-8 max-w-md mx-auto text-center">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto mb-4"></div>
+            <p class="text-slate-600 dark:text-slate-300">Loading...</p>
+        </div>
+    }
+    else if (!isAuthorized)
+    {
+        <div class="card p-8 max-w-md mx-auto text-center">
+            <h2 class="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Access Required</h2>
+            <form @onsubmit="CheckAccess" @onsubmit:preventDefault="true">
+                <div class="mb-4">
+                    <input type="password" @bind="secretInput"
+                           placeholder="Enter admin secret"
+                           class="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg
+                                  bg-white dark:bg-slate-800 text-slate-900 dark:text-white
+                                  focus:ring-2 focus:ring-teal-500 focus:border-teal-500"/>
+                </div>
+                <button type="submit" class="btn-primary w-full">Access Dashboard</button>
+            </form>
+            @if (authError)
+            {
+                <p class="text-red-600 text-sm mt-2">Invalid secret</p>
+            }
+        </div>
+    }
+    else
+    {
+        <!-- Summary Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+            <div class="card p-5">
+                <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Today</p>
+                <p class="text-2xl font-bold text-teal-600 tabular-nums">@statsToday</p>
+            </div>
+            <div class="card p-5">
+                <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">7 Days</p>
+                <p class="text-2xl font-bold text-teal-600 tabular-nums">@stats7d</p>
+            </div>
+            <div class="card p-5">
+                <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">30 Days</p>
+                <p class="text-2xl font-bold text-teal-600 tabular-nums">@stats30d</p>
+            </div>
+            <div class="card p-5">
+                <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">All Time</p>
+                <p class="text-2xl font-bold text-teal-600 tabular-nums">@statsTotal</p>
+            </div>
+            <div class="card p-5">
+                <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Unique IPs (30d)</p>
+                <p class="text-2xl font-bold text-teal-600 tabular-nums">@uniqueIps30d</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Downloads Per Day (last 30 days) -->
+            <div class="card p-6">
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Downloads Per Day</h3>
+                @if (dailyCounts.Count > 0)
+                {
+                    var maxDaily = dailyCounts.Max(d => d.Count);
+                    <div class="flex items-end gap-[2px] h-40">
+                        @foreach (var day in dailyCounts)
+                        {
+                            var pct = maxDaily > 0 ? (double)day.Count / maxDaily * 100 : 0;
+                            var minHeight = day.Count > 0 ? "min-height: 4px;" : "";
+                            <div class="flex-1 group relative">
+                                <div class="bg-teal-500 dark:bg-teal-400 rounded-t-sm transition-all hover:bg-teal-600"
+                                     style="height: @($"{pct:F0}")%; @minHeight"
+                                     title="@day.Date.ToString("MMM d"): @day.Count"></div>
+                            </div>
+                        }
+                    </div>
+                    <div class="flex justify-between mt-2 text-xs text-slate-400">
+                        <span>@dailyCounts.First().Date.ToString("MMM d")</span>
+                        <span>@dailyCounts.Last().Date.ToString("MMM d")</span>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-slate-400 text-center py-8">No data yet</p>
+                }
+            </div>
+
+            <!-- Downloads By Hour -->
+            <div class="card p-6">
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Downloads By Hour (UTC)</h3>
+                @if (hourlyCounts.Any(h => h.Count > 0))
+                {
+                    var maxHourly = hourlyCounts.Max(h => h.Count);
+                    <div class="flex items-end gap-[2px] h-40">
+                        @foreach (var hour in hourlyCounts)
+                        {
+                            var pct = maxHourly > 0 ? (double)hour.Count / maxHourly * 100 : 0;
+                            var minHeight = hour.Count > 0 ? "min-height: 4px;" : "";
+                            <div class="flex-1 group relative">
+                                <div class="bg-indigo-500 dark:bg-indigo-400 rounded-t-sm transition-all hover:bg-indigo-600"
+                                     style="height: @($"{pct:F0}")%; @minHeight"
+                                     title="@($"{hour.Hour:D2}:00"): @hour.Count"></div>
+                            </div>
+                        }
+                    </div>
+                    <div class="flex justify-between mt-2 text-xs text-slate-400">
+                        <span>00:00</span>
+                        <span>06:00</span>
+                        <span>12:00</span>
+                        <span>18:00</span>
+                        <span>23:00</span>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-slate-400 text-center py-8">No data yet</p>
+                }
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Top Clients -->
+            <div class="card p-6">
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Top Clients (30d)</h3>
+                @if (topClients.Count > 0)
+                {
+                    var maxClient = topClients.First().Count;
+                    <div class="space-y-3">
+                        @foreach (var client in topClients)
+                        {
+                            var pct = maxClient > 0 ? (double)client.Count / maxClient * 100 : 0;
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-slate-700 dark:text-slate-300 font-medium">@client.Name</span>
+                                    <span class="text-slate-500 tabular-nums">@client.Count</span>
+                                </div>
+                                <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2">
+                                    <div class="bg-amber-500 dark:bg-amber-400 h-2 rounded-full" style="width: @($"{pct:F0}")%"></div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-slate-400 text-center py-8">No data yet</p>
+                }
+            </div>
+
+            <!-- Top Feeds -->
+            <div class="card p-6">
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Top Feeds (30d)</h3>
+                @if (topFeeds.Count > 0)
+                {
+                    var maxFeed = topFeeds.First().Count;
+                    <div class="space-y-3">
+                        @foreach (var feed in topFeeds)
+                        {
+                            var pct = maxFeed > 0 ? (double)feed.Count / maxFeed * 100 : 0;
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-slate-700 dark:text-slate-300 font-medium">@feed.Name</span>
+                                    <span class="text-slate-500 tabular-nums">@feed.Count</span>
+                                </div>
+                                <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2">
+                                    <div class="bg-emerald-500 dark:bg-emerald-400 h-2 rounded-full" style="width: @($"{pct:F0}")%"></div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-slate-400 text-center py-8">No data yet</p>
+                }
+            </div>
+        </div>
+
+        <!-- Unique Subscribers (by IP hash) -->
+        <div class="card p-6 mb-8">
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Unique Subscribers (30d)</h3>
+            @if (subscribers.Count > 0)
+            {
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="border-b border-slate-200 dark:border-slate-700">
+                        <tr>
+                            <th class="text-left py-3 px-2 font-medium text-slate-700 dark:text-slate-300">IP Hash</th>
+                            <th class="text-left py-3 px-2 font-medium text-slate-700 dark:text-slate-300">Client</th>
+                            <th class="text-left py-3 px-2 font-medium text-slate-700 dark:text-slate-300">Feeds</th>
+                            <th class="text-left py-3 px-2 font-medium text-slate-700 dark:text-slate-300">Downloads</th>
+                            <th class="text-left py-3 px-2 font-medium text-slate-700 dark:text-slate-300">First Seen</th>
+                            <th class="text-left py-3 px-2 font-medium text-slate-700 dark:text-slate-300">Last Seen</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var sub in subscribers)
+                        {
+                            <tr class="border-b border-slate-100 dark:border-slate-800">
+                                <td class="py-3 px-2 font-mono text-xs text-slate-600 dark:text-slate-300">@sub.IpHash[..8]</td>
+                                <td class="py-3 px-2 text-slate-700 dark:text-slate-300">@sub.Client</td>
+                                <td class="py-3 px-2 text-slate-600 dark:text-slate-300">@sub.Feeds</td>
+                                <td class="py-3 px-2 text-slate-600 dark:text-slate-300 tabular-nums">@sub.Count</td>
+                                <td class="py-3 px-2 text-slate-600 dark:text-slate-300 tabular-nums">@sub.FirstSeen.ToLocalTime().ToString("MMM d, HH:mm")</td>
+                                <td class="py-3 px-2 text-slate-600 dark:text-slate-300 tabular-nums">@sub.LastSeen.ToLocalTime().ToString("MMM d, HH:mm")</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-slate-400 text-center py-8">No data yet</p>
+            }
+        </div>
+
+        <!-- Recent Downloads -->
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Recent Downloads</h3>
+            @if (recentDownloads.Count > 0)
+            {
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="border-b border-slate-200 dark:border-slate-700">
+                        <tr>
+                            <th class="text-left py-3 px-2 font-medium text-slate-700 dark:text-slate-300">Timestamp</th>
+                            <th class="text-left py-3 px-2 font-medium text-slate-700 dark:text-slate-300">Feed</th>
+                            <th class="text-left py-3 px-2 font-medium text-slate-700 dark:text-slate-300">Client</th>
+                            <th class="text-left py-3 px-2 font-medium text-slate-700 dark:text-slate-300">IP Hash</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var dl in recentDownloads)
+                        {
+                            <tr class="border-b border-slate-100 dark:border-slate-800">
+                                <td class="py-3 px-2 text-slate-600 dark:text-slate-300 tabular-nums">
+                                    @dl.Timestamp.ToLocalTime().ToString("MMM d, HH:mm:ss")
+                                </td>
+                                <td class="py-3 px-2">
+                                    <span class="pill bg-teal-100 text-teal-800 ring-teal-300/60">@dl.FeedPath</span>
+                                </td>
+                                <td class="py-3 px-2 text-slate-700 dark:text-slate-300">@dl.ClientName</td>
+                                <td class="py-3 px-2 font-mono text-xs text-slate-500">@dl.IpHash</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-slate-400 text-center py-8">No downloads recorded yet.</p>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private bool isAuthorized;
+    private string secretInput = "";
+    private bool authError;
+    private bool componentInitialized;
+
+    // Stats
+    private int statsToday;
+    private int stats7d;
+    private int stats30d;
+    private int statsTotal;
+    private int uniqueIps30d;
+
+    // Chart data
+    private List<(DateTime Date, int Count)> dailyCounts = new();
+    private List<(int Hour, int Count)> hourlyCounts = new();
+    private List<(string Name, int Count)> topClients = new();
+    private List<(string Name, int Count)> topFeeds = new();
+    private List<DownloadSubscriberSummary> subscribers = new();
+    private List<CalendarDownloadLog> recentDownloads = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var request = HttpContextAccessor.HttpContext?.Request;
+            if (request?.Query.ContainsKey("secret") == true)
+            {
+                var querySecret = request.Query["secret"].ToString();
+                if (IsValidSecret(querySecret))
+                {
+                    isAuthorized = true;
+                    await LoadTrafficData();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in OnInitializedAsync: {ex.Message}");
+        }
+
+        componentInitialized = true;
+        StateHasChanged();
+    }
+
+    private async Task CheckAccess()
+    {
+        if (IsValidSecret(secretInput))
+        {
+            isAuthorized = true;
+            authError = false;
+            await LoadTrafficData();
+        }
+        else
+        {
+            authError = true;
+        }
+
+        StateHasChanged();
+    }
+
+    private bool IsValidSecret(string secret)
+    {
+        var expectedSecret = Environment.GetEnvironmentVariable("REFRESH_SECRET") ?? "admin123";
+        return secret == expectedSecret;
+    }
+
+    private async Task LoadTrafficData()
+    {
+        var today = DateTime.UtcNow.Date;
+        var thirtyDaysAgo = today.AddDays(-30);
+        var sevenDaysAgo = today.AddDays(-7);
+
+        // All queries run against SQL - no bulk loading into memory
+        statsToday = await MenuRepository.GetCalendarDownloadCountAsync(today);
+        stats7d = await MenuRepository.GetCalendarDownloadCountAsync(sevenDaysAgo);
+        stats30d = await MenuRepository.GetCalendarDownloadCountAsync(thirtyDaysAgo);
+        statsTotal = await MenuRepository.GetCalendarDownloadTotalCountAsync();
+        uniqueIps30d = await MenuRepository.GetUniqueCalendarDownloadIpsCountAsync(thirtyDaysAgo);
+
+        // Daily counts (fill gaps with 0)
+        var dailyGroups = await MenuRepository.GetDailyDownloadCountsAsync(thirtyDaysAgo);
+        dailyCounts = Enumerable.Range(0, 30)
+            .Select(i => thirtyDaysAgo.AddDays(i))
+            .Select(date => (Date: date, Count: dailyGroups.GetValueOrDefault(date, 0)))
+            .ToList();
+
+        // Hourly counts (fill gaps with 0)
+        var hourlyGroups = await MenuRepository.GetHourlyDownloadCountsAsync(thirtyDaysAgo);
+        hourlyCounts = Enumerable.Range(0, 24)
+            .Select(h => (Hour: h, Count: hourlyGroups.GetValueOrDefault(h, 0)))
+            .ToList();
+
+        topClients = await MenuRepository.GetTopDownloadClientsAsync(thirtyDaysAgo);
+        topFeeds = await MenuRepository.GetTopDownloadFeedsAsync(thirtyDaysAgo);
+        subscribers = await MenuRepository.GetDownloadSubscribersAsync(thirtyDaysAgo);
+        recentDownloads = await MenuRepository.GetRecentCalendarDownloadsAsync(50);
+    }
+}
