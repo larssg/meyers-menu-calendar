@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Meyers.Core.Utilities;
@@ -47,6 +48,65 @@ public static partial class StringHelper
         formatted = formatted.TrimStart('\n', ' ');
 
         return formatted;
+    }
+
+    public static string FormatMenuItemsGrouped(List<string> menuItems)
+    {
+        var categories = new List<string>();
+        var grouped = new Dictionary<string, List<string>>();
+
+        foreach (var item in menuItems)
+        {
+            var colonIndex = item.IndexOf(':');
+            if (colonIndex > 0)
+            {
+                var category = WebUtility.HtmlDecode(item[..colonIndex].Trim());
+                var content = WebUtility.HtmlDecode(item[(colonIndex + 1)..].Trim());
+
+                if (!grouped.ContainsKey(category))
+                {
+                    grouped[category] = [];
+                    categories.Add(category);
+                }
+
+                grouped[category].Add(content);
+            }
+            else
+            {
+                var decoded = WebUtility.HtmlDecode(item);
+                if (!grouped.ContainsKey(""))
+                {
+                    grouped[""] = [];
+                    categories.Add("");
+                }
+
+                grouped[""].Add(decoded);
+            }
+        }
+
+        var sb = new StringBuilder();
+        foreach (var category in categories)
+        {
+            if (sb.Length > 0)
+                sb.Append("\n\n");
+
+            var items = grouped[category];
+
+            if (string.IsNullOrEmpty(category))
+            {
+                sb.Append(string.Join("\n", items));
+            }
+            else if (items.Count == 1)
+            {
+                sb.Append($"{category}: {items[0]}");
+            }
+            else
+            {
+                sb.Append($"{category}:\n{string.Join("\n", items)}");
+            }
+        }
+
+        return sb.ToString();
     }
 
     [GeneratedRegex(@"(\. )([A-ZÆØÅ])")]
