@@ -35,8 +35,8 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 COPY --from=build /app/publish .
 
-# Create data directory for persistent database storage
-RUN mkdir -p /app/data && chown -R app:app /app/data
+# Create persistent directories for database and data protection keys
+RUN mkdir -p /app/data /app/keys && chown -R app:app /app/data /app/keys
 
 # Configure ASP.NET Core to listen on port 8080
 ENV ASPNETCORE_URLS=http://+:8080
