@@ -22,6 +22,10 @@ public class CalendarService : ICalendarService
             Version = "2.0"
         };
 
+        // Hint to calendar clients to refresh every 6 hours (matches background cache refresh interval)
+        calendar.AddProperty("X-PUBLISHED-TTL", "PT6H");
+        calendar.AddProperty("REFRESH-INTERVAL;VALUE=DURATION", "PT6H");
+
         // Add timezone information for Copenhagen
         var copenhagenTz = new VTimeZone("Europe/Copenhagen");
         calendar.TimeZones.Add(copenhagenTz);

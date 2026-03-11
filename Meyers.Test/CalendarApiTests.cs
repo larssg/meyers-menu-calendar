@@ -45,6 +45,16 @@ public class CalendarApiTests : IClassFixture<TestWebApplicationFactory>
     }
 
     [Fact]
+    public async Task Get_Calendar_IncludesRefreshIntervalProperties()
+    {
+        var response = await _client.GetAsync("/calendar/det-velkendte.ics");
+
+        var content = await response.Content.ReadAsStringAsync();
+        Assert.Contains("X-PUBLISHED-TTL:PT6H", content);
+        Assert.Contains("REFRESH-INTERVAL;VALUE=DURATION:PT6H", content);
+    }
+
+    [Fact]
     public async Task Get_Calendar_DetVelkendte_Creates_Events_For_All_Weekdays()
     {
         var response = await _client.GetAsync("/calendar/det-velkendte.ics");
