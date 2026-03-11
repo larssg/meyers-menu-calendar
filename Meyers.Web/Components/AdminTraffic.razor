@@ -79,12 +79,12 @@
                 @if (dailyCounts.Count > 0)
                 {
                     var maxDaily = dailyCounts.Max(d => d.Count);
-                    <div class="flex items-end gap-px h-48">
+                    <div class="flex gap-px h-48">
                         @foreach (var day in dailyCounts)
                         {
                             var pct = maxDaily > 0 ? (double)day.Count / maxDaily * 100 : 0;
                             var minHeight = day.Count > 0 ? "min-height: 4px;" : "";
-                            <div class="flex-1 group relative">
+                            <div class="flex-1 group relative flex flex-col justify-end">
                                 <div class="bg-teal-500 dark:bg-teal-400 rounded-t-sm transition-all hover:bg-teal-600"
                                      style="height: @($"{pct:F0}")%; @minHeight"
                                      title="@day.Date.ToString("MMM d"): @day.Count"></div>
@@ -108,12 +108,12 @@
                 @if (hourlyCounts.Any(h => h.Count > 0))
                 {
                     var maxHourly = hourlyCounts.Max(h => h.Count);
-                    <div class="flex items-end gap-px h-48">
+                    <div class="flex gap-px h-48">
                         @foreach (var hour in hourlyCounts)
                         {
                             var pct = maxHourly > 0 ? (double)hour.Count / maxHourly * 100 : 0;
                             var minHeight = hour.Count > 0 ? "min-height: 4px;" : "";
-                            <div class="flex-1 group relative">
+                            <div class="flex-1 group relative flex flex-col justify-end">
                                 <div class="bg-indigo-500 dark:bg-indigo-400 rounded-t-sm transition-all hover:bg-indigo-600"
                                      style="height: @($"{pct:F0}")%; @minHeight"
                                      title="@($"{hour.Hour:D2}:00"): @hour.Count"></div>
