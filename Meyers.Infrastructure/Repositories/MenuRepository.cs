@@ -325,48 +325,35 @@ public class MenuRepository(MenuDbContext context) : IMenuRepository
 
     public async Task<List<DownloadSubscriberSummary>> GetDownloadSubscribersAsync(DateTime since, int limit = 20)
     {
-        // Group by IpHash in SQL for counts and timestamps, then enrich with client/feeds
-        var ipGroups = await context.CalendarDownloadLogs
+        // Subquery: top IP hashes by download count (not materialized - becomes SQL subquery)
+        var topIpHashes = context.CalendarDownloadLogs
             .Where(dl => dl.Timestamp >= since)
             .GroupBy(dl => dl.IpHash)
-            .Select(g => new
+            .OrderByDescending(g => g.Count())
+            .Take(limit)
+            .Select(g => g.Key);
+
+        // Single query: fetch rows for top IPs only, aggregate in memory
+        var rows = await context.CalendarDownloadLogs
+            .Where(dl => dl.Timestamp >= since && topIpHashes.Contains(dl.IpHash))
+            .Select(dl => new { dl.IpHash, dl.ClientName, dl.FeedPath, dl.Timestamp })
+            .ToListAsync();
+
+        return rows
+            .GroupBy(dl => dl.IpHash)
+            .Select(g => new DownloadSubscriberSummary
             {
                 IpHash = g.Key,
                 Count = g.Count(),
                 FirstSeen = g.Min(dl => dl.Timestamp),
-                LastSeen = g.Max(dl => dl.Timestamp)
-            })
-            .OrderByDescending(x => x.Count)
-            .Take(limit)
-            .ToListAsync();
-
-        if (ipGroups.Count == 0) return [];
-
-        // Fetch client/feed details for just the top IPs
-        var topIpHashes = ipGroups.Select(g => g.IpHash).ToList();
-        var details = await context.CalendarDownloadLogs
-            .Where(dl => dl.Timestamp >= since && topIpHashes.Contains(dl.IpHash))
-            .Select(dl => new { dl.IpHash, dl.ClientName, dl.FeedPath })
-            .ToListAsync();
-
-        var detailsByIp = details.GroupBy(d => d.IpHash).ToDictionary(g => g.Key, g => g.ToList());
-
-        return ipGroups.Select(g =>
-        {
-            var ipDetails = detailsByIp.GetValueOrDefault(g.IpHash, []);
-            return new DownloadSubscriberSummary
-            {
-                IpHash = g.IpHash,
-                Client = ipDetails
-                    .GroupBy(d => d.ClientName)
+                LastSeen = g.Max(dl => dl.Timestamp),
+                Client = g.GroupBy(dl => dl.ClientName)
                     .OrderByDescending(c => c.Count())
                     .Select(c => c.Key)
                     .FirstOrDefault() ?? "Unknown",
-                Feeds = string.Join(", ", ipDetails.Select(d => d.FeedPath).Distinct().OrderBy(f => f)),
-                Count = g.Count,
-                FirstSeen = g.FirstSeen,
-                LastSeen = g.LastSeen
-            };
-        }).ToList();
+                Feeds = string.Join(", ", g.Select(dl => dl.FeedPath).Distinct().OrderBy(f => f))
+            })
+            .OrderByDescending(x => x.Count)
+            .ToList();
     }
 }
