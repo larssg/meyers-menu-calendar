@@ -1,3 +1,4 @@
+using Meyers.Core.Models;
 using Meyers.Infrastructure.Services;
 
 namespace Meyers.Test;
@@ -140,6 +141,20 @@ public class CalendarServiceTests
         var result = _calendarService.CleanupTitle(input);
 
         Assert.Equal(expected, result);
+    }
+
+    [Fact]
+    public void GenerateCalendar_IncludesRefreshIntervalProperties()
+    {
+        var menuDays = new List<MenuDay>
+        {
+            new() { Date = new DateTime(2026, 3, 9), MainDish = "Test", Details = "Test menu", MenuType = "Test" }
+        };
+
+        var result = _calendarService.GenerateCalendar(menuDays, "Test");
+
+        Assert.Contains("X-PUBLISHED-TTL:PT6H", result);
+        Assert.Contains("REFRESH-INTERVAL;VALUE=DURATION:PT6H", result);
     }
 
     [Fact]
