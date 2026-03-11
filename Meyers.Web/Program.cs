@@ -8,6 +8,7 @@ using Meyers.Web;
 using Meyers.Web.Handlers;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -114,6 +115,12 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<MenuDbContext>();
     context.Database.Migrate();
 }
+
+// Trust forwarded headers from reverse proxy (X-Forwarded-For, X-Forwarded-Proto)
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 
 // Configure static files
 app.MapStaticAssets();
