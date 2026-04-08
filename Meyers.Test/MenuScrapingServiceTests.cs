@@ -352,6 +352,137 @@ public class MenuScrapingServiceTests
     }
 }
 
+public class MenuScrapingServiceFoodopTests
+{
+    private readonly string _testHtmlPath;
+
+    public MenuScrapingServiceFoodopTests()
+    {
+        _testHtmlPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TestData",
+            "meyers-menu-page-foodop.html");
+    }
+
+    [Fact]
+    public void ParseNuxtData_FoodopFormat_ReturnsMenuDays()
+    {
+        var html = File.ReadAllText(_testHtmlPath);
+        var result = MenuScrapingService.ParseNuxtData(html);
+
+        Assert.NotEmpty(result);
+    }
+
+    [Fact]
+    public void ParseNuxtData_FoodopFormat_ExtractsAllMenuTypes()
+    {
+        var html = File.ReadAllText(_testHtmlPath);
+        var result = MenuScrapingService.ParseNuxtData(html);
+
+        var menuTypes = result.Select(r => r.MenuType).Distinct().OrderBy(t => t).ToList();
+        Assert.Contains("Almanak", menuTypes);
+        Assert.Contains("Den Grønne", menuTypes);
+        Assert.Contains("Det velkendte", menuTypes);
+        Assert.Contains("Meyers til frokost Aarhus", menuTypes);
+        Assert.Contains("En bid grønnere", menuTypes);
+        Assert.Contains("Det velkendte - Portionspakket", menuTypes);
+    }
+
+    [Fact]
+    public void ParseNuxtData_FoodopFormat_HasCorrectDates()
+    {
+        var html = File.ReadAllText(_testHtmlPath);
+        var result = MenuScrapingService.ParseNuxtData(html);
+
+        var dates = result.Select(r => r.Date).Distinct().OrderBy(d => d).ToList();
+
+        // The foodop fixture has data for April 7-10, 2026
+        Assert.Contains(new DateTime(2026, 4, 7), dates);
+        Assert.Contains(new DateTime(2026, 4, 8), dates);
+        Assert.Contains(new DateTime(2026, 4, 9), dates);
+        Assert.Contains(new DateTime(2026, 4, 10), dates);
+    }
+
+    [Fact]
+    public void ParseNuxtData_FoodopFormat_HasCorrectDayNames()
+    {
+        var html = File.ReadAllText(_testHtmlPath);
+        var result = MenuScrapingService.ParseNuxtData(html);
+
+        var tuesday = result.FirstOrDefault(r => r.Date == new DateTime(2026, 4, 7));
+        Assert.NotNull(tuesday);
+        Assert.Equal("Tirsdag", tuesday.DayName);
+
+        var thursday = result.FirstOrDefault(r => r.Date == new DateTime(2026, 4, 9));
+        Assert.NotNull(thursday);
+        Assert.Equal("Torsdag", thursday.DayName);
+    }
+
+    [Fact]
+    public void ParseNuxtData_FoodopFormat_MenuItemsHaveCategoryPrefix()
+    {
+        var html = File.ReadAllText(_testHtmlPath);
+        var result = MenuScrapingService.ParseNuxtData(html);
+
+        foreach (var day in result)
+        {
+            Assert.NotEmpty(day.MenuItems);
+            Assert.True(day.MenuItems.All(item => item.Contains(':')),
+                $"{day.MenuType} {day.DayName}: not all items have category prefix: {string.Join("; ", day.MenuItems)}");
+        }
+    }
+
+    [Fact]
+    public void ParseNuxtData_FoodopFormat_ExtractsMainDish()
+    {
+        var html = File.ReadAllText(_testHtmlPath);
+        var result = MenuScrapingService.ParseNuxtData(html);
+
+        foreach (var day in result)
+        {
+            Assert.False(string.IsNullOrEmpty(day.MainDish),
+                $"{day.MenuType} {day.DayName}: MainDish is empty");
+        }
+    }
+
+    [Fact]
+    public void ParseNuxtData_FoodopFormat_MainDishHasNoDietPrefix()
+    {
+        var html = File.ReadAllText(_testHtmlPath);
+        var result = MenuScrapingService.ParseNuxtData(html);
+
+        foreach (var day in result)
+        {
+            Assert.DoesNotMatch(@"^Alm\.?\s*/?\s*(halal)?\s*:", day.MainDish);
+            Assert.DoesNotMatch(@"^Vegetarisk\s*:", day.MainDish);
+            Assert.DoesNotMatch(@"^Vegansk\s*:", day.MainDish);
+        }
+    }
+
+    [Fact]
+    public void ParseNuxtData_FoodopFormat_NoDuplicateEntries()
+    {
+        var html = File.ReadAllText(_testHtmlPath);
+        var result = MenuScrapingService.ParseNuxtData(html);
+
+        var keys = result.Select(r => $"{r.Date:yyyy-MM-dd}|{r.MenuType}").ToList();
+        Assert.Equal(keys.Count, keys.Distinct().Count());
+    }
+
+    [Fact]
+    public void ParseNuxtData_FoodopFormat_AlmanakMondayHasExpectedContent()
+    {
+        var html = File.ReadAllText(_testHtmlPath);
+        var result = MenuScrapingService.ParseNuxtData(html);
+
+        var almanakMonday = result.FirstOrDefault(r =>
+            r.MenuType == "Almanak" && r.Date == new DateTime(2026, 4, 7));
+        Assert.NotNull(almanakMonday);
+
+        // Based on the live data we observed
+        Assert.Contains(almanakMonday.MenuItems, item =>
+            item.Contains("Carbonara", StringComparison.OrdinalIgnoreCase));
+    }
+}
+
 // Mock HttpMessageHandler for testing
 public partial class MockHttpMessageHandler : HttpMessageHandler
 {
