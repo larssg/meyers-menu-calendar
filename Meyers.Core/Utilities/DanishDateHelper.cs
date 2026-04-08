@@ -28,4 +28,19 @@ public static class DanishDateHelper
     {
         return Weekdays.Contains(dayName, StringComparer.OrdinalIgnoreCase);
     }
+
+    public static string GetDanishWeekday(DateTime date)
+    {
+        return date.DayOfWeek switch
+        {
+            DayOfWeek.Monday => "Mandag",
+            DayOfWeek.Tuesday => "Tirsdag",
+            DayOfWeek.Wednesday => "Onsdag",
+            DayOfWeek.Thursday => "Torsdag",
+            DayOfWeek.Friday => "Fredag",
+            DayOfWeek.Saturday => "Lørdag",
+            DayOfWeek.Sunday => "Søndag",
+            _ => ""
+        };
+    }
 }

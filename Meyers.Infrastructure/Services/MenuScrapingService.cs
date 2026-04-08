@@ -146,11 +146,9 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
 
     internal static List<MenuDay> ParseNuxtData(string html)
     {
-        var menuDays = new List<MenuDay>();
-
         // Extract the __NUXT_DATA__ JSON array from the script tag
         var match = NuxtDataRegex().Match(html);
-        if (!match.Success) return menuDays;
+        if (!match.Success) return [];
 
         var jsonText = match.Groups[1].Value;
         JsonElement[] data;
@@ -160,10 +158,175 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
         }
         catch
         {
-            return menuDays;
+            return [];
         }
 
-        if (data.Length == 0) return menuDays;
+        if (data.Length == 0) return [];
+
+        // Try the new FoodOp format first (has ISO dates and current data)
+        var menuDays = ParseFoodopMenuBlocks(data);
+        if (menuDays.Count > 0) return menuDays;
+
+        // Fall back to the legacy Sanity menuBlock format
+        return ParseLegacyMenuBlocks(data);
+    }
+
+    /// <summary>
+    /// Parses the new FoodOp menu block format used since April 2026.
+    /// Data is stored in top-level keys like "foodop-menu-block-Almanak" pointing to
+    /// subsidiary entries with menus containing ISO dates and menu_sections with dishes.
+    /// </summary>
+    private static List<MenuDay> ParseFoodopMenuBlocks(JsonElement[] data)
+    {
+        var menuDays = new List<MenuDay>();
+
+        // Find the data index object (element 3 typically) that contains foodop-menu-block-* keys
+        int? foodopBlockIdx = null;
+        for (var i = 0; i < Math.Min(data.Length, 10); i++)
+        {
+            if (data[i].ValueKind != JsonValueKind.Object) continue;
+            foreach (var prop in data[i].EnumerateObject())
+            {
+                if (!prop.Name.StartsWith("foodop-menu-block-", StringComparison.Ordinal)) continue;
+                foodopBlockIdx = prop.Value.GetInt32();
+                break;
+            }
+
+            if (foodopBlockIdx.HasValue) break;
+        }
+
+        if (!foodopBlockIdx.HasValue) return menuDays;
+
+        // Each foodop block contains ALL menu types, so we only need to parse one
+        var blockRef = foodopBlockIdx.Value;
+        if (blockRef >= data.Length || data[blockRef].ValueKind != JsonValueKind.Array) return menuDays;
+
+        var blockArray = data[blockRef];
+        if (blockArray.GetArrayLength() == 0) return menuDays;
+
+        var subIdx = blockArray[0].GetInt32();
+        if (subIdx >= data.Length || data[subIdx].ValueKind != JsonValueKind.Object) return menuDays;
+
+        var subsidiary = data[subIdx];
+        if (!subsidiary.TryGetProperty("menus", out var menusRef)) return menuDays;
+
+        var menusIdx = menusRef.GetInt32();
+        if (menusIdx >= data.Length || data[menusIdx].ValueKind != JsonValueKind.Array) return menuDays;
+
+        var seen = new HashSet<string>();
+
+        foreach (var menuEntryRef in data[menusIdx].EnumerateArray())
+        {
+            var entryIdx = menuEntryRef.GetInt32();
+            if (entryIdx >= data.Length || data[entryIdx].ValueKind != JsonValueKind.Object) continue;
+
+            var entry = data[entryIdx];
+            if (!entry.TryGetProperty("date", out var dateRef) ||
+                !entry.TryGetProperty("names", out var namesRef) ||
+                !entry.TryGetProperty("menu_sections", out var sectionsRef)) continue;
+
+            // Resolve date (ISO format like "2026-04-09")
+            var dateStr = ResolveString(data, entry, "date");
+            if (dateStr == null || !DateTime.TryParse(dateStr, CultureInfo.InvariantCulture,
+                    DateTimeStyles.None, out var date)) continue;
+
+            // Resolve menu type name
+            var namesIdx = namesRef.GetInt32();
+            if (namesIdx >= data.Length || data[namesIdx].ValueKind != JsonValueKind.Object) continue;
+            var namesObj = data[namesIdx];
+            var menuTypeName = ResolveString(data, namesObj, "da") ?? "";
+            if (string.IsNullOrEmpty(menuTypeName)) continue;
+
+            // Deduplicate by date + menu type
+            var key = $"{dateStr}|{menuTypeName}";
+            if (!seen.Add(key)) continue;
+
+            // Resolve menu sections
+            var sectionsIdx = sectionsRef.GetInt32();
+            if (sectionsIdx >= data.Length || data[sectionsIdx].ValueKind != JsonValueKind.Array) continue;
+
+            var dayMenuItems = new List<string>();
+            var mainDishContent = "";
+            var detailsContent = "";
+
+            foreach (var secRef in data[sectionsIdx].EnumerateArray())
+            {
+                var secIdx = secRef.GetInt32();
+                if (secIdx >= data.Length || data[secIdx].ValueKind != JsonValueKind.Object) continue;
+
+                var section = data[secIdx];
+                if (!section.TryGetProperty("names", out var secNamesRef) ||
+                    !section.TryGetProperty("menu_dishes", out var dishesRef)) continue;
+
+                // Resolve section name
+                var secNamesIdx = secNamesRef.GetInt32();
+                if (secNamesIdx >= data.Length || data[secNamesIdx].ValueKind != JsonValueKind.Object) continue;
+                var categoryName = ResolveString(data, data[secNamesIdx], "da") ?? "";
+
+                var dishesIdx = dishesRef.GetInt32();
+                if (dishesIdx >= data.Length || data[dishesIdx].ValueKind != JsonValueKind.Array) continue;
+
+                foreach (var dishRef in data[dishesIdx].EnumerateArray())
+                {
+                    var dishIdx = dishRef.GetInt32();
+                    if (dishIdx >= data.Length || data[dishIdx].ValueKind != JsonValueKind.Object) continue;
+
+                    var dish = data[dishIdx];
+                    if (!dish.TryGetProperty("names", out var dishNamesRef)) continue;
+
+                    var dishNamesIdx = dishNamesRef.GetInt32();
+                    if (dishNamesIdx >= data.Length || data[dishNamesIdx].ValueKind != JsonValueKind.Object) continue;
+                    var title = ResolveString(data, data[dishNamesIdx], "da") ?? "";
+
+                    title = WhitespaceRegex().Replace(title, " ").Trim();
+                    if (string.IsNullOrEmpty(title)) continue;
+
+                    dayMenuItems.Add($"{categoryName}: {title}");
+
+                    // Extract main dish from "Varm ret" categories (prefer "alm" variant)
+                    if (categoryName.Contains("Varm ret", StringComparison.OrdinalIgnoreCase) &&
+                        categoryName.Contains("alm", StringComparison.OrdinalIgnoreCase) &&
+                        string.IsNullOrEmpty(mainDishContent))
+                    {
+                        var dishText = StripDietPrefix(title);
+                        var (mainDish, details) = ExtractMainDishAndDetails(dishText);
+                        mainDishContent = mainDish;
+                        detailsContent = details;
+                    }
+                }
+            }
+
+            if (dayMenuItems.Count > 0)
+            {
+                if (string.IsNullOrEmpty(mainDishContent))
+                    mainDishContent = StripDietPrefix(ExtractMainDishFromFirstItem(dayMenuItems[0]));
+
+                mainDishContent = AllergenRegex().Replace(mainDishContent, "").Trim();
+                mainDishContent = mainDishContent.TrimEnd('.', ' ');
+
+                var weekdayName = DanishDateHelper.GetDanishWeekday(date);
+
+                menuDays.Add(new MenuDay
+                {
+                    DayName = weekdayName,
+                    Date = date,
+                    MenuItems = dayMenuItems,
+                    MainDish = mainDishContent,
+                    Details = detailsContent,
+                    MenuType = menuTypeName
+                });
+            }
+        }
+
+        return menuDays;
+    }
+
+    /// <summary>
+    /// Parses the legacy Sanity-based menuBlock format (pre-April 2026).
+    /// </summary>
+    private static List<MenuDay> ParseLegacyMenuBlocks(JsonElement[] data)
+    {
+        var menuDays = new List<MenuDay>();
 
         // Find menuBlock entries by scanning for _type: "menuBlock"
         // The Nuxt data is a flat array where dicts use index references
