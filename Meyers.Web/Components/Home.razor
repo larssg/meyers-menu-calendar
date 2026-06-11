@@ -1,4 +1,5 @@
 @page "/"
+@using System.Globalization
 @using System.Text.Json
 @using Meyers.Core.Interfaces
 @using Meyers.Core.Models
@@ -7,7 +8,7 @@
 @inject ICalendarService CalendarService
 @inject ITimeZoneService TimeZoneService
 
-<PageTitle>Meyers Menu Calendar</PageTitle>
+<PageTitle>Meyers Menu Calendar &ndash; Meyers lunch menus as iCal calendar feeds</PageTitle>
 
 <div class="max-w-2xl mx-auto">
     <!-- Intro -->
@@ -95,7 +96,49 @@
         <div class="card menu-frame px-6 py-8 sm:px-10 sm:py-9">
             <h2 class="section-title mb-4">The week ahead</h2>
             <div id="weeklyPreview">
-                <!-- Populated by JavaScript -->
+                @* Server-rendered preview for the default menu; re-rendered by JavaScript on selection changes *@
+                @if (defaultMenuType != null)
+                {
+                    var previewStart = TimeZoneService.GetCopenhagenDate();
+                    for (var i = 0; i < 7; i++)
+                    {
+                        var date = previewStart.AddDays(i);
+                        var isWeekend = date.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
+                        MenuEntry? entry = null;
+                        if (!isWeekend && weeklyMenuData.TryGetValue(defaultMenuType.Id, out var entries))
+                        {
+                            entries.TryGetValue(date.Date, out entry);
+                        }
+
+                        <div class="menu-row @(i == 0 ? "menu-row-today" : "")">
+                            <div class="menu-row-date">
+                                @if (i == 0)
+                                {
+                                    <span class="tag-today">Today</span>
+                                }
+                                else
+                                {
+                                    @date.ToString("ddd d MMM", CultureInfo.InvariantCulture)
+                                }
+                            </div>
+                            <div class="menu-row-line">
+                                @if (isWeekend)
+                                {
+                                    <span class="menu-dish menu-dish-muted">Weekend &mdash; the kitchen rests</span>
+                                }
+                                else if (entry != null)
+                                {
+                                    var title = CalendarService.CleanupTitle(entry.MainDish);
+                                    <span class="menu-dish" title="@title">@title</span><span class="menu-leader"></span><span class="menu-type">@defaultMenuType.Name</span>
+                                }
+                                else
+                                {
+                                    <span class="menu-dish menu-dish-muted">No menu published yet</span>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
             </div>
         </div>
     </section>
@@ -168,6 +211,7 @@
 @code {
     private DateTime? lastUpdated;
     private List<MenuType> menuTypes = new();
+    private MenuType? defaultMenuType => menuTypes.FirstOrDefault(mt => mt.Slug == "det-velkendte") ?? menuTypes.FirstOrDefault();
     private Dictionary<int, (MenuEntry? today, MenuEntry? tomorrow)> allMenuPreviews = new();
     private Dictionary<int, Dictionary<DateTime, MenuEntry>> weeklyMenuData = new();
 

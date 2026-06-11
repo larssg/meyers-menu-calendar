@@ -1,21 +1,22 @@
 @inherits LayoutComponentBase
+@using System.Text.Json
+@inject NavigationManager Navigation
 
 <HeadContent>
-  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate, nocache">
-  <meta name="GPTBot" content="noindex, nofollow">
-  <meta name="ChatGPT-User" content="noindex, nofollow">
-  <meta name="CCBot" content="noindex, nofollow">
-  <meta name="Claude-Web" content="noindex, nofollow">
-  <meta name="Google-Extended" content="noindex, nofollow">
+  <meta name="description" content="@Description">
+  <link rel="canonical" href="@CanonicalUrl">
 
   <meta property="og:title" content="Meyers Menu Calendar">
-  <meta property="og:description" content="Fresh lunch menus delivered to your calendar">
+  <meta property="og:description" content="@Description">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Meyers Menu Calendar">
+  <meta property="og:url" content="@CanonicalUrl">
 
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Meyers Menu Calendar">
-  <meta name="twitter:description" content="Fresh lunch menus delivered to your calendar">
+  <meta name="twitter:description" content="@Description">
+
+  @StructuredDataScript
 </HeadContent>
 
 <div class="min-h-screen bg-app flex flex-col">
@@ -78,3 +79,31 @@
     </div>
   </footer>
 </div>
+
+@code {
+
+    private const string Description =
+        "Get the weekly Meyers lunch menu in your calendar. Free iCal feeds for all Meyers Kantiner menu types, " +
+        "with support for Google Calendar, Outlook and Apple Calendar.";
+
+    private string CanonicalUrl => Navigation.ToAbsoluteUri(Navigation.Uri).GetLeftPart(UriPartial.Path);
+
+    private MarkupString StructuredDataScript => new(
+        "<script type=\"application/ld+json\">" + JsonSerializer.Serialize(new Dictionary<string, object>
+    {
+        ["@context"] = "https://schema.org",
+        ["@type"] = "WebApplication",
+        ["name"] = "Meyers Menu Calendar",
+        ["description"] = Description,
+        ["url"] = Navigation.BaseUri,
+        ["applicationCategory"] = "UtilitiesApplication",
+        ["operatingSystem"] = "Any",
+        ["offers"] = new Dictionary<string, object>
+        {
+            ["@type"] = "Offer",
+            ["price"] = "0",
+            ["priceCurrency"] = "DKK"
+        }
+    }) + "</script>");
+
+}
