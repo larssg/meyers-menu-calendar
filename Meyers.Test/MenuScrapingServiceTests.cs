@@ -10,6 +10,9 @@ namespace Meyers.Test;
 
 public class MenuScrapingServiceTests
 {
+    // Fixed date matching the test fixture data (Mar 9-20, 2026)
+    private static readonly DateTime FixtureToday = new(2026, 3, 9);
+
     private readonly string _testHtmlPath;
 
     public MenuScrapingServiceTests()
@@ -33,7 +36,7 @@ public class MenuScrapingServiceTests
     {
         var mockHttpClient = CreateMockHttpClient(_testHtmlPath);
         var repository = new MenuRepository(context);
-        return new MenuScrapingService(mockHttpClient, repository);
+        return new MenuScrapingService(mockHttpClient, repository, new TestTimeZoneService());
     }
 
     private HttpClient CreateMockHttpClient(string filePath)
@@ -209,7 +212,7 @@ public class MenuScrapingServiceTests
         };
         var httpClient = new HttpClient(mockHandler);
         var repository = new MenuRepository(context);
-        var scrapingService = new MenuScrapingService(httpClient, repository);
+        var scrapingService = new MenuScrapingService(httpClient, repository, new TimeZoneService());
 
         // Act - First call should scrape from website
         var firstResult = await scrapingService.ScrapeMenuAsync();
@@ -239,7 +242,7 @@ public class MenuScrapingServiceTests
         };
         var httpClient = new HttpClient(mockHandler);
         var repository = new MenuRepository(context);
-        var scrapingService = new MenuScrapingService(httpClient, repository);
+        var scrapingService = new MenuScrapingService(httpClient, repository, new TimeZoneService());
 
         // Act - First call should scrape from website
         var firstResult = await scrapingService.ScrapeMenuAsync();
@@ -261,7 +264,7 @@ public class MenuScrapingServiceTests
     public void ParseNuxtData_ExtractsAllMenuTypes()
     {
         var html = File.ReadAllText(_testHtmlPath);
-        var result = MenuScrapingService.ParseNuxtData(html);
+        var result = MenuScrapingService.ParseNuxtData(html, FixtureToday);
 
         var groups = result.GroupBy(r => r.MenuType).OrderBy(g => g.Key).ToList();
         foreach (var g in groups)
@@ -315,7 +318,7 @@ public class MenuScrapingServiceTests
     [Fact]
     public void ParseWeekDates_ParsesCorrectly()
     {
-        var dates = MenuScrapingService.ParseWeekDates("Uge 11");
+        var dates = MenuScrapingService.ParseWeekDates("Uge 11", FixtureToday);
         Assert.Equal(5, dates.Count);
         Assert.Equal(new DateTime(2026, 3, 9), dates[0]); // Monday
         Assert.Equal(new DateTime(2026, 3, 13), dates[4]); // Friday
@@ -325,7 +328,7 @@ public class MenuScrapingServiceTests
     public void ParseNuxtData_MainDishDoesNotContainDietPrefix()
     {
         var html = File.ReadAllText(_testHtmlPath);
-        var result = MenuScrapingService.ParseNuxtData(html);
+        var result = MenuScrapingService.ParseNuxtData(html, FixtureToday);
 
         foreach (var day in result)
         {
@@ -342,7 +345,7 @@ public class MenuScrapingServiceTests
     public void ParseNuxtData_MainDishHasNoTrailingPeriod()
     {
         var html = File.ReadAllText(_testHtmlPath);
-        var result = MenuScrapingService.ParseNuxtData(html);
+        var result = MenuScrapingService.ParseNuxtData(html, FixtureToday);
 
         foreach (var day in result)
         {
@@ -354,6 +357,9 @@ public class MenuScrapingServiceTests
 
 public class MenuScrapingServiceFoodopTests
 {
+    // Fixed date matching the foodop fixture data (Apr 7-10, 2026)
+    private static readonly DateTime FixtureToday = new(2026, 4, 7);
+
     private readonly string _testHtmlPath;
 
     public MenuScrapingServiceFoodopTests()
@@ -366,7 +372,7 @@ public class MenuScrapingServiceFoodopTests
     public void ParseNuxtData_FoodopFormat_ReturnsMenuDays()
     {
         var html = File.ReadAllText(_testHtmlPath);
-        var result = MenuScrapingService.ParseNuxtData(html);
+        var result = MenuScrapingService.ParseNuxtData(html, FixtureToday);
 
         Assert.NotEmpty(result);
     }
@@ -375,7 +381,7 @@ public class MenuScrapingServiceFoodopTests
     public void ParseNuxtData_FoodopFormat_ExtractsAllMenuTypes()
     {
         var html = File.ReadAllText(_testHtmlPath);
-        var result = MenuScrapingService.ParseNuxtData(html);
+        var result = MenuScrapingService.ParseNuxtData(html, FixtureToday);
 
         var menuTypes = result.Select(r => r.MenuType).Distinct().OrderBy(t => t).ToList();
         Assert.Contains("Almanak", menuTypes);
@@ -390,7 +396,7 @@ public class MenuScrapingServiceFoodopTests
     public void ParseNuxtData_FoodopFormat_HasCorrectDates()
     {
         var html = File.ReadAllText(_testHtmlPath);
-        var result = MenuScrapingService.ParseNuxtData(html);
+        var result = MenuScrapingService.ParseNuxtData(html, FixtureToday);
 
         var dates = result.Select(r => r.Date).Distinct().OrderBy(d => d).ToList();
 
@@ -405,7 +411,7 @@ public class MenuScrapingServiceFoodopTests
     public void ParseNuxtData_FoodopFormat_HasCorrectDayNames()
     {
         var html = File.ReadAllText(_testHtmlPath);
-        var result = MenuScrapingService.ParseNuxtData(html);
+        var result = MenuScrapingService.ParseNuxtData(html, FixtureToday);
 
         var tuesday = result.FirstOrDefault(r => r.Date == new DateTime(2026, 4, 7));
         Assert.NotNull(tuesday);
@@ -420,7 +426,7 @@ public class MenuScrapingServiceFoodopTests
     public void ParseNuxtData_FoodopFormat_MenuItemsHaveCategoryPrefix()
     {
         var html = File.ReadAllText(_testHtmlPath);
-        var result = MenuScrapingService.ParseNuxtData(html);
+        var result = MenuScrapingService.ParseNuxtData(html, FixtureToday);
 
         foreach (var day in result)
         {
@@ -434,7 +440,7 @@ public class MenuScrapingServiceFoodopTests
     public void ParseNuxtData_FoodopFormat_ExtractsMainDish()
     {
         var html = File.ReadAllText(_testHtmlPath);
-        var result = MenuScrapingService.ParseNuxtData(html);
+        var result = MenuScrapingService.ParseNuxtData(html, FixtureToday);
 
         foreach (var day in result)
         {
@@ -447,7 +453,7 @@ public class MenuScrapingServiceFoodopTests
     public void ParseNuxtData_FoodopFormat_MainDishHasNoDietPrefix()
     {
         var html = File.ReadAllText(_testHtmlPath);
-        var result = MenuScrapingService.ParseNuxtData(html);
+        var result = MenuScrapingService.ParseNuxtData(html, FixtureToday);
 
         foreach (var day in result)
         {
@@ -461,7 +467,7 @@ public class MenuScrapingServiceFoodopTests
     public void ParseNuxtData_FoodopFormat_NoDuplicateEntries()
     {
         var html = File.ReadAllText(_testHtmlPath);
-        var result = MenuScrapingService.ParseNuxtData(html);
+        var result = MenuScrapingService.ParseNuxtData(html, FixtureToday);
 
         var keys = result.Select(r => $"{r.Date:yyyy-MM-dd}|{r.MenuType}").ToList();
         Assert.Equal(keys.Count, keys.Distinct().Count());
@@ -471,7 +477,7 @@ public class MenuScrapingServiceFoodopTests
     public void ParseNuxtData_FoodopFormat_AlmanakMondayHasExpectedContent()
     {
         var html = File.ReadAllText(_testHtmlPath);
-        var result = MenuScrapingService.ParseNuxtData(html);
+        var result = MenuScrapingService.ParseNuxtData(html, FixtureToday);
 
         var almanakMonday = result.FirstOrDefault(r =>
             r.MenuType == "Almanak" && r.Date == new DateTime(2026, 4, 7));

@@ -74,7 +74,8 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IDispos
             services.AddScoped<MenuScrapingService>(provider =>
             {
                 var repository = provider.GetRequiredService<IMenuRepository>();
-                return new MenuScrapingService(mockHttpClient, repository);
+                var timeZoneService = provider.GetRequiredService<ITimeZoneService>();
+                return new MenuScrapingService(mockHttpClient, repository, timeZoneService);
             });
 
             // Build the service provider and ensure the database is created

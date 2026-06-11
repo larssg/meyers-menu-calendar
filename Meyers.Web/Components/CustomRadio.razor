@@ -35,15 +35,14 @@
 
     private string GetInputClasses()
     {
-        var baseClasses = @"text-teal-600 bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 " +
-                          "focus:ring-teal-500 dark:focus:ring-teal-400 focus:ring-2 " +
-                          "transition-all duration-200 appearance-none rounded-full border-2 " +
-                          "checked:bg-teal-600 checked:border-teal-600 dark:checked:bg-teal-500 dark:checked:border-teal-500 " +
-                          "hover:border-slate-400 dark:hover:border-slate-500 " +
+        var baseClasses = @"peer bg-transparent border-ink-faint " +
+                          "transition-all duration-200 appearance-none rounded-full border " +
+                          "checked:bg-madder checked:border-madder " +
+                          "hover:border-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-madder " +
                           "relative cursor-pointer " +
-                          "before:content-[''] before:absolute before:inset-0 before:rounded-full " +
-                          "before:bg-white dark:before:bg-slate-700 before:scale-0 before:transition-transform " +
-                          "checked:before:scale-50 checked:before:bg-white";
+                          "before:content-[''] before:absolute before:inset-[3px] before:rounded-full " +
+                          "before:bg-cream before:scale-0 before:transition-transform " +
+                          "checked:before:scale-100";
 
         var sizeClasses = Size switch
         {
@@ -64,7 +63,7 @@
             _ => "text-base"
         };
 
-        return $"font-medium text-slate-900 dark:text-slate-100 {sizeClasses}".Trim();
+        return $"font-display text-ink-soft peer-checked:text-ink peer-checked:font-medium transition-colors {sizeClasses}".Trim();
     }
 
 }

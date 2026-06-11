@@ -23,7 +23,7 @@ public class CacheDurationTests
 
         // We need to create a mock handler to test the private method
         _handler = new CalendarEndpointHandler(
-            null!, null!, null!, options);
+            null!, null!, null!, null!, options);
     }
 
     [Fact]
