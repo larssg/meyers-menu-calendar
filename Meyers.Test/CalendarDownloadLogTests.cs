@@ -90,10 +90,12 @@ public class CalendarDownloadLogTests
         using var context = CreateInMemoryContext();
         var repository = new MenuRepository(context);
         var now = DateTime.UtcNow;
+        // Anchor today's logs to noon so spreading back by hours can't cross midnight
+        var today = now.Date.AddHours(12);
 
         // 3 logs from today, 2 from 10 days ago
-        await SeedDownloadLogs(context, 3, now);
-        await SeedDownloadLogs(context, 2, now.AddDays(-10), ipHash: "1111111111111111");
+        await SeedDownloadLogs(context, 3, today);
+        await SeedDownloadLogs(context, 2, today.AddDays(-10), ipHash: "1111111111111111");
 
         var countToday = await repository.GetCalendarDownloadCountAsync(now.Date);
         var countWeek = await repository.GetCalendarDownloadCountAsync(now.AddDays(-7));
