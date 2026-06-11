@@ -7,7 +7,7 @@
 @code {
     [Parameter] public string? Value { get; set; }
     [Parameter] public string? InputId { get; set; }
-    [Parameter] public string CssClass { get; set; } = "px-5 py-3 font-medium text-white bg-teal-700 hover:bg-teal-600 transition-colors";
+    [Parameter] public string CssClass { get; set; } = "btn-primary";
     [Parameter] public RenderFragment? ChildContent { get; set; }
 
     private string GetOnClickScript()

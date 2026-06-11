@@ -117,8 +117,8 @@ function copyToClipboard(text) {
         const toast = document.createElement('div');
         toast.id = 'copy-toast';
         toast.textContent = 'Copied to clipboard';
-        toast.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 ' +
-            'rounded-lg bg-teal-700 text-white text-sm shadow';
+        toast.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 ' +
+            'rounded-sm bg-ink text-cream font-mono text-[11px] uppercase tracking-[0.18em] shadow-lg';
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), TOAST_DURATION);
     });
@@ -365,31 +365,30 @@ function updateWeeklyPreview() {
             }
         }
 
-        const dayElement = document.createElement('div');
-        dayElement.className = `p-3 rounded-lg border ${
-            isWeekend
-                ? 'bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
-                : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
-        } ${index === 0 ? 'ring-2 ring-teal-500' : ''}`;
+        const row = document.createElement('div');
+        row.className = 'menu-row' + (index === 0 ? ' menu-row-today' : '');
 
-        dayElement.innerHTML = `
-            <div class="text-center mb-2">
-                <div class="text-xs font-medium text-slate-600 dark:text-slate-400">${dayInfo.dayName}</div>
-                <div class="text-lg font-semibold text-slate-900 dark:text-slate-100">${dayInfo.dayNumber}</div>
-                <div class="text-xs text-slate-500 dark:text-slate-500">${dayInfo.monthName}</div>
-            </div>
-            ${isWeekend ?
-            '<div class="text-center text-xs text-gray-500 dark:text-gray-400">Weekend</div>' :
-            menuEntry ?
-                `<div class="text-center">
-                        <div class="text-xs font-medium text-teal-600 dark:text-teal-400 mb-1">${menuTypeName}</div>
-                        <div class="text-xs text-slate-700 dark:text-slate-300 line-clamp-3" title="${menuEntry.title}">${menuEntry.title}</div>
-                    </div>` :
-                '<div class="text-center text-xs text-slate-500 dark:text-slate-400">No menu</div>'
+        const dateLabel = index === 0
+            ? '<span class="tag-today">Today</span>'
+            : `${dayInfo.dayName} ${dayInfo.dayNumber} ${dayInfo.monthName}`;
+
+        let line;
+        if (isWeekend) {
+            line = '<span class="menu-dish menu-dish-muted">Weekend &mdash; the kitchen rests</span>';
+        } else if (menuEntry) {
+            line = `<span class="menu-dish" title="${menuEntry.title}">${menuEntry.title}</span>` +
+                '<span class="menu-leader"></span>' +
+                `<span class="menu-type">${menuTypeName}</span>`;
+        } else {
+            line = '<span class="menu-dish menu-dish-muted">No menu published yet</span>';
         }
+
+        row.innerHTML = `
+            <div class="menu-row-date">${dateLabel}</div>
+            <div class="menu-row-line">${line}</div>
         `;
 
-        previewContainer.appendChild(dayElement);
+        previewContainer.appendChild(row);
     });
 }
 

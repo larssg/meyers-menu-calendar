@@ -9,44 +9,34 @@
 
 <PageTitle>Meyers Menu Calendar</PageTitle>
 
-<div class="max-w-5xl mx-auto">
-    <!-- Hero -->
-    <section class="text-center mb-12">
-        <span class="kicker">Calendar feed for lunch menus</span>
-        <h2 class="mt-2 text-4xl font-extrabold tracking-tight
-               text-slate-900 dark:text-white">
-            Never miss lunch again
-        </h2>
-        <p class="mt-3 text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
-            Get Meyers daily menus delivered straight to your calendar. Simple,
-            automatic, and always up to date.
+<div class="max-w-2xl mx-auto">
+    <!-- Intro -->
+    <section class="text-center mb-12 reveal">
+        <p class="font-display text-xl leading-relaxed text-ink-soft max-w-xl mx-auto">
+            Choose a menu for each weekday, subscribe once, and the day&rsquo;s dish appears
+            in your calendar <em class="text-madder">before you&rsquo;re hungry</em>.
         </p>
-
     </section>
 
-    <!-- Menu Selection Interface -->
-    <section class="mb-12">
-        <div class="card p-4 sm:p-8 max-w-4xl mx-auto">
-            <!-- Radio Button Selection -->
-            <div class="mb-6">
-                <div class="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8">
-                    <CustomRadio name="menuMode" value="simple" Size="CustomRadio.RadioSize.Medium"
-                                 checked onchange="toggleMenuMode()">
-                        Simple - One menu for all days
-                    </CustomRadio>
-                    <CustomRadio name="menuMode" value="custom" Size="CustomRadio.RadioSize.Medium"
-                                 onchange="toggleMenuMode()">
-                        Custom - Different menus per day
-                    </CustomRadio>
-                </div>
+    <!-- Compose -->
+    <section class="mb-10 reveal" style="animation-delay: 90ms">
+        <div class="card menu-frame px-6 py-8 sm:px-10 sm:py-9">
+            <h2 class="section-title mb-7">Compose your calendar</h2>
+
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-10 mb-7">
+                <CustomRadio name="menuMode" value="simple" Size="CustomRadio.RadioSize.Medium"
+                             checked onchange="toggleMenuMode()">
+                    One menu, every day
+                </CustomRadio>
+                <CustomRadio name="menuMode" value="custom" Size="CustomRadio.RadioSize.Medium"
+                             onchange="toggleMenuMode()">
+                    Mix menus per weekday
+                </CustomRadio>
             </div>
 
             <!-- Simple Mode: Single Dropdown -->
             <div id="simpleMode">
-                <div class="max-w-md mx-auto">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3 text-center">
-                        Select menu for all weekdays
-                    </label>
+                <div class="max-w-sm mx-auto">
                     <CustomSelect id="simpleMenuSelect"
                                   Class="w-full"
                                   Size="CustomSelect.SelectSize.Large"
@@ -64,116 +54,112 @@
 
             <!-- Custom Mode: Five Dropdowns -->
             <div id="customMode" class="hidden">
-                <div class="max-w-2xl mx-auto">
-                    <div class="space-y-4">
-                        @foreach (var day in new[]
-                                      {
-                                          (DayOfWeek.Monday, "Monday"),
-                                          (DayOfWeek.Tuesday, "Tuesday"),
-                                          (DayOfWeek.Wednesday, "Wednesday"),
-                                          (DayOfWeek.Thursday, "Thursday"),
-                                          (DayOfWeek.Friday, "Friday")
-                                      })
-                        {
-                            <div
-                                class="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 gap-3">
-                                <span class="font-medium text-slate-900 dark:text-slate-100 text-sm sm:text-base">
-                                    @day.Item2
-                                </span>
-                                <CustomSelect Class="custom-day-select w-full sm:max-w-xs"
-                                              Size="CustomSelect.SelectSize.Medium"
-                                              data-day="@((int)day.Item1)"
-                                              onchange="updateCalendarUrl()">
-                                    @foreach (var menuType in menuTypes)
-                                    {
-                                        var isSelected = (day.Item1 == DayOfWeek.Monday && menuType.Slug == "det-velkendte") ||
-                                                             (day.Item1 == DayOfWeek.Tuesday && menuType.Slug == "det-velkendte") ||
-                                                             (day.Item1 == DayOfWeek.Wednesday && menuType.Slug == "det-velkendte") ||
-                                                             (day.Item1 == DayOfWeek.Thursday && menuType.Slug == "den-groenne") ||
-                                                             (day.Item1 == DayOfWeek.Friday && menuType.Slug == "det-velkendte");
-                                        <option value="@menuType.Id" data-slug="@menuType.Slug"
-                                                selected="@isSelected">@menuType.Name</option>
-                                    }
-                                </CustomSelect>
-                            </div>
-                        }
-                    </div>
+                <div class="max-w-md mx-auto divide-y divide-rule/60">
+                    @foreach (var day in new[]
+                                  {
+                                      (DayOfWeek.Monday, "Monday"),
+                                      (DayOfWeek.Tuesday, "Tuesday"),
+                                      (DayOfWeek.Wednesday, "Wednesday"),
+                                      (DayOfWeek.Thursday, "Thursday"),
+                                      (DayOfWeek.Friday, "Friday")
+                                  })
+                    {
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-4 py-3">
+                            <span class="font-mono text-[11px] uppercase tracking-[0.16em] text-ink-soft">
+                                @day.Item2
+                            </span>
+                            <CustomSelect Class="custom-day-select w-full sm:w-64"
+                                          Size="CustomSelect.SelectSize.Medium"
+                                          data-day="@((int)day.Item1)"
+                                          onchange="updateCalendarUrl()">
+                                @foreach (var menuType in menuTypes)
+                                {
+                                    var isSelected = (day.Item1 == DayOfWeek.Monday && menuType.Slug == "det-velkendte") ||
+                                                         (day.Item1 == DayOfWeek.Tuesday && menuType.Slug == "det-velkendte") ||
+                                                         (day.Item1 == DayOfWeek.Wednesday && menuType.Slug == "det-velkendte") ||
+                                                         (day.Item1 == DayOfWeek.Thursday && menuType.Slug == "den-groenne") ||
+                                                         (day.Item1 == DayOfWeek.Friday && menuType.Slug == "det-velkendte");
+                                    <option value="@menuType.Id" data-slug="@menuType.Slug"
+                                            selected="@isSelected">@menuType.Name</option>
+                                }
+                            </CustomSelect>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Weekly Calendar Preview -->
-    <section class="mb-12">
-        <div class="card p-4 sm:p-8 max-w-6xl mx-auto">
-            <h3 class="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-6 text-center flex items-center justify-center">
-                <span class="text-2xl mr-3">📅</span>
-                Next 7 Days Preview
-            </h3>
-
-            <div id="weeklyPreview" class="grid grid-cols-1 md:grid-cols-7 gap-2 mb-8">
-                <!-- This will be populated by JavaScript -->
+    <!-- Week ahead -->
+    <section class="mb-12 reveal" style="animation-delay: 180ms">
+        <div class="card menu-frame px-6 py-8 sm:px-10 sm:py-9">
+            <h2 class="section-title mb-4">The week ahead</h2>
+            <div id="weeklyPreview">
+                <!-- Populated by JavaScript -->
             </div>
+        </div>
+    </section>
 
-            <!-- Calendar URL and Instructions -->
-            <div class="border-t border-slate-200 dark:border-slate-700 pt-8">
-                <div class="max-w-2xl mx-auto">
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3 text-center">
-                            Your Calendar Feed URL
-                        </label>
-                        <div class="flex rounded-lg border border-slate-300/60 dark:border-slate-600/60 overflow-hidden
-                            bg-white/80 dark:bg-slate-800/60 backdrop-blur">
-                            <input type="text" id="calendarUrl" value="" readonly class="copy-input"/>
-                            <CopyButton InputId="calendarUrl" CssClass="btn-primary">
-                                Copy Calendar Feed URL
-                            </CopyButton>
-                        </div>
-                    </div>
-
-                    <div class="mb-6 flex justify-center">
-                        <label class="flex items-center cursor-pointer">
-                            <input type="checkbox" id="alarmCheckbox" class="mr-3 w-4 h-4 text-teal-600 
-                                   bg-gray-100 border-gray-300 focus:ring-teal-500 dark:focus:ring-teal-600 
-                                   dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                                   onchange="updateCalendarUrl()">
-                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">
-                                🔔 Add 5-minute alarm before lunch
-                            </span>
-                        </label>
-                    </div>
-
-                    <div class="p-6 rounded-xl border border-teal-200/60 dark:border-teal-700/50
-                          bg-teal-50/70 dark:bg-teal-900/20">
-                        <h4 class="font-semibold text-slate-900 dark:text-slate-100 mb-3 text-center">
-                            How to add to your calendar
-                        </h4>
-                        <div class="grid md:grid-cols-3 gap-4 text-sm text-slate-700 dark:text-slate-300">
-                            <div class="text-center">
-                                <span class="font-medium block mb-1">Google Calendar</span>
-                                <span>Settings → Add calendar → From URL</span>
-                            </div>
-                            <div class="text-center">
-                                <span class="font-medium block mb-1">Outlook</span>
-                                <span>Add calendar → Subscribe from web</span>
-                            </div>
-                            <div class="text-center">
-                                <span class="font-medium block mb-1">Apple Calendar</span>
-                                <span>File → New Calendar Subscription</span>
-                            </div>
-                        </div>
-                        <div class="mt-4 text-center">
-                            <span class="pill">Works with Google, Outlook, Apple Calendar</span>
-                        </div>
-                    </div>
-                </div>
+    <!-- Feed URL ticket -->
+    <section class="mb-12 reveal" style="animation-delay: 270ms">
+        <div class="ticket">
+            <span class="ticket-label">&#9988; Your calendar feed</span>
+            <div class="flex items-stretch p-1.5 gap-1.5">
+                <input type="text" id="calendarUrl" value="" readonly class="copy-input"/>
+                <CopyButton InputId="calendarUrl" CssClass="btn-primary shrink-0">
+                    Copy
+                </CopyButton>
             </div>
+        </div>
+
+        <div class="mt-5 flex justify-center">
+            <label class="flex items-center gap-2.5 cursor-pointer">
+                <input type="checkbox" id="alarmCheckbox" class="size-4 accent-madder"
+                       onchange="updateCalendarUrl()">
+                <span class="text-[15px] text-ink-soft">
+                    Ring a bell five minutes before lunch
+                </span>
+            </label>
+        </div>
+    </section>
+
+    <!-- How to subscribe -->
+    <section class="mb-10 reveal" style="animation-delay: 360ms">
+        <h2 class="section-title mb-7">How to subscribe</h2>
+        <div class="grid sm:grid-cols-3 gap-6 sm:gap-0 sm:divide-x divide-rule/70 text-center">
+            <div class="px-4">
+                <span class="block font-mono text-[10px] uppercase tracking-[0.16em] text-ink mb-1.5">
+                    Google Calendar
+                </span>
+                <span class="text-sm leading-relaxed text-ink-soft">
+                    Settings &rarr; Add calendar &rarr; From URL
+                </span>
+            </div>
+            <div class="px-4">
+                <span class="block font-mono text-[10px] uppercase tracking-[0.16em] text-ink mb-1.5">
+                    Outlook
+                </span>
+                <span class="text-sm leading-relaxed text-ink-soft">
+                    Add calendar &rarr; Subscribe from web
+                </span>
+            </div>
+            <div class="px-4">
+                <span class="block font-mono text-[10px] uppercase tracking-[0.16em] text-ink mb-1.5">
+                    Apple Calendar
+                </span>
+                <span class="text-sm leading-relaxed text-ink-soft">
+                    File &rarr; New Calendar Subscription
+                </span>
+            </div>
+        </div>
+        <div class="mt-7 text-center">
+            <span class="pill">Updates itself &middot; No app required</span>
         </div>
     </section>
 
     <!-- Last updated timestamp -->
     <div class="mt-12 text-center">
-        <p class="text-xs text-slate-500 dark:text-slate-400">
+        <p class="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-faint">
             @FormatLastUpdated()
         </p>
     </div>

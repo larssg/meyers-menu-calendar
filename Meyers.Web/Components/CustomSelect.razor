@@ -34,18 +34,17 @@
 
     private string GetCssClasses()
     {
-        var baseClasses = @"border border-slate-300/60 dark:border-slate-600/60 rounded-lg " +
-                          "bg-white/80 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 " +
-                          "focus:ring-2 focus:ring-teal-500 focus:border-teal-500 dark:focus:ring-teal-400 " +
-                          "appearance-none cursor-pointer transition-all duration-200 " +
-                          "hover:border-slate-400 dark:hover:border-slate-500 " +
+        var baseClasses = @"appearance-none cursor-pointer bg-transparent font-display text-ink " +
+                          "border-0 border-b border-ink-faint rounded-none " +
+                          "hover:border-ink focus:border-madder focus:outline-none " +
+                          "transition-colors duration-200 " +
                           "custom-select-arrow bg-no-repeat";
 
         var sizeClasses = Size switch
         {
-            SelectSize.Small => "px-3 py-2 pr-8 custom-select-small",
-            SelectSize.Large => "px-4 py-3 pr-10 custom-select-large",
-            _ => "px-3 py-2 pr-8 custom-select-medium"
+            SelectSize.Small => "px-1 py-1.5 pr-7 text-sm custom-select-small",
+            SelectSize.Large => "px-2 py-2.5 pr-9 text-xl custom-select-large",
+            _ => "px-1 py-2 pr-8 text-base custom-select-medium"
         };
 
         var alignmentClasses = Centered ? "text-center" : "";

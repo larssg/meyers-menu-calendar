@@ -41,7 +41,7 @@ Features multi-menu support, responsive design, and automatic caching.
 - `Components/Home.razor`: Multi-menu homepage with custom calendar builder UI
 - `Handlers/`: API endpoints for calendar feeds and menu previews
 - `wwwroot/js/menu-app.js`: Client-side functionality (toggleMenuMode, copyToClipboard, updateWeeklyPreview)
-- `Styles/app.css`: Tailwind CSS v4 configuration
+- `Styles/app.css`: Tailwind CSS v4 configuration and design system
 
 ### Meyers.Test
 
@@ -64,7 +64,7 @@ Features multi-menu support, responsive design, and automatic caching.
 cd Meyers.Web && npm install && cd ..
 dotnet run --project Meyers.Web
 
-# Testing (167 tests total)
+# Testing (220 tests total)
 dotnet test
 
 # Database migrations (note: context is in Infrastructure but migrations run via Web project)
@@ -114,7 +114,9 @@ handlers from triggering expensive scraping operations.
 
 ## Testing
 
-Comprehensive test suite (167 tests) with TestWebApplicationFactory, MockHttpMessageHandler, and real HTML fixtures.
+Comprehensive test suite (220 tests) with TestWebApplicationFactory, MockHttpMessageHandler, and real HTML fixtures.
+Tests must stay deterministic: production code gets "today" from ITimeZoneService (pinned to fixed fixture dates in
+tests via TestTimeZoneService), never DateTime.Today directly.
 Tests all 6 menu types, web interface, API endpoints, mobile responsiveness, and MapStaticAssets fingerprinting.
 
 ## Important Notes
@@ -124,7 +126,10 @@ Tests all 6 menu types, web interface, API endpoints, mobile responsiveness, and
 - **JS Assets**: Use `@Assets["js/menu-app.js"]` for JavaScript files
 - **Regex**: Always use `GeneratedRegex` attribute
 - **Database**: Repository pattern with optimized single queries in Infrastructure layer
-- **Testing**: Update all tests when adding features (currently 167 tests)
+- **Testing**: Update all tests when adding features (currently 220 tests)
+- **Dates**: Always get "today" via ITimeZoneService (GetCopenhagenDate), never DateTime.Today; tests pin the date
+- **Design**: Light-only "printed menu card" theme; paper/ink/madder palette, Fraunces + IBM Plex Mono (Google Fonts),
+  design tokens and component classes live in `Styles/app.css` (dark: variants are disabled via @custom-variant)
 - **Calendar Events**: All events include 5-minute alarm notifications
 - **Title Cleanup**: CalendarService.CleanupTitle() only adds "..." when actually truncating content
 - **Namespace Updates**: Use Infrastructure namespaces for moved services and repositories

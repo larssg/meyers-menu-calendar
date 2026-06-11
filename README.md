@@ -14,7 +14,7 @@ notifications.
 - 🚀 **Fast**: Blazor SSR with .NET 10 MapStaticAssets and clean architecture
 - 🔄 **Auto-Refresh**: Background service updates every 6 hours
 - 📱 **Universal**: Works with all calendar apps (Google Calendar, Outlook, Apple Calendar)
-- 🎨 **Responsive**: Modern UI with Tailwind CSS v4 and 7-day calendar preview
+- 🎨 **Responsive**: Printed menu-card inspired UI with Tailwind CSS v4 and a week-ahead preview
 - 🏗️ **Clean Architecture**: Separated Core, Infrastructure, and Web layers
 
 ## Quick Start

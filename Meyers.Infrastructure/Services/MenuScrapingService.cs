@@ -7,7 +7,10 @@ using Meyers.Core.Utilities;
 
 namespace Meyers.Infrastructure.Services;
 
-public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository menuRepository) : IMenuScrapingService
+public partial class MenuScrapingService(
+    HttpClient httpClient,
+    IMenuRepository menuRepository,
+    ITimeZoneService timeZoneService) : IMenuScrapingService
 {
     private const string Url = "https://meyers.dk/ugens-menuer";
     private static readonly TimeSpan CacheRefreshInterval = TimeSpan.FromHours(6);
@@ -44,8 +47,9 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
     {
         // Get all cached entries from the past week to future two weeks to ensure we don't miss any data
         // Use .Date to ensure we're working with date-only comparisons
-        var startDate = DateTime.Today.AddDays(-7).Date;
-        var endDate = DateTime.Today.AddDays(14).Date;
+        var today = timeZoneService.GetCopenhagenDate();
+        var startDate = today.AddDays(-7).Date;
+        var endDate = today.AddDays(14).Date;
         var cachedEntries = await menuRepository.GetMenusForDateRangeAsync(startDate, endDate);
 
         return cachedEntries.Select(entry => new MenuDay
@@ -104,7 +108,7 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
             var html = await httpClient.GetStringAsync(Url);
             scrapingLog.RequestSuccessful = true;
 
-            var menuDays = ParseNuxtData(html);
+            var menuDays = ParseNuxtData(html, timeZoneService.GetCopenhagenDate());
 
             scrapingLog.ParsingSuccessful = true;
             scrapingLog.NewMenuItemsCount = menuDays.Count;
@@ -144,7 +148,7 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
         }
     }
 
-    internal static List<MenuDay> ParseNuxtData(string html)
+    internal static List<MenuDay> ParseNuxtData(string html, DateTime today)
     {
         // Extract the __NUXT_DATA__ JSON array from the script tag
         var match = NuxtDataRegex().Match(html);
@@ -168,7 +172,7 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
         if (menuDays.Count > 0) return menuDays;
 
         // Fall back to the legacy Sanity menuBlock format
-        return ParseLegacyMenuBlocks(data);
+        return ParseLegacyMenuBlocks(data, today);
     }
 
     /// <summary>
@@ -324,7 +328,7 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
     /// <summary>
     /// Parses the legacy Sanity-based menuBlock format (pre-April 2026).
     /// </summary>
-    private static List<MenuDay> ParseLegacyMenuBlocks(JsonElement[] data)
+    private static List<MenuDay> ParseLegacyMenuBlocks(JsonElement[] data, DateTime today)
     {
         var menuDays = new List<MenuDay>();
 
@@ -367,7 +371,7 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
                 if (weekLabelIdx >= data.Length) continue;
 
                 var weekLabel = data[weekLabelIdx].GetString() ?? "";
-                var weekDates = ParseWeekDates(weekLabel);
+                var weekDates = ParseWeekDates(weekLabel, today);
                 if (weekDates.Count == 0) continue;
 
                 // Resolve days array
@@ -512,9 +516,9 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
 
     /// <summary>
     /// Computes Mon-Fri dates from a week label like "Uge 11".
-    /// Uses ISO 8601 week numbering. Year is inferred from proximity to current date.
+    /// Uses ISO 8601 week numbering. Year is inferred from proximity to the given date.
     /// </summary>
-    internal static List<DateTime> ParseWeekDates(string weekLabel)
+    internal static List<DateTime> ParseWeekDates(string weekLabel, DateTime today)
     {
         var dates = new List<DateTime>();
 
@@ -522,7 +526,7 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
         if (!weekMatch.Success) return dates;
 
         var weekNumber = int.Parse(weekMatch.Groups[1].Value);
-        var year = DetermineYear(weekNumber);
+        var year = DetermineYear(weekNumber, today);
         var monday = ISOWeek.GetYearStart(year).AddDays((weekNumber - 1) * 7);
 
         // Generate Mon-Fri dates
@@ -534,9 +538,8 @@ public partial class MenuScrapingService(HttpClient httpClient, IMenuRepository 
         return dates;
     }
 
-    private static int DetermineYear(int weekNumber)
+    private static int DetermineYear(int weekNumber, DateTime now)
     {
-        var now = DateTime.Today;
         var year = now.Year;
 
         // Handle year boundary: Dec showing week 1-2 = next year, Jan showing week 52+ = previous year

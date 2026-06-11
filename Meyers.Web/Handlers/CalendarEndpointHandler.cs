@@ -12,6 +12,7 @@ public partial class CalendarEndpointHandler(
     IMenuScrapingService menuScrapingService,
     ICalendarService calendarService,
     IMenuRepository menuRepository,
+    ITimeZoneService timeZoneService,
     IOptions<MenuCacheOptions> cacheOptions)
 {
     public async Task<IResult> GetCalendarAsync(string menuTypeSlug, HttpContext httpContext)
@@ -22,8 +23,9 @@ public partial class CalendarEndpointHandler(
             var currentMenuDays = await menuScrapingService.ScrapeMenuAsync();
 
             // Also get historical data from the last month plus any future items
-            var startDate = DateTime.Today.AddMonths(-1);
-            var endDate = DateTime.Today.AddMonths(1); // Get up to one month in the future
+            var today = timeZoneService.GetCopenhagenDate();
+            var startDate = today.AddMonths(-1);
+            var endDate = today.AddMonths(1); // Get up to one month in the future
 
             // Get specific menu type
             var menuType = await menuRepository.GetMenuTypeBySlugAsync(menuTypeSlug);
@@ -88,8 +90,9 @@ public partial class CalendarEndpointHandler(
             var currentMenuDays = await menuScrapingService.ScrapeMenuAsync();
 
             // Get historical data from the last month plus any future items
-            var startDate = DateTime.Today.AddMonths(-1);
-            var endDate = DateTime.Today.AddMonths(1);
+            var today = timeZoneService.GetCopenhagenDate();
+            var startDate = today.AddMonths(-1);
+            var endDate = today.AddMonths(1);
 
             // Get all menu types we need
             var allMenuTypes = await menuRepository.GetMenuTypesAsync();
