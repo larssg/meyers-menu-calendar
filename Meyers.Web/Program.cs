@@ -130,22 +130,14 @@ app.UseForwardedHeaders(forwardedHeadersOptions);
 app.MapStaticAssets();
 app.UseStaticFiles();
 
-// Add headers to prevent indexing (except for social media preview crawlers)
+// Keep non-content endpoints (admin, API, calendar feeds) out of search indexes
 app.Use(async (context, next) =>
 {
-    var userAgent = context.Request.Headers["User-Agent"].ToString().ToLowerInvariant();
-    var isSocialMediaCrawler = userAgent.Contains("facebookexternalhit") ||
-                               userAgent.Contains("twitterbot") ||
-                               userAgent.Contains("linkedinbot") ||
-                               userAgent.Contains("whatsapp") ||
-                               userAgent.Contains("telegrambot") ||
-                               userAgent.Contains("skypeuripreview") ||
-                               userAgent.Contains("slackbot") ||
-                               userAgent.Contains("discordbot");
-
-    if (!isSocialMediaCrawler)
-        context.Response.Headers["X-Robots-Tag"] =
-            "noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate, nocache";
+    var path = context.Request.Path;
+    if (path.StartsWithSegments("/admin") ||
+        path.StartsWithSegments("/api") ||
+        path.StartsWithSegments("/calendar"))
+        context.Response.Headers["X-Robots-Tag"] = "noindex, nofollow";
 
     await next();
 });
@@ -180,6 +172,60 @@ app.MapGet("/api/menu-types", async (IMenuRepository menuRepository) =>
 {
     var menuTypes = await menuRepository.GetMenuTypesAsync();
     return Results.Ok(menuTypes.Select(mt => new { mt.Id, mt.Name, mt.Slug }).ToList());
+});
+
+// SEO endpoints: robots.txt and sitemap.xml are generated dynamically so the
+// Sitemap directive and sitemap URLs can use the request's host
+app.MapGet("/robots.txt", (HttpContext context) =>
+{
+    var baseUrl = $"{context.Request.Scheme}://{context.Request.Host}";
+    var content = $"""
+                   User-agent: *
+                   Disallow: /admin
+                   Disallow: /api
+                   Disallow: /calendar
+
+                   # AI training crawlers
+                   User-agent: GPTBot
+                   Disallow: /
+
+                   User-agent: ChatGPT-User
+                   Disallow: /
+
+                   User-agent: CCBot
+                   Disallow: /
+
+                   User-agent: Claude-Web
+                   Disallow: /
+
+                   User-agent: anthropic-ai
+                   Disallow: /
+
+                   User-agent: Google-Extended
+                   Disallow: /
+
+                   Sitemap: {baseUrl}/sitemap.xml
+                   """;
+    return Results.Text(content, "text/plain");
+});
+
+app.MapGet("/sitemap.xml", async (HttpContext context, IMenuRepository menuRepository) =>
+{
+    var baseUrl = $"{context.Request.Scheme}://{context.Request.Host}";
+    var lastUpdated = await menuRepository.GetLastUpdateTimeAsync();
+    var lastMod = lastUpdated.HasValue
+        ? $"\n        <lastmod>{lastUpdated.Value:yyyy-MM-dd}</lastmod>"
+        : string.Empty;
+    var content = $"""
+                   <?xml version="1.0" encoding="UTF-8"?>
+                   <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+                       <url>
+                           <loc>{baseUrl}/</loc>{lastMod}
+                           <changefreq>daily</changefreq>
+                       </url>
+                   </urlset>
+                   """;
+    return Results.Text(content, "application/xml");
 });
 
 // Hidden endpoint for manual menu refresh (for development/troubleshooting)
